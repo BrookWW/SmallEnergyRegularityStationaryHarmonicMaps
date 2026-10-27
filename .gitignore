@@ -1,0 +1,24 @@
+# Local dependencies and generated Lean artifacts
+.lake/
+*.olean
+*.olean.*
+*.ir
+*.ilean
+*.trace
+
+# Local editor files and Python bytecode
+.agents/
+.codex/
+.vscode/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Generated TeX files
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
