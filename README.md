@@ -214,6 +214,7 @@ declared external Lake dependency. With `elan` and Python 3.9 or later installed
 
 ```sh
 lake exe cache get
+rm -rf .lake/build
 lake build
 python3 scripts/check_sources.py
 python3 scripts/check_statements.py
@@ -245,6 +246,10 @@ runs the build and public checks. The
 also runs compiled-declaration replay. Both support manual dispatch and run
 for pushes to `main` and pull requests, with separate build caches. Keep the
 committed toolchain and lockfile when reproducing the development.
+After restoring a cache, each workflow removes the generated project artifacts
+in `.lake/build`, retains the dependency caches, and rebuilds all three
+libraries before verification. The commands above also do this for an existing
+checkout.
 
 ## Reuse and acknowledgments
 

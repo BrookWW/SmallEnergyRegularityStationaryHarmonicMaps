@@ -1,7 +1,8 @@
 module
 
 public import StationaryHarmonicMaps.Analysis.C2TargetSobolevTangency
-public import StationaryHarmonicMaps.Analysis.C1OperatorFieldChainRule
+public import StationaryHarmonicMaps.Analysis.C1SobolevPostcompositionLocal
+public import Mathlib.Analysis.Calculus.FDeriv.CompCLM
 public import StationaryHarmonicMaps.Geometry.NormalProjectionProperties
 public import Mathlib.Analysis.Calculus.FDeriv.Star
 

@@ -1,6 +1,8 @@
 module
 
-public import HolderToCK.Analysis.Poisson.FundamentalFlux
+public import HolderToCK.Analysis.Poisson.KernelCancellation
+public import Mathlib.Analysis.SpecialFunctions.Pow.Asymptotics
+public import Mathlib.MeasureTheory.Integral.Bochner.Set
 public import HolderToCK.Analysis.Poisson.FundamentalWeakGradient
 public import HolderToCK.Analysis.Poisson.HessianTestIntegrability
 public import HolderToCK.Analysis.Poisson.HessianRadialCutoff

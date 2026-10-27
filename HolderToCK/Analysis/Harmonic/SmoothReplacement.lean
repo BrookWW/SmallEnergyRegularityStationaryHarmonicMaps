@@ -4,7 +4,8 @@ public import HolderToCK.Analysis.ClassicalPoisson
 public import HolderToCK.Analysis.WeakPoissonLocality
 public import HolderToCK.Analysis.Harmonic.WeakEnergyOrthogonality
 public import HarmonicMaps.Analysis.PoissonSourceDirichlet
-public import HarmonicMaps.Analysis.HarmonicMaximumDifference
+public import HarmonicMaps.Analysis.PoissonBoundaryMaximum
+public import Mathlib.Topology.Order.OrderClosed
 public import HarmonicMaps.Analysis.HarmonicEnergyOrthogonality
 
 /-! # Smooth boundary replacements and their contraction estimates

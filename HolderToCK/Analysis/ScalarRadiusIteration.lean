@@ -1,6 +1,8 @@
 module
 
-public import HarmonicMaps.Analysis.IterationScales
+public import HarmonicMaps.Energy
+public import Mathlib.Analysis.SpecialFunctions.Pow.Real
+public import Mathlib.Algebra.Order.Archimedean.Basic
 public import Mathlib.Analysis.SpecialFunctions.Pow.Real
 
 /-! # Scalar iteration over every positive radius

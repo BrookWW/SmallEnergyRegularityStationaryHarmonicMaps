@@ -1,16 +1,18 @@
 module
 
 public import StationaryHarmonicMaps.Analysis.CutoffCappedEnvelope
-public import StationaryHarmonicMaps.Analysis.LocalLpDivCurlPairing
+public import StationaryHarmonicMaps.Analysis.LocalLpCriticalCutoff
+public import StationaryHarmonicMaps.Analysis.LocalDivCurlContinuousPairing
+public import StationaryHarmonicMaps.Analysis.NeumannGradientSpace
+public import HarmonicMaps.Analysis.SobolevLocality
 
 /-!
-# Actual capped-envelope growth and ordinary local div--curl integrals
+# Actual capped-envelope gradient growth
 
 The bounded, nonempty original capped supremum controls every original
 ball term. Positive-radius power cancellation yields the actual critical
 Lp amplitude from its same value at eight times the reference radius.
-The proved raw local div--curl producer then controls the original
-ordinary integral against the same native cutoff.
+
 -/
 
 public section
@@ -57,40 +59,6 @@ theorem cutoff_capped_envelope_lp_growth (n : ℕ) (hn : 2≤n)
   rw [one_div,Real.rpow_inv_rpow hNonneg hp.ne']
   exact hGrowth.trans_eq (mul_comm _ _)
 
-/-- Original cutoff and coefficient data yield the ordinary local div--curl bound with the actual capped-envelope factor, without a growth or BMO premise. -/
-theorem exists_capped_envelope_divcurl_integral_bound (n : ℕ) (hn : 2≤n)
-    (p : ℝ) (hp₁ : 1≤p) (hp₂ : p≤2) (A B : ℝ) (hA : 0≤A) (hB : 0≤B) :
-    ∃ C : ℝ,0<C ∧ ∀ (m : ℕ) (u : Domain n → Ambient m) (Du : Domain n → Gradient n m) (η : ℝ),
-      MemW12 (ballDomain (0 : Domain n) 1) u Du → 0≤η →
-      criticalGradientMorreySquare Du (Metric.ball (0 : Domain n) 1)≤ENNReal.ofReal (η^2) →
-      ∀ (χ : Domain n → ℝ),ContDiff ℝ ∞ χ → HasCompactSupport χ →
-        tsupport χ⊆Metric.closedBall (0 : Domain n) (3/4 : ℝ) →
-        (∀ x,|χ x|≤A) →
-        (∀ (x : Domain n) (i : Fin n),|fderiv ℝ χ x (EuclideanSpace.single i 1)|≤B) →
-        let c := ⨍ y in Metric.ball (0 : Domain n) 1,u y
-        let v := fun x=>χ x • (u x-c)
-        let Dv := fun x i=>χ x • Du x i+fderiv ℝ χ x (EuclideanSpace.single i 1) • (u x-c)
-        let Φ := fun (x : Domain n) (r : ℝ)=>r^(p-(n : ℝ))*∫ y in Metric.ball x r,(Real.sqrt (hsNormSq (Dv y)))^p
-        let Ψ := fun s : ℝ=>sSup {z : ℝ | ∃ x r,0<r ∧ r≤s ∧ z=Φ x r}
-        ∀ (a : Domain n) (t : ℝ),0<t → t≤(1/128 : ℝ) →
-          ∀ (L : Ambient m →L[ℝ] ℝ) (q : ℕ) (Z : Domain n → Gradient n q),
-            (∀ i,MemLp (fun x=>Z x i) 2 (volume.restrict (Metric.ball a (t/2)))) →
-            HolderToCK.WeakPoissonOn (ballDomain a (t/2)) Z (fun _=>(0 : Ambient q)) →
-            ∀ (w : Domain n → Ambient q),ContDiff ℝ ∞ w → HasCompactSupport w →
-              tsupport w⊆Metric.ball a (t/2) →
-              let Dw := fun x i=>fderiv ℝ w x (EuclideanSpace.single i 1)
-              IntegrableOn (fun x=>(∑ i : Fin n,inner ℝ (Z x i) (Dw x i))*L (v x))
-                (Metric.ball a (t/2)) volume ∧
-              |∫ x in Metric.ball a (t/2),(∑ i : Fin n,inner ℝ (Z x i) (Dw x i))*L (v x)|≤
-                C*‖L‖*(Ψ (8*t))^(1/p)*Real.sqrt (∫ x in Metric.ball a (t/2),hsNormSq (Z x))*
-                  Real.sqrt (∫ x in Metric.ball a (t/2),hsNormSq (Dw x)) := by
-  obtain ⟨C,hC,Hpair⟩ := exists_local_lp_divcurl_integral_bound n hn p hp₁ hp₂
-  refine ⟨C,hC,?_⟩
-  intro m u Du η hu hη hCritical χ hχ hcχ hsχ hχA hDχB c v Dv Φ Ψ a t ht htCap L q Z hZ hDiv w hw hcw hsw Dw
-  obtain ⟨hW,hNonneg,hGrowth⟩ := cutoff_capped_envelope_lp_growth n hn p hp₁ hp₂ A B hA hB
-    m u Du η hu hη hCritical χ hχ hcχ hsχ hχA hDχB t ht htCap
-  exact Hpair m a t ht v Dv ((Ψ (8*t))^(1/p)) hW.to_memW12Loc
-    (Real.rpow_nonneg hNonneg _) hGrowth L q Z hZ hDiv w hw hcw hsw
 
 end StationaryHarmonicMaps.Analysis
 

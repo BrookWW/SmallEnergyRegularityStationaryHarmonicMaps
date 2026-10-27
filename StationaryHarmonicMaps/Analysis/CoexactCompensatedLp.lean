@@ -2,7 +2,8 @@
 module
 
 public import StationaryHarmonicMaps.Analysis.ThreeFactorHolder
-public import StationaryHarmonicMaps.Analysis.CoexactHodgePowerPairingBall
+public import StationaryHarmonicMaps.Analysis.CoexactNativeDualTestBall
+public import StationaryHarmonicMaps.Analysis.CoexactFrameCutoffPairing
 
 /-!
 # Compensated low-power control of the same actual relative coexact field

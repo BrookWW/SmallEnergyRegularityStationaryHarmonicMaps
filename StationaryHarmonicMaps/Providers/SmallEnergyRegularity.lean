@@ -1,6 +1,8 @@
 module
 
-public import StationaryHarmonicMaps.Analysis.StationarySystemSmallness
+public import StationaryHarmonicMaps.Frozen.VariationalWeakPoissonEquivalence
+public import StationaryHarmonicMaps.Analysis.EncodedPotentialMorrey
+public import HolderToCK.Analysis.WeakPoissonLocality
 public import StationaryHarmonicMaps.Analysis.CompensatedSystemRepresentative
 public import StationaryHarmonicMaps.Analysis.OperatorCoefficientCoordinates
 public import StationaryHarmonicMaps.Analysis.CriticalNativeCoulombBallExistence

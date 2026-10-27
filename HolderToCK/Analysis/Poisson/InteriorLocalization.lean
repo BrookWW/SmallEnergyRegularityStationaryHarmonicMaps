@@ -1,6 +1,8 @@
 /- Copyright (c) 2026. All rights reserved. -/
 module
 
+public import HolderToCK.Analysis.ClassicalEquation
+public import HolderToCK.Foundation.HolderContinuity
 public import HolderToCK.Frozen.PoissonInteriorSchauder
 public import HolderToCK.Analysis.Poisson.InteriorLocalizationBoundsNested
 

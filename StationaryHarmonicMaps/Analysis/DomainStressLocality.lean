@@ -1,7 +1,8 @@
 module
 
 public import StationaryHarmonicMaps.Foundation.DomainStationarity
-public import HarmonicMaps.Analysis.InnerVariationStressIntegrability
+public import HarmonicMaps.EnergyLemmas
+public import Mathlib.MeasureTheory.Function.L2Space
 public import HarmonicMaps.SobolevRestriction
 public import Mathlib.Analysis.Calculus.FDeriv.Const
 public import Mathlib.MeasureTheory.Integral.Bochner.Set

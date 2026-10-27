@@ -1,5 +1,7 @@
 module
 
+public import Mathlib.MeasureTheory.Function.L2Space
+
 public import StationaryHarmonicMaps.Analysis.DistributionHarmonicMollification
 public import HarmonicMaps.SobolevLemmas
 public import HolderToCK.Foundation.WeakPoisson

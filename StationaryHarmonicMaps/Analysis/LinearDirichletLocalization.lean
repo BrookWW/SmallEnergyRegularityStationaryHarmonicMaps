@@ -1,6 +1,10 @@
 module
 
-public import StationaryHarmonicMaps.Analysis.LinearDirichletMorrey
+public import StationaryHarmonicMaps.Analysis.GeometricIteration
+public import StationaryHarmonicMaps.Analysis.LinearFluxEnergyDecay
+public import StationaryHarmonicMaps.Analysis.CriticalMorreyIntegralBounds
+public import HolderToCK.Analysis.WeakPoissonLocality
+public import HarmonicMaps.SobolevRestriction
 public import HarmonicMaps.Analysis.SobolevDifference
 
 /-! # Actual localized forcing splits of zero-boundary linear solutions

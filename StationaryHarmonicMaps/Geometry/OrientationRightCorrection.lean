@@ -104,38 +104,6 @@ theorem encoded_inner_conjugate_eq {q : ℕ}
       rw [encoded_inner_mul_left_eq_adjoint E hE, star_star]
     _ = _ := by rw [real_inner_comm]; simp only [mul_assoc]
 
-/-- The actual native orthogonal frame admits a single fixed right correction into determinant one. -/
-theorem exists_right_orientation_correction {n q : ℕ}
-    (E : (Ambient q →L[ℝ] Ambient q) →L[ℝ] Ambient (q*q))
-    (R : Ambient (q*q) →L[ℝ] (Ambient q →L[ℝ] Ambient q))
-    (hER : ∀ z, E (R z) = z)
-    (hE : ∀ T : Ambient q →L[ℝ] Ambient q,
-      ‖E T‖ ^ 2 = ∑ j : Fin q, ‖T (EuclideanSpace.single j 1)‖ ^ 2)
-    (p : Domain n → Ambient (q*q)) (Dp : Domain n → Gradient n (q*q))
-    (hp : MemW12 (ballDomain (0 : Domain n) 1) p Dp)
-    (horth : ∀ᵐ x ∂volume.restrict (Metric.ball (0 : Domain n) 1), star (R (p x)) * R (p x) = 1) :
-    ∃ H : Ambient q →L[ℝ] Ambient q, star H * H = 1 ∧
-      ∀ᵐ x ∂volume.restrict (Metric.ball (0 : Domain n) 1), (R (p x) * H).det = 1 := by
-  by_cases hq : q = 0
-  · subst q
-    refine ⟨1, by simp, Eventually.of_forall fun x => ?_⟩
-    have heq : R (p x) * (1 : Ambient 0 →L[ℝ] Ambient 0) = 1 := Subsingleton.elim _ _
-    rw [heq]
-    exact map_one (LinearMap.det : (Ambient 0 →ₗ[ℝ] Ambient 0) →* ℝ)
-  · obtain ⟨d, hd, hdet⟩ := exists_constant_operator_det_of_native_orthogonal E R hER hE p Dp hp horth
-    rcases hd with hd | hd
-    · refine ⟨1, by simp, ?_⟩
-      filter_upwards [hdet] with x hx
-      rw [mul_one, hx, hd]
-    · obtain ⟨H, hH, hHd⟩ := exists_orthogonal_reflection_det_neg_one (Nat.pos_of_ne_zero hq)
-      refine ⟨H, hH, ?_⟩
-      filter_upwards [hdet] with x hx
-      change LinearMap.det ((R (p x)).toLinearMap * H.toLinearMap) = 1
-      rw [map_mul]
-      change (R (p x)).det * H.det = 1
-      rw [hx, hd, hHd]
-      norm_num
-
 /-- Fixed actual right multiplication preserves the native graph, its original HS gradient and gauged energy. -/
 theorem native_right_orthogonal_correction {n q : ℕ} {Ω : OpenDomain n}
     (E : (Ambient q →L[ℝ] Ambient q) →L[ℝ] Ambient (q*q))

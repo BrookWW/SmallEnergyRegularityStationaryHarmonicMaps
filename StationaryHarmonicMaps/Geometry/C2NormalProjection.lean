@@ -2,7 +2,10 @@ module
 
 public import StationaryHarmonicMaps.Geometry.C2TargetCharts
 public import StationaryHarmonicMaps.Geometry.GramProjection
-public import StationaryHarmonicMaps.Geometry.ProjectionDifferential
+public import StationaryHarmonicMaps.Geometry.ProjectionCommutator
+public import Mathlib.Analysis.Calculus.FDeriv.CompCLM
+public import Mathlib.Analysis.Calculus.FDeriv.Star
+public import Mathlib.Analysis.Calculus.FDeriv.Congr
 
 /-!
 # C¹ normal projections along actual C² targets
@@ -10,8 +13,6 @@ public import StationaryHarmonicMaps.Geometry.ProjectionDifferential
 The orthogonal projection onto the normal subspace varies C¹ in every actual
 target chart. Its regularity follows from the C¹ derivative family of a C²
 chart and the Gram formula for its actual tangent range.
-Its actual chart derivatives are self-adjoint and satisfy differentiated
-idempotence.
 -/
 
 public section
@@ -68,41 +69,6 @@ theorem normal_projection_chart_hasFDerivAt {q : ℕ} (N : CompactC2EmbeddedTarg
   exact ((N.normal_projection_chart_contDiff p).contDiffAt
     (hOpen.mem_nhds ht)).differentiableAt one_ne_zero |>.hasFDerivAt
 
-/-- Directional derivatives of the actual chart normal projection are self-adjoint. -/
-theorem normal_projection_chart_derivative_isSelfAdjoint {q : ℕ}
-    (N : CompactC2EmbeddedTarget q) (p : N.Carrier) :
-    let e := extChartAt 𝓘(ℝ, EuclideanSpace ℝ (Fin N.dimension)) p
-    let Q := fun t => (N.tangentImage (e.symm t))ᗮ.starProjection
-    ∀ t ∈ e.target, ∀ v : EuclideanSpace ℝ (Fin N.dimension),
-      IsSelfAdjoint (fderiv ℝ Q t v) := by
-  let I := 𝓘(ℝ, EuclideanSpace ℝ (Fin N.dimension))
-  let e := extChartAt I p
-  let Q := fun t => (N.tangentImage (e.symm t))ᗮ.starProjection
-  change ∀ t ∈ e.target, ∀ v : EuclideanSpace ℝ (Fin N.dimension),
-    IsSelfAdjoint (fderiv ℝ Q t v)
-  intro t ht v
-  exact Geometry.projection_derivative_isSelfAdjoint
-    (N.normal_projection_chart_hasFDerivAt p t ht)
-    (Filter.Eventually.of_forall fun s => isSelfAdjoint_starProjection
-      (N.tangentImage (e.symm s))ᗮ) v
-
-/-- The actual chart normal-projection derivative satisfies the mixed composition identity. -/
-theorem normal_projection_chart_derivative_idempotence {q : ℕ}
-    (N : CompactC2EmbeddedTarget q) (p : N.Carrier) :
-    let e := extChartAt 𝓘(ℝ, EuclideanSpace ℝ (Fin N.dimension)) p
-    let Q := fun t => (N.tangentImage (e.symm t))ᗮ.starProjection
-    ∀ t ∈ e.target, ∀ v : EuclideanSpace ℝ (Fin N.dimension),
-      fderiv ℝ Q t v * Q t + Q t * fderiv ℝ Q t v = fderiv ℝ Q t v := by
-  let I := 𝓘(ℝ, EuclideanSpace ℝ (Fin N.dimension))
-  let e := extChartAt I p
-  let Q := fun t => (N.tangentImage (e.symm t))ᗮ.starProjection
-  change ∀ t ∈ e.target, ∀ v : EuclideanSpace ℝ (Fin N.dimension),
-    fderiv ℝ Q t v * Q t + Q t * fderiv ℝ Q t v = fderiv ℝ Q t v
-  intro t ht v
-  exact Geometry.projection_derivative_idempotence
-    (N.normal_projection_chart_hasFDerivAt p t ht)
-    (Filter.Eventually.of_forall fun s =>
-      (N.tangentImage (e.symm s))ᗮ.isIdempotentElem_starProjection) v
 
 end StationaryHarmonicMaps.CompactC2EmbeddedTarget
 

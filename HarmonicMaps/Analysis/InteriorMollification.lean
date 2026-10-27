@@ -1,15 +1,13 @@
 module
 
 public import HarmonicMaps.Analysis.MollificationChangeVariables
-public import HarmonicMaps.Analysis.FiniteEnergySobolev
 
 /-!
 # Fixed-scale interior mollification
 
 The source unit-ball integral is defined on the proved interior neighborhood
 `B(0,3/4)`. Its actual integrability and equality to the smooth zero-extension
-convolution are established before the public definition. The source-facing
-application obtains finite Sobolev data from the existing finite-energy theorem.
+convolution are established before the public definition.
 -/
 
 @[expose] public section
@@ -94,38 +92,6 @@ theorem mollification_closedHalfBall_subset_neighborhood (n : ℕ) :
     Metric.closedBall (0 : Domain n) (1 / 2) ⊆ Metric.ball (0 : Domain n) (3 / 4) :=
   Metric.closedBall_subset_ball (by norm_num : (1 / 2 : ℝ) < 3 / 4)
 
-/-- Source local Sobolev, compact-target and finite-energy data supply the
-literal integrability and neighborhood smoothness, through the existing
-finite Sobolev theorem for the same map and displayed gradient. -/
-theorem MemW12Loc.interiorMollification_spec {n q : ℕ} (N : CompactSmoothEmbeddedTarget q)
-    {u : Domain n → Ambient q} {Du : Domain n → Gradient n q}
-    (hu : MemW12Loc (ballDomain (0 : Domain n) 1) u Du)
-    (hN : TakesValuesIn N (ballDomain (0 : Domain n) 1) u)
-    (hE : dirichletEnergy Du (Metric.ball (0 : Domain n) 1) ≠ ⊤)
-    (h : PositiveRadius) (hh : h.val ≤ 1 / 4) :
-    (∀ x ∈ Metric.ball (0 : Domain n) (3 / 4), ∀ y ∈ Metric.ball (0 : Domain n) 1,
-      x - h.val • y ∈ Metric.ball (0 : Domain n) 1) ∧
-    (∀ x ∈ Metric.ball (0 : Domain n) (3 / 4),
-      IntegrableOn (fun y => fixedMollifierKernel n y • u (x - h.val • y))
-        (Metric.ball (0 : Domain n) 1)) ∧
-    ContDiffOn ℝ ∞ (fun x : Domain n => ∫ y in Metric.ball (0 : Domain n) 1,
-      fixedMollifierKernel n y • u (x - h.val • y))
-      (Metric.ball (0 : Domain n) (3 / 4)) ∧
-    Metric.closedBall (0 : Domain n) (1 / 2) ⊆ Metric.ball (0 : Domain n) (3 / 4) ∧
-    (∃ M : Domain n → Ambient q, ContDiff ℝ ∞ M ∧
-      ∀ x ∈ Metric.ball (0 : Domain n) (3 / 4),
-        M x = ∫ y in Metric.ball (0 : Domain n) 1,
-          fixedMollifierKernel n y • u (x - h.val • y)) := by
-  have hW : MemW12 (ballDomain (0 : Domain n) 1) u Du :=
-    hu.memW12_unitBall_of_finiteEnergy N hN hE
-  have hInt := hW.integrable_unitBall
-  refine ⟨(fun x hx y hy => mollification_sampling_mem_unitBall h hh hx hy),
-    (fun x hx => sourceMollification_integrableOn u hInt h hh x hx),
-    sourceMollification_contDiffOn u hInt h hh,
-    mollification_closedHalfBall_subset_neighborhood n,
-    zeroExtendedMollification u hInt h, zeroExtendedMollification_contDiff u hInt h, ?_⟩
-  intro x hx
-  exact (sourceMollification_eq_zeroExtended u hInt h hh x hx).symm
 
 end
 end HarmonicMaps

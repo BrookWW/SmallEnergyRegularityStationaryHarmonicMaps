@@ -1,6 +1,9 @@
 module
 
-public import HarmonicMaps.Analysis.MorreyMeans
+public import HarmonicMaps.Analysis.BallAverageDifferentiation
+public import HarmonicMaps.Analysis.MorreyBallEstimates
+public import HarmonicMaps.Analysis.MorreyGeometricMeans
+public import HarmonicMaps.Energy
 public import HarmonicMaps.Representative
 public import Mathlib.Analysis.Normed.Affine.AddTorsor
 import Mathlib.Analysis.Normed.Module.Convex
@@ -148,47 +151,5 @@ theorem continuous_of_norm_sub_le_rpow {X : Type*} [MetricSpace X] {E : Type*}
   filter_upwards [(tendsto_order.mp hz).2 ε hε] with y hy
   exact lt_of_le_of_lt (by simpa only [dist_eq_norm] using hbound y x) hy
 
-/-- One dimension/exponent constant controls the continuous representative of every source map. -/
-theorem morrey_holder (n : ℕ) (_hn : 2 ≤ n) (α : ℝ) (hα : 0 < α) (_hα1 : α < 1) :
-    ∃ C : ℝ≥0, ∀ (q : ℕ) (f : Domain n → Ambient q) (Df : Domain n → Gradient n q),
-      MemW12 (ballDomain (0 : Domain n) 1) f Df → ∀ (M : ℝ), 0 ≤ M →
-      (∀ (x : Domain n), x ∈ Metric.ball (0 : Domain n) (1 / 2) →
-        ∀ (r : PositiveRadius), r.val ≤ (1 / 2 : ℝ) →
-          (∫ y in Metric.ball x r.val, hsNormSq (Df y)) ≤
-            M * Real.rpow r.val ((n : ℝ) - 2 + 2 * α)) →
-      ∃ w : Metric.ball (0 : Domain n) (1 / 2) → Ambient q,
-        IsContinuousRepresentative (ballDomain (0 : Domain n) (1 / 2)) f w ∧
-        (∀ (x : Domain n) (hx : x ∈ Metric.ball (0 : Domain n) (1 / 2)),
-          Tendsto (fun r : ℝ => (volume (Metric.ball x r)).toReal⁻¹ •
-            (∫ y in Metric.ball x r, f y)) (𝓝[>] (0 : ℝ)) (𝓝 (w ⟨x, hx⟩))) ∧
-        (∀ x y : Metric.ball (0 : Domain n) (1 / 2),
-          ‖w x - w y‖ ≤ (C : ℝ) * Real.sqrt M *
-            Real.rpow (dist (x : Domain n) (y : Domain n)) α) := by
-  let H : ℝ := Real.sqrt ((2 : ℝ) ^ (n + 1) * (2 : ℝ) ^ n /
-    volume.real (Metric.ball (0 : Domain n) 1)) / (1 - (1 / 2 : ℝ) ^ α)
-  let J : ℝ := Real.sqrt ((2 : ℝ) ^ (n + 1) * (3 / 2 : ℝ) ^ n /
-    volume.real (Metric.ball (0 : Domain n) 1))
-  let D : ℝ := 2 * H * (2 : ℝ) ^ α + 2 * J * (3 : ℝ) ^ α
-  have hden : 0 < 1 - (1 / 2 : ℝ) ^ α := sub_pos.mpr
-    (Real.rpow_lt_one (by norm_num) (by norm_num) hα)
-  have hD : 0 ≤ D := by dsimp only [D, H, J]; positivity
-  refine ⟨⟨8 * D, by positivity⟩, ?_⟩
-  intro q f Df hf M hM hgrowth
-  obtain ⟨w, hwlimit, hwtail, hwae⟩ := hf.morrey_means hα hM hgrowth
-  have hnear : ∀ x y : Metric.ball (0 : Domain n) (1 / 2),
-      dist (x : Domain n) (y : Domain n) ≤ 1 / 8 →
-      ‖w x - w y‖ ≤ (D * Real.sqrt M) * (dist (x : Domain n) (y : Domain n)) ^ α := by
-    intro x y hd
-    simpa only [D, H, J, Real.rpow_eq_pow] using
-      meanLimit_holder_near hα hM hf hgrowth w hwtail x y hd
-  have hglobal := holder_global_of_eightSegments hα.le (mul_nonneg hD (Real.sqrt_nonneg M)) w hnear
-  have hcontinuity : Continuous w := continuous_of_norm_sub_le_rpow w hα (by
-    intro x y
-    simpa only [Subtype.dist_eq] using hglobal x y)
-  refine ⟨w, ⟨hcontinuity, hwae⟩, hwlimit, ?_⟩
-  intro x y
-  change ‖w x - w y‖ ≤ (8 * D) * Real.sqrt M *
-    Real.rpow (dist (x : Domain n) (y : Domain n)) α
-  simpa only [Real.rpow_eq_pow, mul_assoc] using hglobal x y
 
 end HarmonicMaps

@@ -1,7 +1,9 @@
 /- Copyright (c) 2026. All rights reserved. -/
 module
 
-public import StationaryHarmonicMaps.Analysis.CoulombLinearMorreyPart
+public import StationaryHarmonicMaps.Analysis.CoexactOperatorLpMorrey
+public import StationaryHarmonicMaps.Geometry.OrthogonalRightHS
+public import StationaryHarmonicMaps.Geometry.GaugedEnergyAlgebra
 public import StationaryHarmonicMaps.Analysis.SkewRelativeCoexactProjection
 
 /-!

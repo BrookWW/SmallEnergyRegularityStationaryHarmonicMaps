@@ -1,6 +1,6 @@
 module
 
-public import HolderToCK.Analysis.Poisson.RadialHessian
+public import HolderToCK.Analysis.Poisson.RadialLogDerivatives
 public import HolderToCK.Foundation.BallVolume
 public import HarmonicMaps.Analysis.SphereSurfaceMeasure
 public import Mathlib.MeasureTheory.Measure.Lebesgue.VolumeOfBalls

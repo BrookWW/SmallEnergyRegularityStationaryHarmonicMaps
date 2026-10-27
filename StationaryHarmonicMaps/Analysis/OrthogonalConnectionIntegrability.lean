@@ -1,6 +1,9 @@
 module
 
-public import StationaryHarmonicMaps.Analysis.OrthogonalCoordinateSystem
+public import StationaryHarmonicMaps.Analysis.OrthogonalCoefficientBounds
+public import StationaryHarmonicMaps.Analysis.SobolevOrthogonalFrame
+public import StationaryHarmonicMaps.Analysis.WeakOperatorFluxTransform
+public import StationaryHarmonicMaps.Geometry.OrthogonalFluxAlgebra
 public import Mathlib.Analysis.CStarAlgebra.Basic
 public import StationaryHarmonicMaps.Analysis.BoundedOperatorProducts
 

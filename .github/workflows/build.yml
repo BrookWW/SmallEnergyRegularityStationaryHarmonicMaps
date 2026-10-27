@@ -47,6 +47,21 @@ jobs:
             lake-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json') }}-
             lake-kernel-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean-toolchain', 'lakefile.toml', 'lake-manifest.json') }}-
 
+      - name: Clear project artifacts before building
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil
+          project = Path.cwd().resolve()
+          lake = project / ".lake"
+          build = lake / "build"
+          if lake.is_symlink() or build.is_symlink() or lake.resolve() != lake or build.resolve() != build:
+              raise SystemExit("Refusing to remove artifacts through a redirected path")
+          if build.exists():
+              shutil.rmtree(build)
+          print("Project artifacts cleared; dependency cache retained")
+          PY
+
       - name: Build all three Lean libraries
         uses: leanprover/lean-action@f061402b660e0c34644504b324e830f2991d4865 # v1
         with:

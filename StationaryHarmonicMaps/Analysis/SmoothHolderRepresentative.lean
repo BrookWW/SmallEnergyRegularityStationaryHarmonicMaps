@@ -1,6 +1,9 @@
 module
 
-public import StationaryHarmonicMaps.Analysis.SmoothTargetBootstrap
+public import StationaryHarmonicMaps.Geometry.SmoothNormalExtension
+public import StationaryHarmonicMaps.Analysis.VariationalWeakPoisson
+public import HolderToCK.Frozen.HolderQuadraticPoissonSmooth
+import HolderToCK.Analysis.WeakPoissonLocality
 import HarmonicMaps.Analysis.SobolevAECongruence
 import HarmonicMaps.SobolevRestriction
 

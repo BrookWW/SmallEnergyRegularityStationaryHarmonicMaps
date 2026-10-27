@@ -3,21 +3,6 @@
   "encoding": "lean-kernel-expression-json-v1",
   "theorems": [
     {
-      "module": "HarmonicMaps.Frozen.OneStepEnergyDecay",
-      "theorem": "HarmonicMaps.oneStepEnergyDecay",
-      "type_sha256": "f355dc0ec4d3c5bca86b9eb655b75f930408d5b27bb026c00db665b458e88ebf"
-    },
-    {
-      "module": "HarmonicMaps.Frozen.OuterVariation",
-      "theorem": "HarmonicMaps.outerVariation_weakEquation",
-      "type_sha256": "a5df1101a7f9a356db92a3c2ada26bb3493660cc2741f585382aa60b3fd0f718"
-    },
-    {
-      "module": "HarmonicMaps.Frozen.SmallEnergyRegularity",
-      "theorem": "HarmonicMaps.smallEnergyRegularity",
-      "type_sha256": "97cc3cab4398c7a32c607e8e398a52428d6ebafc9df74432dbc83ee6965456e8"
-    },
-    {
       "module": "HarmonicMaps.Frozen.TubularProjectionDerivativeWellDefined",
       "theorem": "HarmonicMaps.tubularProjectionDerivativeWellDefined",
       "type_sha256": "1d8bc60d9f1b6de0eb9d73ac6110dcf37d29427896e1b8c6cf53fde22ec62a7a"
@@ -51,11 +36,6 @@
       "module": "HarmonicMaps.Frozen.TubularProjection",
       "theorem": "HarmonicMaps.tubularProjection_complete",
       "type_sha256": "56197ef824b1379e79117f4a3101be46ca7b31d35cedc7db2c512b19a1a5f5d3"
-    },
-    {
-      "module": "HarmonicMaps.Frozen.UniformSmoothing",
-      "theorem": "HarmonicMaps.uniformSmoothing_complete",
-      "type_sha256": "cc08708923a2fee1c7d12fa7bcbcb80a7789a7aa0bb2b18708ed3d31e8fb8356"
     },
     {
       "module": "HolderToCK.Frozen.HolderQuadraticPoissonSmooth",

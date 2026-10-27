@@ -1,8 +1,11 @@
 module
 
+public import Mathlib.MeasureTheory.Function.L2Space
+
 public import HolderToCK.Foundation.WeakPoisson
 public import HolderToCK.Analysis.ConvolutionDerivatives
-public import HarmonicMaps.Analysis.MollificationEnergy
+public import HarmonicMaps.Analysis.MollificationJensen
+public import HarmonicMaps.Analysis.SobolevMollificationGradient
 
 /-! # Interior mollification of the signed weak Poisson equation
 

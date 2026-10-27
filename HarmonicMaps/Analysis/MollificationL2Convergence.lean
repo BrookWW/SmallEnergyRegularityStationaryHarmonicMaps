@@ -1,5 +1,7 @@
 module
 
+public import Mathlib.MeasureTheory.Function.L2Space
+
 public import HarmonicMaps.Analysis.SobolevMollificationGradient
 public import HarmonicMaps.Analysis.L2TranslationContinuity
 public import HarmonicMaps.Analysis.MollificationJensen

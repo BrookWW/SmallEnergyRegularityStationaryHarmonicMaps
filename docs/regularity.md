@@ -117,7 +117,8 @@ connection small in the required critical norms.
 The definitions and proofs appear in
 [VariationalWeakPoissonEquivalence](../StationaryHarmonicMaps/Frozen/VariationalWeakPoissonEquivalence.lean),
 [StationaryMorreyBound](../StationaryHarmonicMaps/Frozen/StationaryMorreyBound.lean)
-and [StationarySystemSmallness](../StationaryHarmonicMaps/Analysis/StationarySystemSmallness.lean).
+and the original-system construction in
+[Providers.smallEnergyRegularity](../StationaryHarmonicMaps/Providers/SmallEnergyRegularity.lean).
 
 ## Construction of the critical Coulomb frame
 

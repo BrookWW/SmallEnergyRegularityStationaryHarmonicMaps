@@ -1,7 +1,27 @@
 module
 
-public import HarmonicMaps.Analysis.VariableMollificationSmooth
-public import HarmonicMaps.Analysis.VariableMollificationBounds
+public import HarmonicMaps.Sobolev
+public import Mathlib.Analysis.Calculus.ContDiff.Operations
+public import Mathlib.Analysis.Calculus.FDeriv.Mul
+public import Mathlib.LinearAlgebra.Matrix.SchurComplement
+public import Mathlib.Analysis.Calculus.MeanValue
+public import Mathlib.Topology.MetricSpace.Contracting
+public import Mathlib.Analysis.Normed.Operator.Banach
+public import Mathlib.Analysis.SpecificLimits.Normed
+public import Mathlib.Analysis.Calculus.InverseFunctionTheorem.ContDiff
+public import Mathlib.MeasureTheory.Function.Jacobian
+public import HarmonicMaps.Analysis.BallVariance
+public import HarmonicMaps.Analysis.MollificationJensen
+public import Mathlib.Topology.MetricSpace.HausdorffDistance
+public import HarmonicMaps.Analysis.MollificationChangeVariables
+public import Mathlib.Analysis.Calculus.ParametricIntegral
+public import Mathlib.MeasureTheory.Function.LpSeminorm.CompareExp
+public import Mathlib.MeasureTheory.Integral.Bochner.Basic
+public import HarmonicMaps.Analysis.VariableMollificationMatrix
+public import Mathlib.MeasureTheory.Integral.Prod
+public import Mathlib.Analysis.Convex.Integral
+public import Mathlib.Analysis.Normed.Module.Convex
+public import HarmonicMaps.Analysis.SobolevMollificationGradient
 public import HarmonicMaps.Analysis.SmoothWeakGradient
 
 /-!

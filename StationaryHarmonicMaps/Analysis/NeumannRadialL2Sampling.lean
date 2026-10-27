@@ -2,7 +2,18 @@
 module
 
 public import HarmonicMaps.Analysis.L2AffineContinuity
-public import HarmonicMaps.Analysis.VariableMollificationPullbackEstimates
+public import HarmonicMaps.Sobolev
+public import Mathlib.Analysis.Calculus.ContDiff.Operations
+public import Mathlib.Analysis.Calculus.FDeriv.Mul
+public import Mathlib.LinearAlgebra.Matrix.SchurComplement
+public import Mathlib.Analysis.Calculus.MeanValue
+public import Mathlib.Topology.MetricSpace.Contracting
+public import Mathlib.Analysis.Normed.Operator.Banach
+public import Mathlib.Analysis.SpecificLimits.Normed
+public import Mathlib.Analysis.Calculus.InverseFunctionTheorem.ContDiff
+public import Mathlib.MeasureTheory.Function.Jacobian
+public import Mathlib.MeasureTheory.Function.LpSeminorm.CompareExp
+public import Mathlib.MeasureTheory.Integral.Bochner.Basic
 public import Mathlib.MeasureTheory.Integral.Prod
 public import Mathlib.MeasureTheory.Measure.Haar.NormedSpace
 public import Mathlib.MeasureTheory.Function.L2Space

@@ -1,7 +1,8 @@
 module
 
 public import StationaryHarmonicMaps.Analysis.RelativeHodgeAffine
-public import StationaryHarmonicMaps.Analysis.CoexactHodgePowerPairingBall
+public import StationaryHarmonicMaps.Analysis.CoexactNativeDualTestBall
+public import StationaryHarmonicMaps.Analysis.CoexactFrameCutoffPairing
 public import StationaryHarmonicMaps.Analysis.HodgeEnergyIdentity
 public import StationaryHarmonicMaps.Analysis.ZeroBoundaryLinearMap
 
