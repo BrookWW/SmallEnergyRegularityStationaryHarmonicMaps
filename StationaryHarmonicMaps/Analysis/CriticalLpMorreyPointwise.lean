@@ -1,0 +1,82 @@
+module
+
+public import StationaryHarmonicMaps.Analysis.CriticalLpMorreyDyadicMeans
+public import StationaryHarmonicMaps.Analysis.BallMeanLpEnergyTail
+
+/-!
+# Lower-power critical pointwise bounds at actual Lebesgue points
+
+The original critical Lp gradient growth controls the finite number of large
+dyadic steps. Actual lower-power gradient averages control the remaining tail.
+Their combination is uniform in the target dimension and the map.
+-/
+
+public section
+
+open HarmonicMaps MeasureTheory Filter
+open scoped Topology
+
+namespace StationaryHarmonicMaps.Analysis
+
+/-- Outside an actual energy-average superlevel, the original value has a quantitative dyadic bound. -/
+theorem exists_pointwise_bound_of_criticalLp_growth (n : ℕ)
+    (p : ℝ) (hpOne : 1≤p) (hpTwo : p≤2) :
+    ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (u : Domain n → Ambient q)
+      (Du : Domain n → Gradient n q) (η : ℝ),
+      MemW12 (ballDomain (0 : Domain n) 1) u Du → 0 ≤ η →
+      (∀a∈Metric.ball (0 : Domain n) 1,∀r : ℝ,0<r →
+        (∫y in Metric.ball a r∩Metric.ball (0 : Domain n) 1,(Real.sqrt (hsNormSq (Du y)))^p)≤
+          η^p*r^((n : ℝ)-p)) →
+      ∀ x ∈ Metric.ball (0 : Domain n) (7 / 8 : ℝ),
+      Tendsto (fun r : ℝ => ⨍ y in Metric.ball x r, u y)
+        (𝓝[>] (0 : ℝ)) (𝓝 (u x)) → ∀ m : ℕ,
+      (∀ r : ℝ, 0 < r → r ≤ 1 / 16 →
+        (∫ y in Metric.ball x r, (Real.sqrt (hsNormSq (Du y)))^p) ≤
+          (16 * η * (2 : ℝ) ^ m) ^ p * volume.real (Metric.ball x r)) →
+      ‖u x - (⨍ y in Metric.ball (0 : Domain n) 1, u y)‖ ≤ C * η * ((m : ℝ) + 1) := by
+  obtain ⟨C₀, hC₀, hmeans⟩ := exists_dyadic_mean_bound_of_criticalLp_growth n p hpOne hpTwo
+  let T : ℝ := (2 : ℝ) ^ (n + 1) * ((2 : ℝ) ^ (n + 1) * Real.sqrt (n : ℝ))
+  let C : ℝ := C₀ + T + 1
+  have hT : 0 ≤ T := by dsimp only [T]; positivity
+  have hC : 0 < C := by dsimp only [C]; positivity
+  refine ⟨C, hC, ?_⟩
+  intro q u Du η hu hη hcritical x hx hLebesgue m henergy
+  let r₀ : ℝ := (1 / 16 : ℝ) * (1 / 2 : ℝ) ^ m
+  have hr₀ : 0 < r₀ := mul_pos (by norm_num) (pow_pos (by norm_num) m)
+  have hcap : r₀ ≤ 1 / 16 := mul_le_of_le_one_right (by norm_num : (0 : ℝ) ≤ 1 / 16)
+    (pow_le_one₀ (by norm_num : (0 : ℝ) ≤ 1 / 2) (by norm_num))
+  have hclosed : Metric.closedBall x r₀ ⊆ (ballDomain (0 : Domain n) 1).val :=
+    (Metric.closedBall_subset_closedBall hcap).trans (closedBall_sixteenth_subset_unit hx)
+  have htail := ballMean_value_tail_of_lp_energy_average p hpOne hpTwo hu.to_memW12Loc x hr₀
+    (by positivity : 0≤16*η*(2 : ℝ)^m) hclosed hLebesgue
+    (fun r hr hrle => henergy r hr (hrle.trans hcap))
+  have hpow : (1 / 2 : ℝ) ^ m * (2 : ℝ) ^ m = 1 := by
+    rw [← mul_pow]
+    norm_num
+  have hscale : (16 * η * (2 : ℝ) ^ m) * r₀ = η := by
+    calc
+      _ = η * ((1 / 2 : ℝ) ^ m * (2 : ℝ) ^ m) := by dsimp only [r₀]; ring
+      _ = _ := by rw [hpow, mul_one]
+  have htail' : ‖u x - (⨍ y in Metric.ball x r₀, u y)‖ ≤ T * η := by
+    rw [norm_sub_rev]
+    have hcoef : T * (16 * η * (2 : ℝ) ^ m) * r₀ = T * η := by
+      rw [mul_assoc, hscale]
+    exact htail.trans_eq hcoef
+  have hhead := hmeans q u Du η hu hη hcritical x hx m
+  have hscalar : T + C₀ * ((m : ℝ) + 1) ≤ C * ((m : ℝ) + 1) := by
+    have hm : 0 ≤ (m : ℝ) := Nat.cast_nonneg m
+    have hTm := mul_nonneg hT hm
+    dsimp only [C]
+    nlinarith only [hm, hTm]
+  calc
+    _ ≤ ‖u x - (⨍ y in Metric.ball x r₀, u y)‖ +
+        ‖(⨍ y in Metric.ball x r₀, u y) - (⨍ y in Metric.ball (0 : Domain n) 1, u y)‖ :=
+      norm_sub_le_norm_sub_add_norm_sub _ _ _
+    _ ≤ T * η + C₀ * η * ((m : ℝ) + 1) := add_le_add htail' hhead
+    _ = (T + C₀ * ((m : ℝ) + 1)) * η := by ring
+    _ ≤ (C * ((m : ℝ) + 1)) * η := mul_le_mul_of_nonneg_right hscalar hη
+    _ = _ := by ring
+
+end StationaryHarmonicMaps.Analysis
+
+end

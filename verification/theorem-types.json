@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "encoding": "lean-kernel-expression-json-v1",
+  "theorems": [
+    {
+      "module": "HarmonicMaps.Frozen.OneStepEnergyDecay",
+      "theorem": "HarmonicMaps.oneStepEnergyDecay",
+      "type_sha256": "f355dc0ec4d3c5bca86b9eb655b75f930408d5b27bb026c00db665b458e88ebf"
+    },
+    {
+      "module": "HarmonicMaps.Frozen.OuterVariation",
+      "theorem": "HarmonicMaps.outerVariation_weakEquation",
+      "type_sha256": "a5df1101a7f9a356db92a3c2ada26bb3493660cc2741f585382aa60b3fd0f718"
+    },
+    {
+      "module": "HarmonicMaps.Frozen.SmallEnergyRegularity",
+      "theorem": "HarmonicMaps.smallEnergyRegularity",
+      "type_sha256": "97cc3cab4398c7a32c607e8e398a52428d6ebafc9df74432dbc83ee6965456e8"
+    },
+    {
+      "module": "HarmonicMaps.Frozen.TubularProjectionDerivativeWellDefined",
+      "theorem": "HarmonicMaps.tubularProjectionDerivativeWellDefined",
+      "type_sha256": "1d8bc60d9f1b6de0eb9d73ac6110dcf37d29427896e1b8c6cf53fde22ec62a7a"
+    },
+    {
+      "module": "HarmonicMaps.Geometry.TubularProjectionDerivativeCharacterization",
+      "theorem": "HarmonicMaps.tubularProjectionDerivative_characterization",
+      "type_sha256": "e37cd3bff72a0b1c610c9a0a473d83dd705fe19f2e6a983e5307f09c6afabf5f"
+    },
+    {
+      "module": "HarmonicMaps.Frozen.TubularProjectionSecondDerivativeWellDefined",
+      "theorem": "HarmonicMaps.tubularProjectionSecondDerivativeWellDefined",
+      "type_sha256": "62e24d643fd115b6d6281e7cf7600122906b5d55c31b0395a8a4f9645a5c98cb"
+    },
+    {
+      "module": "HarmonicMaps.Geometry.TubularProjectionSecondDerivativeCharacterization",
+      "theorem": "HarmonicMaps.tubularProjectionSecondDerivative_characterization",
+      "type_sha256": "9e10f4874697db683e3db68a1f0b90d3eaa961a68acf2c6cd067c27e9f41225a"
+    },
+    {
+      "module": "HarmonicMaps.Frozen.TubularProjectionWellDefined",
+      "theorem": "HarmonicMaps.tubularProjectionWellDefined",
+      "type_sha256": "fd0b370f427d0102c09250da2159e130b86b15bb049a7442b56bdb75fd438398"
+    },
+    {
+      "module": "HarmonicMaps.Geometry.TubularProjectionCharacterization",
+      "theorem": "HarmonicMaps.tubularProjection_characterization",
+      "type_sha256": "26682edfcc9c6cf43c24abc97abb0f311fd5c373048ef0b55a292338cbc2f991"
+    },
+    {
+      "module": "HarmonicMaps.Frozen.TubularProjection",
+      "theorem": "HarmonicMaps.tubularProjection_complete",
+      "type_sha256": "56197ef824b1379e79117f4a3101be46ca7b31d35cedc7db2c512b19a1a5f5d3"
+    },
+    {
+      "module": "HarmonicMaps.Frozen.UniformSmoothing",
+      "theorem": "HarmonicMaps.uniformSmoothing_complete",
+      "type_sha256": "cc08708923a2fee1c7d12fa7bcbcb80a7789a7aa0bb2b18708ed3d31e8fb8356"
+    },
+    {
+      "module": "HolderToCK.Frozen.HolderQuadraticPoissonSmooth",
+      "theorem": "HolderToCK.holderQuadraticPoisson_smooth",
+      "type_sha256": "9f0571b6b3f4b47b90dd38ad13bc91bf748d17c9f3cc593a362ad6cd36dfff4f"
+    },
+    {
+      "module": "HolderToCK.Frozen.PoissonInteriorSchauder",
+      "theorem": "HolderToCK.poissonInteriorSchauder",
+      "type_sha256": "3279b48cbdad846f4b190c0993dedc09f00d863f2f86fac27db2ce90a3cdf8b5"
+    },
+    {
+      "module": "StationaryHarmonicMaps.Frozen.NormalProjectionCharacterization",
+      "theorem": "StationaryHarmonicMaps.CompactC2EmbeddedTarget.normalProjection_characterization",
+      "type_sha256": "b99217f509e543dfe1a74dd510a938e50d57f17ea411b0de0a7323651abb8325"
+    },
+    {
+      "module": "StationaryHarmonicMaps.Frozen.NormalProjectionWellDefined",
+      "theorem": "StationaryHarmonicMaps.CompactC2EmbeddedTarget.normalProjection_existsUnique",
+      "type_sha256": "b4bf71ec48e8cc6467422051334368626f5c66aca0bdadb0bf1c436ea1837aa0"
+    },
+    {
+      "module": "StationaryHarmonicMaps.Frozen.VariationalWeakPoissonEquivalence",
+      "theorem": "StationaryHarmonicMaps.CompactC2EmbeddedTarget.variational_weakPoisson_equivalence",
+      "type_sha256": "856074cce7b18325424a5fd93d70bfc1934c773d0f1fb7771132abe998b56a8a"
+    },
+    {
+      "module": "StationaryHarmonicMaps.Frozen.Monotonicity",
+      "theorem": "StationaryHarmonicMaps.IsDomainStationary.monotonicity",
+      "type_sha256": "982e7843f85043a4a66be1ea46926c32ed09258fe604be86cb062ed1609113c3"
+    },
+    {
+      "module": "StationaryHarmonicMaps.Frozen.StationaryMorreyBound",
+      "theorem": "StationaryHarmonicMaps.stationary_morrey_bound",
+      "type_sha256": "d2224baf3d278fdc4a56fea5f0563eebbfa36bcffd00ba41d43807d3a10503c8"
+    },
+    {
+      "module": "StationaryHarmonicMaps.Frozen.SmallEnergyRegularity",
+      "theorem": "StationaryHarmonicMaps.stationary_small_energy_regularity",
+      "type_sha256": "ce8019d28de50e9789e37522dba66cbecf58c32426b1e5057196f322a5f28c9c"
+    },
+    {
+      "module": "StationaryHarmonicMaps.Frozen.SmallEnergySmoothRegularity",
+      "theorem": "StationaryHarmonicMaps.stationary_small_energy_smooth_regularity",
+      "type_sha256": "3f1df7a89e8cdc5b7a8747ef9ec6438b9fa86a2da48ae3f651843a43b29cd22f"
+    }
+  ]
+}

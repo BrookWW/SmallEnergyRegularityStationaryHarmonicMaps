@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "Please cite this repository when using its formalization or mathematical proof."
+type: software
+title: "Small-energy regularity for stationary harmonic maps in Lean 4"
+authors:
+  - name: "SmallEnergyRegularityStationaryHarmonicMaps contributors"
+repository-code: "https://github.com/BrookWW/SmallEnergyRegularityStationaryHarmonicMaps"
+url: "https://github.com/BrookWW/SmallEnergyRegularityStationaryHarmonicMaps"
+abstract: >-
+  A Lean 4 formalization of quantitative interior small-energy regularity for
+  stationary weakly harmonic maps into compact embedded C2 targets in every
+  source dimension at least two, with the smooth-target corollary for the same
+  representative. The package includes the geometric and analytic proof
+  dependencies and an independent mathematical exposition.
+keywords:
+  - Lean
+  - formal verification
+  - harmonic maps
+  - stationary harmonic maps
+  - small-energy regularity
