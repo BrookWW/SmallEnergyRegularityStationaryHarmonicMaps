@@ -62,6 +62,32 @@ theorem lowerSemicontinuous_measurable_smooth_grand_kernel {n : ℕ} (f : Domain
   exact ⟨hLS,hLS.measurable⟩
 
 /-- The original rough div--curl data produce the same literal measurable grand maximal field with a genuine finite bilinear L1 estimate. -/
+theorem exists_divcurl_measurable_grand_kernel_bound_explicit (n : ℕ) (hn : 2≤n) :
+    ∃ K : ℝ,0<K ∧ K=(divcurlGrandKernelMajorant n:ℝ) ∧ ∀ (q : ℕ) (Z : Domain n → Gradient n q),
+      (∀ i,MemLp (fun x=>Z x i) 2 volume) →
+      HolderToCK.WeakPoissonOn (⟨univ,isOpen_univ⟩ : OpenDomain n) Z (fun _=>(0 : Ambient q)) →
+      ∀ (w : Domain n → Ambient q) (Dw : Domain n → Gradient n q),
+        MemW12Loc (⟨univ,isOpen_univ⟩ : OpenDomain n) w Dw →
+        (∀ i,MemLp (fun x=>Dw x i) 2 volume) →
+        let J := fun a => ⨆ r : PositiveRadius, ⨆ κ : Domain n → ℝ,
+          ⨆ (_ : ContDiff ℝ ∞ κ), ⨆ (_ : HasCompactSupport κ),
+          ⨆ (_ : tsupport κ⊆Metric.ball a r.val),
+          ⨆ (_ : ∀ x∈Metric.ball a r.val,∀ i : Fin n,
+            |fderiv ℝ κ x (EuclideanSpace.single i 1)|≤r.val^(-(n : ℝ)-1)),
+            ENNReal.ofReal |∫ x,κ x*∑ i : Fin n,inner ℝ (Z x i) (Dw x i)|
+        LowerSemicontinuous J ∧ Measurable J ∧
+          (∫⁻ a,J a)≤ENNReal.ofReal K *
+            (ENNReal.ofReal (∫ x,hsNormSq (Z x)))^((1 : ℝ)/2) *
+            (ENNReal.ofReal (∫ x,hsNormSq (Dw x)))^((1 : ℝ)/2) ∧
+          (∫⁻ a,J a)<(∞ : ℝ≥0∞) ∧ (∀ᵐ a ∂volume,J a≠(∞ : ℝ≥0∞)) := by
+  obtain ⟨K,hK,hKEq,H⟩ := exists_divcurl_grand_kernel_lintegral_bound_explicit n hn
+  refine ⟨K,hK,hKEq,?_⟩
+  intro q Z hZ hdiv w Dw hw hDw J
+  obtain ⟨hBound,hI⟩ := H q Z hZ hdiv w Dw hw hDw
+  obtain ⟨hLS,hMeas⟩ := lowerSemicontinuous_measurable_smooth_grand_kernel
+    (fun x=>∑ i : Fin n,inner ℝ (Z x i) (Dw x i))
+  exact ⟨hLS,hMeas,hBound,hI,(ae_lt_top' hMeas.aemeasurable hI.ne).mono (fun _ hx=>hx.ne)⟩
+
 theorem exists_divcurl_measurable_grand_kernel_bound (n : ℕ) (hn : 2≤n) :
     ∃ K : ℝ,0<K ∧ ∀ (q : ℕ) (Z : Domain n → Gradient n q),
       (∀ i,MemLp (fun x=>Z x i) 2 volume) →
@@ -80,13 +106,8 @@ theorem exists_divcurl_measurable_grand_kernel_bound (n : ℕ) (hn : 2≤n) :
             (ENNReal.ofReal (∫ x,hsNormSq (Z x)))^((1 : ℝ)/2) *
             (ENNReal.ofReal (∫ x,hsNormSq (Dw x)))^((1 : ℝ)/2) ∧
           (∫⁻ a,J a)<(∞ : ℝ≥0∞) ∧ (∀ᵐ a ∂volume,J a≠(∞ : ℝ≥0∞)) := by
-  obtain ⟨K,hK,H⟩ := exists_divcurl_grand_kernel_lintegral_bound n hn
-  refine ⟨K,hK,?_⟩
-  intro q Z hZ hdiv w Dw hw hDw J
-  obtain ⟨hBound,hI⟩ := H q Z hZ hdiv w Dw hw hDw
-  obtain ⟨hLS,hMeas⟩ := lowerSemicontinuous_measurable_smooth_grand_kernel
-    (fun x=>∑ i : Fin n,inner ℝ (Z x i) (Dw x i))
-  exact ⟨hLS,hMeas,hBound,hI,(ae_lt_top' hMeas.aemeasurable hI.ne).mono (fun _ hx=>hx.ne)⟩
+  obtain ⟨K,hK,_hKEq,H⟩ := exists_divcurl_measurable_grand_kernel_bound_explicit n hn
+  exact ⟨K,hK,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

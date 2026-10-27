@@ -74,9 +74,9 @@ private theorem hs_power_integrable_of_native {n q : ℕ} (a : Domain n) (R : �
   simpa only [heq,ballDomain,IntegrableOn] using H
 
 /-- Every original native W0 graph on a positive-radius ball has a genuine native conjugate test with exact original power pairing and dimension-only full-HS moment control. -/
-theorem exists_native_dirichlet_dual_test_ball (n : ℕ) (hn : 2≤n)
+theorem exists_native_dirichlet_dual_test_ball_explicit (n : ℕ) (hn : 2≤n)
     (p : ℝ) (hpOne : 1<p) (hpTwo : p<2) :
-    ∃C : ℝ,0<C ∧ ∀(q : ℕ) (a : Domain n) (R : ℝ),0<R →
+    ∃C : ℝ,0<C ∧ C = dirichletLpMomentConstant n (p/(p-1)) ∧ ∀(q : ℕ) (a : Domain n) (R : ℝ),0<R →
       let μ := volume.restrict (ball a R)
       let r := p/(p-1)
       ∀(u : Domain n → Ambient q) (Du : Domain n → Gradient n q),
@@ -90,8 +90,8 @@ theorem exists_native_dirichlet_dual_test_ball (n : ℕ) (hn : 2≤n)
           Integrable (fun x=>(hsNormSq (Dφ x))^(r/2)) μ ∧
           (∫x,∑i : Fin n,inner ℝ (Du x i) (Dφ x i) ∂μ)=∫x,(hsNormSq (Du x))^(p/2) ∂μ ∧
           (∫x,(hsNormSq (Dφ x))^(r/2) ∂μ)≤C*(∫x,(hsNormSq (Du x))^(p/2) ∂μ) := by
-  obtain ⟨C,hC,Hunit⟩ := exists_native_dirichlet_dual_test_unitBall n hn p hpOne hpTwo
-  refine ⟨C,hC,?_⟩
+  obtain ⟨C,hC,hFormula,Hunit⟩ := exists_native_dirichlet_dual_test_unitBall_explicit n hn p hpOne hpTwo
+  refine ⟨C,hC,hFormula,?_⟩
   intro q a R hR μ r u Du hu
   let U := fun x=>u (a+R • x)
   let DU := fun x i=>R • Du (a+R • x) i
@@ -184,6 +184,25 @@ theorem exists_native_dirichlet_dual_test_ball (n : ℕ) (hn : 2≤n)
       _ ≤ R^n*α^r*(C*((R^n)⁻¹*R^p*(∫x,(hsNormSq (Du x))^(p/2) ∂μ))) := H
       _ = (R^n*α^r*((R^n)⁻¹*R^p))*(C*(∫x,(hsNormSq (Du x))^(p/2) ∂μ)) := by ring
       _ = _ := by rw [hCancel,one_mul]
+
+theorem exists_native_dirichlet_dual_test_ball (n : ℕ) (hn : 2≤n)
+    (p : ℝ) (hpOne : 1<p) (hpTwo : p<2) :
+    ∃C : ℝ,0<C ∧ ∀(q : ℕ) (a : Domain n) (R : ℝ),0<R →
+      let μ := volume.restrict (ball a R)
+      let r := p/(p-1)
+      ∀(u : Domain n → Ambient q) (Du : Domain n → Gradient n q),
+        HasZeroBoundaryValues (ballDomain a R) u Du →
+        ∃(φ : Domain n → Ambient q) (Dφ : Domain n → Gradient n q),
+          HasZeroBoundaryValues (ballDomain a R) φ Dφ ∧
+          MemLp (fun x=>WithLp.toLp 2 (fun k : Fin (n*q)=>
+            Dφ x (finProdFinEquiv.symm k).1 (finProdFinEquiv.symm k).2)) (ENNReal.ofReal r) μ ∧
+          Integrable (fun x=>∑i : Fin n,inner ℝ (Du x i) (Dφ x i)) μ ∧
+          Integrable (fun x=>(hsNormSq (Du x))^(p/2)) μ ∧
+          Integrable (fun x=>(hsNormSq (Dφ x))^(r/2)) μ ∧
+          (∫x,∑i : Fin n,inner ℝ (Du x i) (Dφ x i) ∂μ)=∫x,(hsNormSq (Du x))^(p/2) ∂μ ∧
+          (∫x,(hsNormSq (Dφ x))^(r/2) ∂μ)≤C*(∫x,(hsNormSq (Du x))^(p/2) ∂μ) := by
+  obtain ⟨C,hC,_hFormula,H⟩ := exists_native_dirichlet_dual_test_ball_explicit n hn p hpOne hpTwo
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

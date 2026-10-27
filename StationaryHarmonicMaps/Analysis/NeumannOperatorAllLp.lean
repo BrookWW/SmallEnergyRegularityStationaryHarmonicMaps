@@ -21,10 +21,34 @@ open scoped Topology ENNReal
 
 namespace StationaryHarmonicMaps.Analysis
 
+@[expose] noncomputable def effectiveNeumannLpMomentConstant (n : ℕ) (p : ℝ) : ℝ :=
+  if p<2 then (effectiveNeumannHighMomentConstant n (p/(p-1)))^(p-1)
+  else if p=2 then 1 else effectiveNeumannHighMomentConstant n p
+
+theorem effectiveNeumannLpMomentConstant_pos (n : ℕ) (p : ℝ) (hp : 1<p) :
+    0 < effectiveNeumannLpMomentConstant n p := by
+  unfold effectiveNeumannLpMomentConstant
+  split_ifs with hpTwo hpEq
+  · have hr : 2<p/(p-1) := (lt_div_iff₀ (by linarith : 0<p-1)).mpr (by linarith)
+    exact Real.rpow_pos_of_pos (effectiveNeumannHighMomentConstant_pos n _ hr) _
+  · norm_num
+  · exact effectiveNeumannHighMomentConstant_pos n p (lt_of_le_of_ne (not_lt.mp hpTwo) (Ne.symm hpEq))
+
+theorem effectiveNeumannLpMomentConstant_dimensional (n : ℕ) (hn : 2≤n) :
+    effectiveNeumannLpMomentConstant n ((2*n+1 : ℕ) : ℝ) =
+      (effectiveNeumannDimensionalMomentConstant n : ℝ) := by
+  have hnR : (2 : ℝ)≤n := by exact_mod_cast hn
+  have hr : (2 : ℝ)<((2*n+1 : ℕ) : ℝ) := by
+    simp only [Nat.cast_add,Nat.cast_mul,Nat.cast_ofNat,Nat.cast_one]
+    linarith
+  rw [effectiveNeumannLpMomentConstant,if_neg (not_lt.mpr hr.le),if_neg hr.ne']
+  exact effectiveNeumannHighMomentConstant_dimensional n hn
+
 /-- One actual Neumann projection and its original native response have every
 Lp moment estimate, with dimension/exponent constants uniform in the target. -/
-theorem exists_same_neumann_operator_all_lp_unitBall (n : ℕ) (hn : 2≤n) :
-    ∃ Cp : {p : ℝ //1<p} → ℝ,(∀p,0<Cp p) ∧ ∀q : ℕ,
+theorem exists_same_neumann_operator_all_lp_unitBall_explicit (n : ℕ) (hn : 2≤n) :
+    ∃ Cp : {p : ℝ //1<p} → ℝ,(∀p,0<Cp p) ∧
+      Cp = (fun p => effectiveNeumannLpMomentConstant n p.val) ∧ ∀q : ℕ,
       let μ := volume.restrict (ball (0:Domain n) 1)
       let D := fun (P : Domain n → Ambient (n*q)) x i=>WithLp.toLp 2
         (fun j : Fin q=>P x (finProdFinEquiv (i,j)))
@@ -45,7 +69,7 @@ theorem exists_same_neumann_operator_all_lp_unitBall (n : ℕ) (hn : 2≤n) :
             MemLp (fun x=>(T W) x) (ENNReal.ofReal p.val) μ ∧
             (∫x,‖(T W) x‖^p.val ∂μ)≤Cp p*(∫x,‖W x‖^p.val ∂μ) := by
   classical
-  obtain ⟨Ch,hCh,HT⟩ := exists_neumann_class_all_high_moments_unitBall n hn
+  obtain ⟨Ch,hCh,hChEq,HT⟩ := exists_neumann_class_all_high_moments_unitBall_explicit n hn
   have hConj (p : {p : ℝ //1<p}) (hp : p.val<2) : 2<p.val/(p.val-1) := by
     apply (lt_div_iff₀ (by linarith [p.property] : 0<p.val-1)).mpr
     linarith only [hp]
@@ -58,7 +82,10 @@ theorem exists_same_neumann_operator_all_lp_unitBall (n : ℕ) (hn : 2≤n) :
     · exact Real.rpow_pos_of_pos (hCh _) _
     · norm_num
     · exact hCh _
-  refine ⟨Cp,hCp,?_⟩
+  refine ⟨Cp,hCp,?_,?_⟩
+  · funext p
+    dsimp only [Cp,effectiveNeumannLpMomentConstant]
+    split_ifs <;> simp only [hChEq]
   intro q μ D
   letI : IsFiniteMeasure μ := isFiniteMeasure_restrict.mpr measure_ball_ne_top
   obtain ⟨T,hT,hSelf,hIdem,Hresponse⟩ := HT q
@@ -95,6 +122,30 @@ theorem exists_same_neumann_operator_all_lp_unitBall (n : ℕ) (hn : 2≤n) :
       · simpa [Cp,hpLow,hpEq,Real.rpow_two] using hTwo W
     · have hpHigh : 2<p.val := lt_of_le_of_ne (not_lt.mp hpLow) (Ne.symm hpEq)
       simpa only [Cp,dif_neg hpLow,dif_neg hpEq] using hHigh ⟨p.val,hpHigh⟩ W hW
+
+theorem exists_same_neumann_operator_all_lp_unitBall (n : ℕ) (hn : 2≤n) :
+    ∃ Cp : {p : ℝ //1<p} → ℝ,(∀p,0<Cp p) ∧ ∀q : ℕ,
+      let μ := volume.restrict (ball (0:Domain n) 1)
+      let D := fun (P : Domain n → Ambient (n*q)) x i=>WithLp.toLp 2
+        (fun j : Fin q=>P x (finProdFinEquiv (i,j)))
+      ∃T : Lp (Ambient (n*q)) 2 μ →L[ℝ] Lp (Ambient (n*q)) 2 μ,
+        ‖T‖≤1 ∧ IsSelfAdjoint T ∧ (∀V,T (T V)=T V) ∧
+        ∀W : Lp (Ambient (n*q)) 2 μ,∃u : Domain n → Ambient q,
+          MemW12 (ballDomain (0:Domain n) 1) u (D (T W)) ∧
+          (∀ (ψ : Domain n → Ambient q) (Dψ : Domain n → Gradient n q),
+            MemW12 (ballDomain (0 : Domain n) 1) ψ Dψ →
+            Integrable (fun x=>∑i : Fin n,inner ℝ (D (T W) x i) (Dψ x i)) μ ∧
+            Integrable (fun x=>∑i : Fin n,inner ℝ (D W x i) (Dψ x i)) μ ∧
+            (∫x,∑i : Fin n,inner ℝ (D (T W) x i) (Dψ x i) ∂μ)=
+              ∫x,∑i : Fin n,inner ℝ (D W x i) (Dψ x i) ∂μ) ∧
+          HolderToCK.WeakPoissonOn (ballDomain (0:Domain n) 1)
+            (fun x i=>D (T W) x i-D W x i) (fun _=>0) ∧
+          (∫x,hsNormSq (D (T W) x) ∂μ)≤∫x,hsNormSq (D W x) ∂μ ∧
+          ∀p : {p : ℝ //1<p},MemLp (fun x=>W x) (ENNReal.ofReal p.val) μ →
+            MemLp (fun x=>(T W) x) (ENNReal.ofReal p.val) μ ∧
+            (∫x,‖(T W) x‖^p.val ∂μ)≤Cp p*(∫x,‖W x‖^p.val ∂μ) := by
+  obtain ⟨C,hC,_hCEq,H⟩ := exists_same_neumann_operator_all_lp_unitBall_explicit n hn
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

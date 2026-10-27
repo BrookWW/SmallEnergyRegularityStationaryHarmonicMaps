@@ -25,8 +25,12 @@ open scoped ContDiff Topology ENNReal
 namespace StationaryHarmonicMaps.Analysis
 
 /-- Original integrable scalar data and their actual finite literal grand maximal integral produce a genuine normalized atomic series with original AE reconstruction and summable original coefficients. -/
-theorem exists_normalized_atoms_of_finite_grand_kernel (n : ℕ) (hn : 0<n) :
-    ∃ C : ℝ,0<C ∧ ∀ (f : Domain n → ℝ),Integrable f volume →
+
+@[expose] noncomputable def normalizedGrandAtomConstant (n : ℕ) : ℝ :=
+  correctedGrandPieceConstant n * (2 * (70 : ℝ)^n)
+
+theorem exists_normalized_atoms_of_finite_grand_kernel_explicit (n : ℕ) (hn : 0<n) :
+    ∃ C : ℝ,0<C ∧ C = normalizedGrandAtomConstant n ∧ ∀ (f : Domain n → ℝ),Integrable f volume →
       let J := fun a => ⨆ s : PositiveRadius, ⨆ κ : Domain n → ℝ,
         ⨆ (_ : ContDiff ℝ ∞ κ), ⨆ (_ : HasCompactSupport κ),
         ⨆ (_ : tsupport κ⊆Metric.ball a s.val),
@@ -46,10 +50,12 @@ theorem exists_normalized_atoms_of_finite_grand_kernel (n : ℕ) (hn : 0<n) :
             (∀ᵐ x ∂volume,Summable (fun p=>|w p*a p x|)) ∧
             f=ᵐ[volume](fun x=>∑' p,w p*a p x) := by
   classical
-  obtain ⟨K,hK,Hpieces⟩ := exists_corrected_grand_dyadic_pieces n hn
+  obtain ⟨K,hK,hKFormula,Hpieces⟩ := exists_corrected_grand_dyadic_pieces_explicit n hn
   let C := K*(2*(70 : ℝ)^n)
   have hC : 0<C := by dsimp only [C];positivity
-  refine ⟨C,hC,?_⟩
+  refine ⟨C,hC,?_,?_⟩
+  · dsimp only [C, normalizedGrandAtomConstant]
+    rw [hKFormula]
   intro f hf J hJ S r
   obtain ⟨U,hU,θ,hPieces,_hFinite,hWindows,hApprox,hCost⟩ := Hpieces f hf hJ
   letI (j : ℤ) : Countable (U j) := (hU j).1.to_subtype
@@ -132,6 +138,29 @@ theorem exists_normalized_atoms_of_finite_grand_kernel (n : ℕ) (hn : 0<n) :
     simpa only [hAtomEq] using hx.1
   · filter_upwards [hRepresentation] with x hx
     exact hx.trans (tsum_congr fun p=>(hAtomEq p x).symm)
+
+theorem exists_normalized_atoms_of_finite_grand_kernel (n : ℕ) (hn : 0<n) :
+    ∃ C : ℝ,0<C ∧ ∀ (f : Domain n → ℝ),Integrable f volume →
+      let J := fun a => ⨆ s : PositiveRadius, ⨆ κ : Domain n → ℝ,
+        ⨆ (_ : ContDiff ℝ ∞ κ), ⨆ (_ : HasCompactSupport κ),
+        ⨆ (_ : tsupport κ⊆Metric.ball a s.val),
+        ⨆ (_ : ∀ x∈Metric.ball a s.val,∀ i : Fin n,
+          |fderiv ℝ κ x (EuclideanSpace.single i 1)|≤s.val^(-(n : ℝ)-1)),
+          ENNReal.ofReal |∫ x,κ x*f x|
+      (∫⁻ x,J x)<(∞ : ℝ≥0∞) →
+        let S := fun j : ℤ=>{x | ENNReal.ofReal ((2 : ℝ)^j)<J x}
+        let r := fun j a=>Metric.infDist a (S j)ᶜ/20
+        ∃ U : ℤ → Set (Domain n),(∀ j,(U j).Countable ∧ ∀ a : U j,0<r j a.val) ∧
+          ∃ (w : (Σ j,U j) → ℝ) (a : (Σ j,U j) → Domain n → ℝ),
+            (∀ p,0<w p ∧ Integrable (a p) volume ∧ (∫ x,a p x)=0 ∧
+              Function.support (a p)⊆Metric.ball p.2.val (70*r p.1 p.2.val) ∧
+              (∀ᵐ x ∂volume,|a p x|≤(volume.real (Metric.ball p.2.val (70*r p.1 p.2.val)))⁻¹) ∧
+              (∫ x,|a p x|)≤1) ∧
+            Summable w ∧ (∑' p,w p)≤C*(∫⁻ x,J x).toReal ∧
+            (∀ᵐ x ∂volume,Summable (fun p=>|w p*a p x|)) ∧
+            f=ᵐ[volume](fun x=>∑' p,w p*a p x) := by
+  obtain ⟨C,hC,_hFormula,H⟩ := exists_normalized_atoms_of_finite_grand_kernel_explicit n hn
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

@@ -3,6 +3,7 @@ module
 public import StationaryHarmonicMaps.Analysis.GrandKernelLocalization
 public import StationaryHarmonicMaps.Analysis.ScaledBallCutoff
 public import HolderToCK.Foundation.BallVolume
+public import StationaryHarmonicMaps.Analysis.EffectiveEuclideanVolume
 
 /-!
 # Actual cancellation pieces from a nearby grand maximal good point
@@ -37,8 +38,22 @@ theorem integrable_zero_mean_cutoff_piece {X : Type*} [MeasurableSpace X] (μ : 
   ring
 
 /-- Original integrable data and one actual nearby grand-maximal good point produce a scaled cutoff, its controlled original average and its true zero-mean local piece. -/
-theorem exists_grand_good_point_cutoff_piece (n : ℕ) :
-    ∃ D : ℝ,0<D ∧ ∀ (f : Domain n → ℝ),Integrable f volume →
+
+@[expose] noncomputable def grandGoodPointCutoffConstant (n : ℕ) : ℝ :=
+  ((2 : ℝ)^22 * (10 : ℝ)^(n+1)) / volume.real (Metric.ball (0 : Domain n) 1)
+
+@[expose] noncomputable def grandGoodPointCutoffMajorant (n : ℕ) : ℝ :=
+  (2 : ℝ)^22 * (10 : ℝ)^(n+1) * ((n : ℝ)+1)^n
+
+theorem grandGoodPointCutoffConstant_le (n : ℕ) :
+    grandGoodPointCutoffConstant n ≤ grandGoodPointCutoffMajorant n := by
+  have hInv := euclidean_unit_ball_inverse_volume_le n
+  have hA : 0 ≤ (2 : ℝ)^22 * (10 : ℝ)^(n+1) := by positivity
+  simpa only [grandGoodPointCutoffConstant, grandGoodPointCutoffMajorant, div_eq_mul_inv] using
+    mul_le_mul_of_nonneg_left hInv hA
+
+theorem exists_grand_good_point_cutoff_piece_explicit (n : ℕ) :
+    ∃ D : ℝ,0<D ∧ D = grandGoodPointCutoffConstant n ∧ ∀ (f : Domain n → ℝ),Integrable f volume →
       let J := fun a => ⨆ r : PositiveRadius, ⨆ κ : Domain n → ℝ,
         ⨆ (_ : ContDiff ℝ ∞ κ), ⨆ (_ : HasCompactSupport κ),
         ⨆ (_ : tsupport κ⊆Metric.ball a r.val),
@@ -53,13 +68,15 @@ theorem exists_grand_good_point_cutoff_piece (n : ℕ) :
           |c|≤D*L ∧ Integrable (fun x=>η x*(f x-c)) volume ∧
             (∫ x,η x*(f x-c))=0 ∧
             Function.support (fun x=>η x*(f x-c))⊆Metric.ball a (2*r) := by
-  obtain ⟨C,hC,Hcut⟩ := exists_scaled_ball_cutoff n
+  obtain ⟨C,hC,hCFormula,Hcut⟩ := exists_scaled_ball_cutoff_explicit n
   let V : ℝ := volume.real (Metric.ball (0 : Domain n) 1)
   have hV : 0<V := ENNReal.toReal_pos
     (Metric.measure_ball_pos volume (0 : Domain n) (by norm_num : (0 : ℝ)<1)).ne' measure_ball_ne_top
   let D : ℝ := (C*(10 : ℝ)^(n+1))/V
   have hD : 0<D := div_pos (mul_pos hC (pow_pos (by norm_num) _)) hV
-  refine ⟨D,hD,?_⟩
+  refine ⟨D,hD,?_,?_⟩
+  · dsimp only [D, V, grandGoodPointCutoffConstant]
+    rw [hCFormula]
   intro f hf J a y r L hr hL hya hGood
   obtain ⟨η,hη,hcη,hsη,hOne,hηBound,hDη⟩ := Hcut a r hr
   have hηI : Integrable η volume := hη.continuous.integrable_of_hasCompactSupport hcη
@@ -113,6 +130,54 @@ theorem exists_grand_good_point_cutoff_piece (n : ℕ) :
   apply subset_tsupport η
   intro hηx
   exact hx (by dsimp only;rw [hηx,zero_mul])
+
+theorem exists_grand_good_point_cutoff_piece_majorant (n : ℕ) :
+    ∃ D : ℝ,0<D ∧ D = grandGoodPointCutoffMajorant n ∧ ∀ (f : Domain n → ℝ),Integrable f volume →
+      let J := fun a => ⨆ r : PositiveRadius, ⨆ κ : Domain n → ℝ,
+        ⨆ (_ : ContDiff ℝ ∞ κ), ⨆ (_ : HasCompactSupport κ),
+        ⨆ (_ : tsupport κ⊆Metric.ball a r.val),
+        ⨆ (_ : ∀ x∈Metric.ball a r.val,∀ i : Fin n,
+          |fderiv ℝ κ x (EuclideanSpace.single i 1)|≤r.val^(-(n : ℝ)-1)),
+          ENNReal.ofReal |∫ x,κ x*f x|
+      ∀ (a y : Domain n) (r L : ℝ),0<r → 0≤L → dist y a≤8*r → J y≤ENNReal.ofReal L →
+        ∃ η : Domain n → ℝ,ContDiff ℝ ∞ η ∧ HasCompactSupport η ∧
+          tsupport η⊆Metric.ball a (2*r) ∧
+          (∀ x∈Metric.closedBall a r,η x=1) ∧ (∀ x,0≤η x ∧ η x≤1) ∧
+          let c := (∫ x,η x*f x)/(∫ x,η x)
+          |c|≤D*L ∧ Integrable (fun x=>η x*(f x-c)) volume ∧
+            (∫ x,η x*(f x-c))=0 ∧
+            Function.support (fun x=>η x*(f x-c))⊆Metric.ball a (2*r) := by
+  obtain ⟨D, hD, hFormula, H⟩ := exists_grand_good_point_cutoff_piece_explicit n
+  refine ⟨grandGoodPointCutoffMajorant n, ?_, rfl, ?_⟩
+  · dsimp only [grandGoodPointCutoffMajorant]
+    positivity
+  intro f hf J a y r L hr hL hya hGood
+  obtain ⟨η, hη, hcη, hsη, hOne, hBound, hAverage, hI, hZero, hSupp⟩ :=
+    H f hf a y r L hr hL hya hGood
+  have hDmajor : D ≤ grandGoodPointCutoffMajorant n := by
+    rw [hFormula]
+    exact grandGoodPointCutoffConstant_le n
+  exact ⟨η, hη, hcη, hsη, hOne, hBound,
+    hAverage.trans (mul_le_mul_of_nonneg_right hDmajor hL), hI, hZero, hSupp⟩
+
+theorem exists_grand_good_point_cutoff_piece (n : ℕ) :
+    ∃ D : ℝ,0<D ∧ ∀ (f : Domain n → ℝ),Integrable f volume →
+      let J := fun a => ⨆ r : PositiveRadius, ⨆ κ : Domain n → ℝ,
+        ⨆ (_ : ContDiff ℝ ∞ κ), ⨆ (_ : HasCompactSupport κ),
+        ⨆ (_ : tsupport κ⊆Metric.ball a r.val),
+        ⨆ (_ : ∀ x∈Metric.ball a r.val,∀ i : Fin n,
+          |fderiv ℝ κ x (EuclideanSpace.single i 1)|≤r.val^(-(n : ℝ)-1)),
+          ENNReal.ofReal |∫ x,κ x*f x|
+      ∀ (a y : Domain n) (r L : ℝ),0<r → 0≤L → dist y a≤8*r → J y≤ENNReal.ofReal L →
+        ∃ η : Domain n → ℝ,ContDiff ℝ ∞ η ∧ HasCompactSupport η ∧
+          tsupport η⊆Metric.ball a (2*r) ∧
+          (∀ x∈Metric.closedBall a r,η x=1) ∧ (∀ x,0≤η x ∧ η x≤1) ∧
+          let c := (∫ x,η x*f x)/(∫ x,η x)
+          |c|≤D*L ∧ Integrable (fun x=>η x*(f x-c)) volume ∧
+            (∫ x,η x*(f x-c))=0 ∧
+            Function.support (fun x=>η x*(f x-c))⊆Metric.ball a (2*r) := by
+  obtain ⟨D, hD, _hFormula, H⟩ := exists_grand_good_point_cutoff_piece_explicit n
+  exact ⟨D, hD, H⟩
 
 end StationaryHarmonicMaps.Analysis
 

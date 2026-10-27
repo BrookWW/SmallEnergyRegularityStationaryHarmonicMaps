@@ -242,6 +242,169 @@ theorem exists_compact_target_compensated_ball_representative
     exact hW.unique hw
 
 
+theorem exists_compact_target_compensated_ball_representative_effective
+    (n : ℕ) (hn : 2≤n) (q : ℕ)
+    (E : (Ambient q →L[ℝ] Ambient q) →L[ℝ] Ambient (q*q))
+    (R : Ambient (q*q) →L[ℝ] (Ambient q →L[ℝ] Ambient q))
+    (hRE : ∀T,R (E T)=T) (hER : ∀z,E (R z)=z)
+    (hE : ∀T : Ambient q →L[ℝ] Ambient q,‖E T‖^2=∑j : Fin q,‖T (EuclideanSpace.single j 1)‖^2)
+    :
+    ∃ε C : ℝ,0<ε ∧ ε≤1 ∧ 0<C ∧
+      ε=(effectiveGivenFrameSmallness n q : ℝ) ∧
+      C=(effectiveGivenFrameHolderConstant n q : ℝ) ∧ ∀(N : CompactC2EmbeddedTarget q)
+      (u : Domain n → Ambient q) (Du : Domain n → Gradient n q) (η : ℝ)
+      (a : Domain n) (ρ : ℝ),0<ρ →
+      MemW12 (ballDomain a ρ) u Du →
+      (∀ᵐx∂volume.restrict (ball a ρ),u x∈N.carrierSet) → 0≤η → η≤ε →
+      criticalGradientMorreySquare Du (ball a ρ)≤ENNReal.ofReal (η^2) →
+      ∀(P : Domain n → Ambient (q*q)) (DP : Domain n → Gradient n (q*q)),
+        MemW12 (ballDomain a ρ) P DP →
+        (∀ᵐx∂volume.restrict (ball a ρ),star (R (P x))*R (P x)=1) →
+        criticalGradientMorreySquare DP (ball a ρ)≤ENNReal.ofReal (η^2) →
+        ∀Ω : Domain n → Fin n → (Ambient q →L[ℝ] Ambient q),
+          (∀i,MemLp (fun x=>Ω x i) 2 (volume.restrict (ball a ρ))) →
+          HolderToCK.WeakPoissonOn (ballDomain a ρ) Du (fun x=>-(∑i : Fin n,Ω x i (Du x i))) →
+          let Z := fun x i=>star (R (P x))*R (DP x i)+star (R (P x))*Ω x i*R (P x)
+          HolderToCK.WeakPoissonOn (ballDomain a ρ) (fun x i=>E (Z x i)) (fun _=>0) →
+          criticalGradientMorreySquare (fun x i=>E (Z x i)) (ball a ρ)≤ENNReal.ofReal (η^2) →
+            ∃w : ball a ((2/3:ℝ)*ρ) → Ambient q,
+              IsContinuousRepresentative (ballDomain a ((2/3:ℝ)*ρ)) u w ∧
+              (∀x,w x∈N.carrierSet) ∧
+              (∀x y,‖w x-w y‖≤C*η*ρ^(-(1/2 : ℝ))*(dist (x:Domain n) (y:Domain n))^(1/2 : ℝ)) ∧
+              ∀W : ball a ((2/3:ℝ)*ρ) → Ambient q,
+                IsContinuousRepresentative (ballDomain a ((2/3:ℝ)*ρ)) u W → W=w := by
+  have hnReal : (2:ℝ)≤(n:ℝ) := by exact_mod_cast hn
+  have hnPos : (0:ℝ)<(n:ℝ) := lt_of_lt_of_le (by norm_num) hnReal
+  let p : ℝ := 1+1/(2*(n:ℝ))
+  have hDen : 0<2*(n:ℝ) := mul_pos (by norm_num) hnPos
+  have hpOne : 1<p := by dsimp only [p];linarith only [div_pos zero_lt_one hDen]
+  have hpTwo : p<2 := by
+    have hInv : 1/(2*(n:ℝ))<1 := (div_lt_iff₀ hDen).mpr (by linarith only [hnReal])
+    dsimp only [p]
+    linarith only [hInv]
+  have hValue : p/(p-1)=2*(n:ℝ)+1 := by
+    dsimp only [p]
+    field_simp
+    ring
+  have hpConj : (n:ℝ)<p/(p-1) := by rw [hValue];linarith only [hnReal]
+  have hConjugate : p/(p-1)=((2*n+1 : ℕ) : ℝ) := by
+    simpa only [Nat.cast_add,Nat.cast_mul,Nat.cast_ofNat,Nat.cast_one] using hValue
+  obtain ⟨ε,C,hε,hεOne,hC,hεF,hCF,H⟩ := exists_compact_target_compensated_representative_effective
+    n hn p hpOne hpTwo hpConj q E R hRE hER hE hConjugate
+  refine ⟨ε,C,hε,hεOne,hC,hεF,hCF,?_⟩
+  intro N u Du η a ρ hρ hu hTarget hη hηle hCritical P DP hP hOrth hDPCritical Ω hΩ hEq Z hDiv hZCritical
+  let U := fun y=>u (a+ρ • y)
+  let DU := fun y i=>ρ • Du (a+ρ • y) i
+  let S := fun y=>P (a+ρ • y)
+  let DS := fun y i=>ρ • DP (a+ρ • y) i
+  let A := fun y i=>ρ • Ω (a+ρ • y) i
+  let ZU := fun y i=>star (R (S y))*R (DS y i)+star (R (S y))*A y i*R (S y)
+  have hU : MemW12 (ballDomain (0:Domain n) 1) U DU := by
+    simpa only [sub_zero,div_self hρ.ne'] using hu.affineBall_pullback (0:Domain n) hρ
+  have hS : MemW12 (ballDomain (0:Domain n) 1) S DS := by
+    simpa only [sub_zero,div_self hρ.ne'] using hP.affineBall_pullback (0:Domain n) hρ
+  have hUN : ∀ᵐy∂volume.restrict (ball (0:Domain n) 1),U y∈N.carrierSet := by
+    simpa only [sub_zero,div_self hρ.ne'] using ae_affineBall a (0:Domain n) hρ ρ hTarget
+  have hSOrth : ∀ᵐy∂volume.restrict (ball (0:Domain n) 1),star (R (S y))*R (S y)=1 := by
+    simpa only [sub_zero,div_self hρ.ne'] using ae_affineBall a (0:Domain n) hρ ρ hOrth
+  have hDUCritical : criticalGradientMorreySquare DU (ball (0:Domain n) 1)≤ENNReal.ofReal (η^2) := by
+    rw [criticalGradientMorreySquare_unitBall a ⟨ρ,hρ⟩ Du]
+    exact hCritical
+  have hDSCritical : criticalGradientMorreySquare DS (ball (0:Domain n) 1)≤ENNReal.ofReal (η^2) := by
+    rw [criticalGradientMorreySquare_unitBall a ⟨ρ,hρ⟩ DP]
+    exact hDPCritical
+  have hAL2 (i : Fin n) : MemLp (fun y=>A y i) 2 (volume.restrict (ball (0:Domain n) 1)) := by
+    have hEncoded := E.lipschitz.comp_memLp (map_zero E) (hΩ i)
+    have hScaled := (memLp_affineBall a (0:Domain n) hρ ρ hEncoded).const_smul ρ
+    have H := R.lipschitz.comp_memLp (map_zero R) hScaled
+    have H0 : MemLp (fun y=>A y i) 2 (volume.restrict (ball (0:Domain n) (ρ/ρ))) :=
+      MemLp.ae_eq (Eventually.of_forall fun y=>by
+        change R (ρ • E (Ω (a+ρ • (y-0)) i))=ρ • Ω (a+ρ • y) i
+        rw [sub_zero,map_smul,hRE]) H
+    simpa only [div_self hρ.ne'] using H0
+  have hForcingI : IntegrableOn (fun x=>-(∑i : Fin n,Ω x i (Du x i))) (ball a ρ) volume := by
+    apply Integrable.neg
+    apply integrable_finsetSum
+    intro i _
+    have hZi := hΩ i
+    have hFi := hu.2.2 i
+    have hm := (continuous_fst.clm_apply continuous_snd).comp_aestronglyMeasurable
+      (hZi.aestronglyMeasurable.prodMk hFi.aestronglyMeasurable)
+    have hp : MemLp (fun x=>‖Ω x i‖*‖Du x i‖) 1 (volume.restrict (ball a ρ)) :=
+      hFi.norm.mul' hZi.norm
+    apply (memLp_one_iff_integrable.mp hp).mono' hm
+    exact Eventually.of_forall fun x=>(Ω x i).le_opNorm _
+  have hUEq : HolderToCK.WeakPoissonOn (ballDomain (0:Domain n) 1) DU
+      (fun y=>-(∑i : Fin n,A y i (DU y i))) := by
+    have H := weakPoisson_affineBall_integrable hEq hForcingI (0:Domain n) hρ
+    simp only [sub_zero,div_self hρ.ne'] at H
+    exact H.congr (EventuallyEq.refl _ _)
+      (Eventually.of_forall fun y=>system_forcing_smul ρ (Ω (a+ρ • y)) (Du (a+ρ • y)))
+  have hZU (y : Domain n) (i : Fin n) : ZU y i=ρ • Z (a+ρ • y) i := by
+    ext z
+    simp only [ZU,S,DS,A,Z,map_smul,mul_apply_eq_comp,smul_apply,add_apply,smul_add]
+  have hZUEq : HolderToCK.WeakPoissonOn (ballDomain (0:Domain n) 1)
+      (fun y i=>E (ZU y i)) (fun _=>0) := by
+    have H := weakPoisson_affineBall_integrable hDiv (integrable_zero _ _ _) (0:Domain n) hρ
+    simp only [sub_zero,div_self hρ.ne',smul_zero] at H
+    exact H.congr (Eventually.of_forall fun y=>by
+        funext i
+        change ρ • E (Z (a+ρ • y) i)=E (ZU y i)
+        rw [hZU,map_smul]) (EventuallyEq.refl _ _)
+  have hZUCritical : criticalGradientMorreySquare (fun y i=>E (ZU y i)) (ball (0:Domain n) 1)≤
+      ENNReal.ofReal (η^2) := by
+    have hField : (fun y i=>E (ZU y i))=(fun y i=>ρ • E (Z (a+ρ • y) i)) := by
+      funext y i
+      rw [hZU,map_smul]
+    rw [hField,criticalGradientMorreySquare_unitBall a ⟨ρ,hρ⟩ (fun x i=>E (Z x i))]
+    exact hZCritical
+  obtain ⟨V,hV,hVN,hVH,_hVU⟩ := H N U DU η hU hUN hη hηle hDUCritical S DS hS hSOrth
+    hDSCritical A hAL2 hUEq hZUEq hZUCritical
+  have hRatio : (2/3:ℝ)/ρ⁻¹=(2/3:ℝ)*ρ := by rw [div_inv_eq_mul]
+  have hImage (x : ball a ((2/3:ℝ)*ρ)) : ρ⁻¹ • ((x:Domain n)-a)∈ball (0:Domain n) (2/3:ℝ) := by
+    have hx : (x:Domain n)∈ball a ((2/3:ℝ)/ρ⁻¹) := by rw [hRatio];exact x.property
+    have H := (affineBall_mem_ball_iff (0:Domain n) a (inv_pos.mpr hρ) (2/3:ℝ) x).mpr hx
+    simpa only [zero_add] using H
+  let i : ball a ((2/3:ℝ)*ρ) → ball (0:Domain n) (2/3:ℝ) :=
+    fun x=>⟨ρ⁻¹ • ((x:Domain n)-a),hImage x⟩
+  have hi : Continuous i := by
+    apply Continuous.subtype_mk
+    exact (continuous_subtype_val.sub continuous_const).const_smul ρ⁻¹
+  let w := fun x=>V (i x)
+  have hwCont : Continuous w := hV.1.comp hi
+  have hBackAE := ae_affineBall (0:Domain n) a (inv_pos.mpr hρ) (2/3:ℝ) hV.2
+  rw [hRatio] at hBackAE
+  have hwAE : ∀ᵐx∂volume.restrict (ball a ((2/3:ℝ)*ρ)),
+      ∀hx : x∈ball a ((2/3:ℝ)*ρ),w ⟨x,hx⟩=u x := by
+    filter_upwards [hBackAE] with x hx
+    intro hxBall
+    have hM : (0:Domain n)+ρ⁻¹ • (x-a)∈ball (0:Domain n) (2/3:ℝ) := by
+      rw [zero_add]
+      exact hImage ⟨x,hxBall⟩
+    have H := hx hM
+    have hInverse : a+ρ • (ρ⁻¹ • (x-a))=x := by
+      rw [smul_smul,mul_inv_cancel₀ hρ.ne',one_smul,add_sub_cancel]
+    let y0 : ball (0:Domain n) (2/3:ℝ) := ⟨(0:Domain n)+ρ⁻¹ • (x-a),hM⟩
+    have hy0 : i ⟨x,hxBall⟩=y0 := Subtype.ext (zero_add _).symm
+    calc
+      w ⟨x,hxBall⟩=V y0 := congrArg V hy0
+      _=U ((0:Domain n)+ρ⁻¹ • (x-a)) := H
+      _=u x := by
+        change u (a+ρ • ((0:Domain n)+ρ⁻¹ • (x-a)))=u x
+        rw [zero_add,hInverse]
+  have hw : IsContinuousRepresentative (ballDomain a ((2/3:ℝ)*ρ)) u w := ⟨hwCont,hwAE⟩
+  refine ⟨w,hw,fun x=>hVN (i x),?_,?_⟩
+  · intro x y
+    have hDist : dist (i x:Domain n) (i y:Domain n)=ρ⁻¹*dist (x:Domain n) (y:Domain n) := by
+      change dist (ρ⁻¹ • ((x:Domain n)-a)) (ρ⁻¹ • ((y:Domain n)-a))=_
+      rw [dist_eq_norm,←smul_sub,sub_sub_sub_cancel_right,norm_smul,Real.norm_of_nonneg (inv_nonneg.mpr hρ.le),dist_eq_norm]
+    exact (hVH (i x) (i y)).trans_eq (by
+      rw [hDist,Real.mul_rpow (inv_nonneg.mpr hρ.le) dist_nonneg,Real.inv_rpow hρ.le,←Real.rpow_neg hρ.le]
+      ring)
+  · intro W hW
+    exact hW.unique hw
+
+
 /-- A genuine original system on B(0,3/4), together with its same given
 small critical Coulomb frame, gives the unique target-valued Holder
 representative on B(0,1/2). The auxiliary low exponent and cutoff are

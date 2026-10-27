@@ -58,8 +58,8 @@ private theorem hs_sub_bound {n q : ℕ} (A B : Gradient n q) :
     _=_ := by rw [Finset.sum_add_distrib,← Finset.mul_sum,← Finset.mul_sum];rfl
 
 /-- One actual Dirichlet operator produces genuine near/far class responses for every raw field and query, their global AE split and integrabilities, the actual near energy control, and the far local bound in terms of the same original output and input. -/
-theorem exists_same_dirichlet_operator_near_far_density_split (n : ℕ) (hn : 2≤n) :
-    ∃C : ℝ,0<C ∧ ∀q : ℕ,
+theorem exists_same_dirichlet_operator_near_far_density_split_explicit (n : ℕ) (hn : 2≤n) :
+    ∃C : ℝ,0<C ∧ C = (sameDirichletOffSupportMajorant n : ℝ) ∧ ∀q : ℕ,
       let μ := volume.restrict (ball (0:Domain n) 1)
       let E : Gradient n q → Ambient (n*q) := fun G=>WithLp.toLp 2
         (fun k=>G (finProdFinEquiv.symm k).1 (finProdFinEquiv.symm k).2)
@@ -99,8 +99,8 @@ theorem exists_same_dirichlet_operator_near_far_density_split (n : ℕ) (hn : 2�
               (∀x∈B,FF x=0) ∧
               ∀ᵐx∂volume.restrict (ball a R),h x≤
                 2*C*(volume.real B)⁻¹*((∫y in B,hsNormSq (Q₀ y))+(∫y in B,hsNormSq (F₀ y))) := by
-  obtain ⟨C,hC,HT⟩ := exists_same_dirichlet_operator_all_ball_offSupport_bounds n hn
-  refine ⟨C,hC,?_⟩
+  obtain ⟨C,hC,hFormula,HT⟩ := exists_same_dirichlet_operator_all_ball_offSupport_bounds_explicit n hn
+  refine ⟨C,hC,hFormula,?_⟩
   intro q μ E Z
   obtain ⟨T,hNorm,hSelf,hIdem,Hresponse⟩ := HT q
   refine ⟨T,hNorm,hSelf,hIdem,?_⟩
@@ -205,6 +205,50 @@ theorem exists_same_dirichlet_operator_near_far_density_split (n : ℕ) (hn : 2�
     _≤C*(volume.real B)⁻¹*(2*((∫y in B,hsNormSq (Q₀ y))+(∫y in B,hsNormSq (F₀ y)))) :=
       mul_le_mul_of_nonneg_left hFarEnergy (mul_nonneg hC.le (inv_nonneg.mpr ENNReal.toReal_nonneg))
     _=_ := by ring
+
+theorem exists_same_dirichlet_operator_near_far_density_split (n : ℕ) (hn : 2≤n) :
+    ∃C : ℝ,0<C ∧ ∀q : ℕ,
+      let μ := volume.restrict (ball (0:Domain n) 1)
+      let E : Gradient n q → Ambient (n*q) := fun G=>WithLp.toLp 2
+        (fun k=>G (finProdFinEquiv.symm k).1 (finProdFinEquiv.symm k).2)
+      let Z := fun (G : Domain n → Gradient n q) x i=>(ball (0:Domain n) 1).indicator (fun y=>G y i) x
+      ∃T : Lp (Ambient (n*q)) 2 μ →L[ℝ] Lp (Ambient (n*q)) 2 μ,
+        ‖T‖≤1 ∧ IsSelfAdjoint T ∧ (∀A,T (T A)=T A) ∧
+        ∀(F : Domain n → Gradient n q) (hF : ∀i,MemLp (fun x=>F x i) 2 μ),
+          let A := (memLp_hs_flatten F hF).toLp (fun x=>E (F x))
+          let Q := fun (x : Domain n) (i : Fin n)=>WithLp.toLp 2
+            (fun j : Fin q=>(T A) x (finProdFinEquiv (i,j)))
+          let F₀ := Z F
+          let Q₀ := Z Q
+          ∃u : Domain n → Ambient q,HasZeroBoundaryValues (ballDomain (0:Domain n) 1) u Q ∧
+            HolderToCK.WeakPoissonOn (ballDomain (0:Domain n) 1) (fun x i=>Q x i-F x i) (fun _=>0) ∧
+            (∀i,MemLp (fun x=>F₀ x i) 2 volume) ∧ (∀i,MemLp (fun x=>Q₀ x i) 2 volume) ∧
+            Integrable (fun x=>hsNormSq (F₀ x)) volume ∧ Integrable (fun x=>hsNormSq (Q₀ x)) volume ∧
+            (∫x,hsNormSq (Q₀ x))≤∫x,hsNormSq (F₀ x) ∧
+            ∀(a : Domain n) (R : ℝ),0<R →
+              let B := ball a (256*R)
+              let FN := fun x i=>B.indicator (fun y=>F y i) x
+              let FF := fun x i=>F x i-FN x i
+              let hN : ∀i,MemLp (fun x=>FN x i) 2 μ := fun i=>(hF i).indicator measurableSet_ball
+              let hFar : ∀i,MemLp (fun x=>FF x i) 2 μ := fun i=>(hF i).sub (hN i)
+              let AN := (memLp_hs_flatten FN hN).toLp (fun x=>E (FN x))
+              let AF := (memLp_hs_flatten FF hFar).toLp (fun x=>E (FF x))
+              let QN := fun (x : Domain n) (i : Fin n)=>WithLp.toLp 2
+                (fun j : Fin q=>(T AN) x (finProdFinEquiv (i,j)))
+              let QF := fun (x : Domain n) (i : Fin n)=>WithLp.toLp 2
+                (fun j : Fin q=>(T AF) x (finProdFinEquiv (i,j)))
+              let g := fun x=>hsNormSq (Z QN x)
+              let h := fun x=>hsNormSq (Z QF x)
+              (∀i,MemLp (fun x=>Z QN x i) 2 volume) ∧ (∀i,MemLp (fun x=>Z QF x i) 2 volume) ∧
+              Integrable g volume ∧ Integrable h volume ∧
+              Q₀ =ᵐ[volume] (fun x i=>Z QN x i+Z QF x i) ∧
+              (∀ᵐx∂volume,hsNormSq (Q₀ x)≤2*g x+2*h x) ∧
+              (∫x,g x)≤∫x in B,hsNormSq (F₀ x) ∧
+              (∀x∈B,FF x=0) ∧
+              ∀ᵐx∂volume.restrict (ball a R),h x≤
+                2*C*(volume.real B)⁻¹*((∫y in B,hsNormSq (Q₀ y))+(∫y in B,hsNormSq (F₀ y))) := by
+  obtain ⟨C,hC,_hFormula,H⟩ := exists_same_dirichlet_operator_near_far_density_split_explicit n hn
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

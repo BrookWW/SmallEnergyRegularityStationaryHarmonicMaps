@@ -19,12 +19,18 @@ open HarmonicMaps MeasureTheory Set Metric
 
 namespace StationaryHarmonicMaps
 
-/-- Local all-center Lp growth gives the unique continuous half-ball representative.
-The uniform constant precedes every ambient dimension, map, amplitude and ball. -/
-theorem existsUnique_local_representative_of_lp_gradient_growth
+/-- Explicit coefficient for local gradient-growth representatives. -/
+@[expose] noncomputable def localLpMorreyRepresentativeConstant (n : ℕ) (p α : ℝ) : ℝ :=
+  1 + localCampanatoConstant n α *
+    (((2 : ℝ)^(n+1) * Real.sqrt (n : ℝ)) *
+      (volume.real (Metric.ball (0 : Domain n) 1))^(-(1/p)))
+
+/-- Local all-center Lp growth gives the unique continuous half-ball
+representative with the displayed dimension and exponent coefficient. -/
+theorem existsUnique_local_representative_of_lp_gradient_growth_explicit
     (n : ℕ) (p α : ℝ) (hp₁ : 1 ≤ p) (hp₂ : p ≤ 2)
     (hα : 0 < α) (_hαOne : α < 1) :
-    ∃ C : ℝ, 0 < C ∧
+    ∃ C : ℝ, 0 < C ∧ C = localLpMorreyRepresentativeConstant n p α ∧
       ∀ (q : ℕ) (Ω : OpenDomain n) (u : Domain n → Ambient q)
         (Du : Domain n → Gradient n q) (K : ℝ) (a : Domain n) (R : ℝ),
         MemW12Loc Ω u Du → 0 < R → Metric.closedBall a R ⊆ Ω.val → 0 ≤ K →
@@ -36,15 +42,17 @@ theorem existsUnique_local_representative_of_lp_gradient_growth
           IsContinuousRepresentative (ballDomain a (R / 2)) u w ∧
           ∀ x y : Metric.ball a (R / 2),
             ‖w x - w y‖ ≤ C * K * (dist (x : Domain n) (y : Domain n)) ^ α := by
-  obtain ⟨C₀, hC₀, hcampanato⟩ :=
-    existsUnique_local_representative_of_meanOscillation n α hα
+  obtain ⟨C₀, hC₀, hC₀eq, hcampanato⟩ :=
+    existsUnique_local_representative_of_meanOscillation_explicit n α hα
   let D : ℝ := ((2 : ℝ) ^ (n + 1) * Real.sqrt (n : ℝ)) *
     (volume.real (Metric.ball (0 : Domain n) 1)) ^ (-(1 / p))
   let C : ℝ := 1 + C₀ * D
   have hD : 0 ≤ D := by dsimp only [D]; positivity
   have hC : 0 < C := by dsimp only [C]; positivity
   have hcoefficient : C₀ * D ≤ C := by dsimp only [C]; linarith
-  refine ⟨C, hC, ?_⟩
+  refine ⟨C, hC, ?_, ?_⟩
+  · dsimp only [C, D, localLpMorreyRepresentativeConstant]
+    rw [hC₀eq]
   intro q Ω u Du K a R hu hR hball hK hgrowth
   letI : IsFiniteMeasure (volume.restrict (ballDomain a R).val) :=
     isFiniteMeasure_restrict.mpr measure_ball_ne_top
@@ -70,6 +78,25 @@ theorem existsUnique_local_representative_of_lp_gradient_growth
         (mul_le_mul_of_nonneg_right hcoefficient hK) (Real.rpow_nonneg dist_nonneg _)
   · intro v hv
     exact hv.1.unique hw.1
+
+theorem existsUnique_local_representative_of_lp_gradient_growth
+    (n : ℕ) (p α : ℝ) (hp₁ : 1 ≤ p) (hp₂ : p ≤ 2)
+    (hα : 0 < α) (_hαOne : α < 1) :
+    ∃ C : ℝ, 0 < C ∧
+      ∀ (q : ℕ) (Ω : OpenDomain n) (u : Domain n → Ambient q)
+        (Du : Domain n → Gradient n q) (K : ℝ) (a : Domain n) (R : ℝ),
+        MemW12Loc Ω u Du → 0 < R → Metric.closedBall a R ⊆ Ω.val → 0 ≤ K →
+        (∀ (x : Domain n), x ∈ Metric.ball a (3 * R / 4) →
+          ∀ r : ℝ, 0 < r → r ≤ R / 4 →
+            (∫ y in Metric.ball x r, (Real.sqrt (hsNormSq (Du y))) ^ p) ≤
+              K ^ p * r ^ ((n : ℝ) - p + p * α)) →
+        ∃! w : Metric.ball a (R / 2) → Ambient q,
+          IsContinuousRepresentative (ballDomain a (R / 2)) u w ∧
+          ∀ x y : Metric.ball a (R / 2),
+            ‖w x - w y‖ ≤ C * K * (dist (x : Domain n) (y : Domain n)) ^ α := by
+  obtain ⟨C, hC, _hFormula, H⟩ :=
+    existsUnique_local_representative_of_lp_gradient_growth_explicit n p α hp₁ hp₂ hα _hαOne
+  exact ⟨C, hC, H⟩
 
 end StationaryHarmonicMaps
 

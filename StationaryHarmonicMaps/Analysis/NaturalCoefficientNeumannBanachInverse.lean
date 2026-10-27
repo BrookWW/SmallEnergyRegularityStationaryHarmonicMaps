@@ -114,6 +114,59 @@ theorem exists_small_natural_coefficient_neumann_morrey_inverse
   exact inverse_of_unique_operator (H m q q B Z η hZ hNatural hη hCritical)
     (fun T hT=>hT.1.trans hCoeff)
 
+@[expose] def effectiveNaturalNeumannInverseAmplitude (n : ℕ) (bilinearBound : ℚ) : ℚ :=
+  EffectiveCoulomb.inverseAmplitude (effectiveNaturalNeumannOperatorConstant n) bilinearBound
+
+theorem effectiveNaturalNeumannInverseAmplitude_pos (n : ℕ) (hn : 1 ≤ n)
+    {bilinearBound : ℚ} (hBound : 0 ≤ bilinearBound) :
+    0 < effectiveNaturalNeumannInverseAmplitude n bilinearBound :=
+  EffectiveCoulomb.inverseAmplitude_pos (effectiveNaturalNeumannOperatorConstant_pos n hn) hBound
+
+/-- A coefficient threshold is chosen internally. The same unique
+natural Neumann operator has norm at most one half, and the actual
+I+T equivalence has its full inverse with norm at most two. -/
+theorem effective_small_natural_coefficient_neumann_morrey_inverse
+    (n : ℕ) (hn : 2≤n) (bilinearBound : ℚ) (hBound : 0 ≤ bilinearBound) :
+    ∀(m q : ℕ)
+      (B : Ambient m→L[ℝ](Ambient q→L[ℝ]Ambient q)),
+      ‖B‖ ≤ (bilinearBound : ℝ) → ∀(Z : Domain n→Gradient n m) (η : ℝ),
+        (∀i,MemLp (fun x=>Z x i) 2 (volume.restrict (ball (0:Domain n) 1))) →
+        (∀(ψ : Domain n→Ambient m) (Dψ : Domain n→Gradient n m),
+          MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+          (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (Z x i) (Dψ x i))=0) →
+        0≤η → η≤(effectiveNaturalNeumannInverseAmplitude n bilinearBound : ℝ) →
+        criticalGradientMorreySquare Z (ball (0:Domain n) 1)≤ENNReal.ofReal (η^2) →
+        letI : NormedAddCommGroup (MeanZeroNativeMorreySpace n q ((n:ℝ)-1)) := Submodule.normedAddCommGroup _
+        ∃!T : MeanZeroNativeMorreySpace n q ((n:ℝ)-1)→L[ℝ]MeanZeroNativeMorreySpace n q ((n:ℝ)-1),
+          (‖T‖≤(effectiveNaturalNeumannOperatorConstant n : ℝ)*‖B‖*η ∧ ∀X : MeanZeroNativeMorreySpace n q ((n:ℝ)-1),
+            let u : Domain n→Ambient q := (nativeMorreyMapClass (n:=n) (q:=q) ((n:ℝ)-1)) X.val
+            let Q : Domain n→Gradient n q := fun x i=>WithLp.toLp 2
+              (fun j : Fin q=>(nativeMorreyHSClass (n:=n) (q:=q) ((n:ℝ)-1)) (T X).val x (finProdFinEquiv (i,j)))
+            ∀(ψ : Domain n→Ambient q) (Dψ : Domain n→Gradient n q),
+              MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+              IntegrableOn (fun x=>∑i : Fin n,inner ℝ (Q x i) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+              IntegrableOn (fun x=>∑i : Fin n,inner ℝ (B (Z x i) (u x)) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+              (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (Q x i) (Dψ x i))=
+                ∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (B (Z x i) (u x)) (Dψ x i)) ∧
+          ‖T‖≤(1/2:ℝ) ∧
+          ∃!A : MeanZeroNativeMorreySpace n q ((n:ℝ)-1)≃L[ℝ]MeanZeroNativeMorreySpace n q ((n:ℝ)-1),
+            (∀X,A X=X+T X) ∧
+            ‖(A.symm : MeanZeroNativeMorreySpace n q ((n:ℝ)-1)→L[ℝ]MeanZeroNativeMorreySpace n q ((n:ℝ)-1))‖≤2 := by
+  have H := effective_unique_natural_coefficient_neumann_morrey_operator n hn
+  intro m q B hB Z η hZ hNatural hη hηle hCritical
+  letI : NormedAddCommGroup (MeanZeroNativeMorreySpace n q ((n:ℝ)-1)) := Submodule.normedAddCommGroup _
+  have hC : 0 < (effectiveNaturalNeumannOperatorConstant n : ℝ) := by
+    exact_mod_cast effectiveNaturalNeumannOperatorConstant_pos n (by omega)
+  have hCoeff : (effectiveNaturalNeumannOperatorConstant n : ℝ) * ‖B‖ * η ≤ 1 / 2 := by
+    calc
+      _ ≤ (effectiveNaturalNeumannOperatorConstant n : ℝ) * (bilinearBound : ℝ) * η :=
+        mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hB hC.le) hη
+      _ ≤ 1 / 2 := EffectiveCoulomb.inverseAmplitude_controls_product
+        (effectiveNaturalNeumannOperatorConstant_pos n (by omega)) hBound hη hηle
+  exact inverse_of_unique_operator (H m q q B Z η hZ hNatural hη hCritical)
+    (fun T hT => hT.1.trans hCoeff)
+
+
 end StationaryHarmonicMaps.Analysis
 
 end

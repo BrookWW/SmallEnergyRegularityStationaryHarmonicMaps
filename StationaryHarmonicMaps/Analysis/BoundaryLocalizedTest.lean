@@ -21,10 +21,19 @@ open scoped ContDiff Topology ENNReal
 
 namespace StationaryHarmonicMaps.Analysis
 
+@[expose] def effectiveBoundaryLocalizedTestConstant (n : ℕ) : ℕ :=
+  2 + 2 * n * (2 ^ 22) ^ 2 * (2 ^ (n + 1) * 16)
+
+theorem effectiveBoundaryLocalizedTestConstant_pos (n : ℕ) :
+    0 < (effectiveBoundaryLocalizedTestConstant n : ℝ) := by
+  simp only [effectiveBoundaryLocalizedTestConstant, Nat.cast_add, Nat.cast_mul,
+    Nat.cast_pow, Nat.cast_ofNat]
+  positivity
+
 /-- Every small query centered in the source ball has a genuine compact native
 test with homogeneous energy controlled on the enlarged query ball. -/
-theorem exists_boundary_localized_native_test_energy (n : ℕ) :
-    ∃C : ℝ,0<C ∧ ∀ (q : ℕ) (U : Domain n → Ambient q) (DU : Domain n → Gradient n q),
+theorem effective_boundary_localized_native_test_energy (n : ℕ) :
+    ∀ (q : ℕ) (U : Domain n → Ambient q) (DU : Domain n → Gradient n q),
       MemW12 (ballDomain (0 : Domain n) 2) U DU →
       ∀ (a : Domain n),a∈ball (0 : Domain n) 1 → ∀ (r : ℝ),0<r → r≤1/8 →
       ∃χ : Domain n → ℝ,ContDiff ℝ ∞ χ ∧ HasCompactSupport χ ∧
@@ -35,11 +44,15 @@ theorem exists_boundary_localized_native_test_energy (n : ℕ) :
         let DW := fun x i=>χ x • DU x i+fderiv ℝ χ x (EuclideanSpace.single i 1) • (U x-c)
         MemW12 (⟨univ,isOpen_univ⟩ : OpenDomain n) W DW ∧
         (∫x in ball (0 : Domain n) 1,hsNormSq (DW x))≤
-          C*(∫x in ball a (4*r),hsNormSq (DU x)) := by
-  obtain ⟨A,hA,Hχ⟩ := exists_scaled_ball_cutoff n
+          (effectiveBoundaryLocalizedTestConstant n : ℝ)*(∫x in ball a (4*r),hsNormSq (DU x)) := by
+  let A : ℝ := (2 : ℝ) ^ 22
+  have Hχ := scaled_ball_cutoff_explicit n
   let C := 2+(2*(n : ℝ)*A^2)*((2 : ℝ)^(n+1)*16)
   have hC : 0<C := by dsimp only [C];positivity
-  refine ⟨C,hC,?_⟩
+  have hEq : (effectiveBoundaryLocalizedTestConstant n : ℝ) = C := by
+    simp only [effectiveBoundaryLocalizedTestConstant, Nat.cast_add, Nat.cast_mul,
+      Nat.cast_pow, Nat.cast_ofNat, C, A]
+  rw [hEq]
   intro q U DU hU a ha r hr hrCap
   obtain ⟨χ,hχ,hcχ,hsχ,hOne,hBounds,hDχ⟩ := Hχ a r hr
   have hQuery : ball a (4*r)⊆ball (0 : Domain n) 2 := by
@@ -107,6 +120,24 @@ theorem exists_boundary_localized_native_test_energy (n : ℕ) :
       rw [hCoeff] at H
       dsimp only [C]
       linarith only [H]
+
+/-- Every small query centered in the source ball has a genuine compact native
+test with homogeneous energy controlled on the enlarged query ball. -/
+theorem exists_boundary_localized_native_test_energy (n : ℕ) :
+    ∃C : ℝ,0<C ∧ ∀ (q : ℕ) (U : Domain n → Ambient q) (DU : Domain n → Gradient n q),
+      MemW12 (ballDomain (0 : Domain n) 2) U DU →
+      ∀ (a : Domain n),a∈ball (0 : Domain n) 1 → ∀ (r : ℝ),0<r → r≤1/8 →
+      ∃χ : Domain n → ℝ,ContDiff ℝ ∞ χ ∧ HasCompactSupport χ ∧
+        tsupport χ⊆ball a (2*r) ∧ (∀x∈closedBall a r,χ x=1) ∧
+        (∀x,0≤χ x ∧ χ x≤1) ∧
+        let c := ⨍x in ball a (4*r),U x
+        let W := fun x=>χ x • (U x-c)
+        let DW := fun x i=>χ x • DU x i+fderiv ℝ χ x (EuclideanSpace.single i 1) • (U x-c)
+        MemW12 (⟨univ,isOpen_univ⟩ : OpenDomain n) W DW ∧
+        (∫x in ball (0 : Domain n) 1,hsNormSq (DW x))≤
+          C*(∫x in ball a (4*r),hsNormSq (DU x)) := by
+  exact ⟨(effectiveBoundaryLocalizedTestConstant n : ℝ), effectiveBoundaryLocalizedTestConstant_pos n,
+    effective_boundary_localized_native_test_energy n⟩
 
 end StationaryHarmonicMaps.Analysis
 

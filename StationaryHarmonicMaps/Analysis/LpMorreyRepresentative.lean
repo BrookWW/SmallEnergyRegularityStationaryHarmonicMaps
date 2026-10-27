@@ -98,10 +98,16 @@ theorem sobolev_meanOscillation_of_lp_growth {n q : ℕ} (a : Domain n)
 
 /-- Actual all-center Lp gradient growth gives the unique continuous representative.
 The constant is chosen before the map, its amplitude and the reference radius. -/
-theorem existsUnique_continuous_representative_of_lp_gradient_growth
+
+@[expose] noncomputable def globalLpMorreyRepresentativeConstant (n : ℕ) (p α : ℝ) : ℝ :=
+  1 + (1 + |(2 : ℝ)^n / (1-(1/2 : ℝ)^α)| + |meanOscillationHolderConstant n α|) *
+    (((2 : ℝ)^(n+1)*Real.sqrt (n : ℝ)) *
+      (volume.real (Metric.ball (0 : Domain n) 1))^(-(1/p)))
+
+theorem existsUnique_continuous_representative_of_lp_gradient_growth_explicit
     (n : ℕ) (p α : ℝ) (hp₁ : 1 ≤ p) (hp₂ : p ≤ 2)
     (hα : 0 < α) (_hαOne : α < 1) :
-    ∃ C : ℝ, 0 < C ∧
+    ∃ C : ℝ, 0 < C ∧ C = globalLpMorreyRepresentativeConstant n p α ∧
       ∀ (q : ℕ) (u : Domain n → Ambient q) (Du : Domain n → Gradient n q)
         (K r₀ : ℝ),
         MemW12Loc (⟨Set.univ, isOpen_univ⟩ : OpenDomain n) u Du →
@@ -140,7 +146,7 @@ theorem existsUnique_continuous_representative_of_lp_gradient_growth
     have hm := mul_le_mul_of_nonneg_right hle hD
     dsimp only [C]
     linarith
-  refine ⟨C, hC, ?_⟩
+  refine ⟨C, hC, rfl, ?_⟩
   intro q u Du K r₀ hu hK hr₀ hgrowth
   have hlocal : LocallyIntegrable u volume :=
     locallyIntegrableOn_univ.mp hu.1.1
@@ -170,6 +176,28 @@ theorem existsUnique_continuous_representative_of_lp_gradient_growth
         (mul_le_mul_of_nonneg_right hHD hK) (Real.rpow_nonneg dist_nonneg _)
   · intro v hv
     exact MeasureTheory.Measure.eq_of_ae_eq (hv.2.1.trans hw.2.1.symm) hv.1 hw.1
+
+theorem existsUnique_continuous_representative_of_lp_gradient_growth
+    (n : ℕ) (p α : ℝ) (hp₁ : 1 ≤ p) (hp₂ : p ≤ 2)
+    (hα : 0 < α) (_hαOne : α < 1) :
+    ∃ C : ℝ, 0 < C ∧
+      ∀ (q : ℕ) (u : Domain n → Ambient q) (Du : Domain n → Gradient n q)
+        (K r₀ : ℝ),
+        MemW12Loc (⟨Set.univ, isOpen_univ⟩ : OpenDomain n) u Du →
+        0 ≤ K → 0 < r₀ →
+        (∀ (x : Domain n) (r : ℝ), 0 < r → r ≤ r₀ →
+          (∫ y in Metric.ball x r, (Real.sqrt (hsNormSq (Du y))) ^ p) ≤
+            K ^ p * r ^ ((n : ℝ) - p + p * α)) →
+        ∃! w : Domain n → Ambient q,
+          Continuous w ∧ w =ᵐ[volume] u ∧
+          (∀ x, Tendsto (fun r : ℝ => ⨍ y in Metric.ball x r, u y)
+            (𝓝[>] (0 : ℝ)) (𝓝 (w x))) ∧
+          (∀ (x : Domain n) (r : ℝ), 0 < r → r ≤ r₀ →
+            ‖(⨍ y in Metric.ball x r, u y) - w x‖ ≤ C * K * r ^ α) ∧
+          (∀ x y : Domain n, dist x y ≤ r₀ / 4 →
+            ‖w x - w y‖ ≤ C * K * (dist x y) ^ α) := by
+  obtain ⟨C,hC,_hFormula,H⟩ := existsUnique_continuous_representative_of_lp_gradient_growth_explicit n p α hp₁ hp₂ hα _hαOne
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps
 

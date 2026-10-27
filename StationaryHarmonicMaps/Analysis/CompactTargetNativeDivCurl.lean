@@ -15,7 +15,7 @@ actual W0 cancellation then give the same envelope bound for the ordinary
 integral, with no smoothness or higher-integrability premise on the test.
 -/
 
-public section
+@[expose] public section
 
 open HarmonicMaps MeasureTheory Filter Set Metric
 open scoped ContDiff Topology
@@ -46,10 +46,13 @@ theorem exists_ae_bound_cutoff_of_compact_target {n m : ℕ}
     rw [hZero,zero_smul,norm_zero]
     positivity
 
+def effectiveCompactTargetEnvelopePairingConstant (n : ℕ) : ℚ :=
+  effectiveLocalDivcurlPairingConstant n*(effectiveLocalLpCriticalCutoffConstant n:ℚ)
+
 /-- The actual compact-target cutoff and an arbitrary genuine native W0 test have the ordinary envelope-controlled div--curl pairing; no test smoothness, product integrability or pairing certificate is assumed. -/
-theorem exists_compact_target_capped_envelope_native_divcurl_bound (n : ℕ) (hn : 2≤n)
+theorem exists_compact_target_capped_envelope_native_divcurl_bound_explicit (n : ℕ) (hn : 2≤n)
     (p : ℝ) (hp₁ : 1≤p) (hp₂ : p≤2) (A B : ℝ) (hA : 0≤A) (hB : 0≤B) :
-    ∃ C : ℝ,0<C ∧ ∀ (m : ℕ) (N : CompactC2EmbeddedTarget m)
+    ∃ C : ℝ,0<C ∧ C=(effectiveCompactTargetEnvelopePairingConstant n:ℝ) ∧ ∀ (m : ℕ) (N : CompactC2EmbeddedTarget m)
       (u : Domain n → Ambient m) (Du : Domain n → Gradient n m) (η : ℝ),
       MemW12 (ballDomain (0 : Domain n) 1) u Du →
       (∀ᵐ x ∂volume.restrict (Metric.ball (0 : Domain n) 1),u x∈N.carrierSet) → 0≤η →
@@ -74,10 +77,15 @@ theorem exists_compact_target_capped_envelope_native_divcurl_bound (n : ℕ) (hn
               |∫ x in Metric.ball a (t/2),(∑ i : Fin n,inner ℝ (Z x i) (Dw x i))*L (v x)|≤
                 C*‖L‖*(Ψ (8*t))^(1/p)*Real.sqrt (∫ x in Metric.ball a (t/2),hsNormSq (Z x))*
                   Real.sqrt (∫ x in Metric.ball a (t/2),hsNormSq (Dw x)) := by
-  obtain ⟨D,hD,Hpair⟩ := existsUnique_local_divcurl_continuous_pairing n hn
-  obtain ⟨E,hE,Hcut⟩ := exists_local_lp_critical_cutoff_scalar_mean_oscillation_bound n p hp₁ hp₂
+  obtain ⟨D,hD,hDEq,Hpair⟩ := existsUnique_local_divcurl_continuous_pairing_explicit n hn
+  obtain ⟨E,hE,hEEq,Hcut⟩ := exists_local_lp_critical_cutoff_scalar_mean_oscillation_bound_explicit n p hp₁ hp₂
   let C := D*E
-  refine ⟨C,mul_pos hD hE,?_⟩
+  have hCEq : C=(effectiveCompactTargetEnvelopePairingConstant n:ℝ) := by
+    dsimp only [C,effectiveCompactTargetEnvelopePairingConstant]
+    rw [hDEq,hEEq]
+    push_cast
+    rfl
+  refine ⟨C,mul_pos hD hE,hCEq,?_⟩
   intro m N u Du η hu hTarget hη hCritical χ hχ hcχ hsχ hχA hDχB c v Dv Φ Ψ a t ht htCap L q Z hZ hDiv w Dw hw
   obtain ⟨hW,hNonneg,hGrowth⟩ := cutoff_capped_envelope_lp_growth n hn p hp₁ hp₂ A B hA hB
     m u Du η hu hη hCritical χ hχ hcχ hsχ hχA hDχB t ht htCap
@@ -120,6 +128,36 @@ theorem exists_compact_target_capped_envelope_native_divcurl_bound (n : ℕ) (hn
     Z hZ hDiv w Dw hw b (E*‖L‖*(Ψ (8*t))^(1/p)) hbMeas (by positivity) hBMO
   rw [(hAgree hProduct).trans hIntegral] at hEstimate
   exact ⟨hOriginalI,hEstimate.trans_eq (by dsimp only [C];ring)⟩
+
+theorem exists_compact_target_capped_envelope_native_divcurl_bound (n : ℕ) (hn : 2≤n)
+    (p : ℝ) (hp₁ : 1≤p) (hp₂ : p≤2) (A B : ℝ) (hA : 0≤A) (hB : 0≤B) :
+    ∃ C : ℝ,0<C ∧ ∀ (m : ℕ) (N : CompactC2EmbeddedTarget m)
+      (u : Domain n → Ambient m) (Du : Domain n → Gradient n m) (η : ℝ),
+      MemW12 (ballDomain (0 : Domain n) 1) u Du →
+      (∀ᵐ x ∂volume.restrict (Metric.ball (0 : Domain n) 1),u x∈N.carrierSet) → 0≤η →
+      criticalGradientMorreySquare Du (Metric.ball (0 : Domain n) 1)≤ENNReal.ofReal (η^2) →
+      ∀ (χ : Domain n → ℝ),ContDiff ℝ ∞ χ → HasCompactSupport χ →
+        tsupport χ⊆Metric.closedBall (0 : Domain n) (3/4 : ℝ) →
+        (∀ x,|χ x|≤A) →
+        (∀ (x : Domain n) (i : Fin n),|fderiv ℝ χ x (EuclideanSpace.single i 1)|≤B) →
+        let c := ⨍ y in Metric.ball (0 : Domain n) 1,u y
+        let v := fun x=>χ x • (u x-c)
+        let Dv := fun x i=>χ x • Du x i+fderiv ℝ χ x (EuclideanSpace.single i 1) • (u x-c)
+        let Φ := fun (x : Domain n) (r : ℝ)=>r^(p-(n : ℝ))*∫ y in Metric.ball x r,(Real.sqrt (hsNormSq (Dv y)))^p
+        let Ψ := fun s : ℝ=>sSup {z : ℝ | ∃ x r,0<r ∧ r≤s ∧ z=Φ x r}
+        ∀ (a : Domain n) (t : ℝ),0<t → t≤(1/128 : ℝ) →
+          ∀ (L : Ambient m →L[ℝ] ℝ) (q : ℕ) (Z : Domain n → Gradient n q),
+            (∀ i,MemLp (fun x=>Z x i) 2 (volume.restrict (Metric.ball a (t/2)))) →
+            HolderToCK.WeakPoissonOn (ballDomain a (t/2)) Z (fun _=>(0 : Ambient q)) →
+            ∀ (w : Domain n → Ambient q) (Dw : Domain n → Gradient n q),
+              HasZeroBoundaryValues (ballDomain a (t/2)) w Dw →
+              IntegrableOn (fun x=>(∑ i : Fin n,inner ℝ (Z x i) (Dw x i))*L (v x))
+                (Metric.ball a (t/2)) volume ∧
+              |∫ x in Metric.ball a (t/2),(∑ i : Fin n,inner ℝ (Z x i) (Dw x i))*L (v x)|≤
+                C*‖L‖*(Ψ (8*t))^(1/p)*Real.sqrt (∫ x in Metric.ball a (t/2),hsNormSq (Z x))*
+                  Real.sqrt (∫ x in Metric.ball a (t/2),hsNormSq (Dw x)) := by
+  obtain ⟨C,hC,_hCEq,H⟩ := exists_compact_target_capped_envelope_native_divcurl_bound_explicit n hn p hp₁ hp₂ A B hA hB
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

@@ -73,9 +73,14 @@ theorem exists_ballAverage_representative_of_meanOscillation
   exact tendsto_nhds_unique (hw x).1 hx
 
 /-- The dimension and exponent constant in the near-point Campanato estimate. -/
-noncomputable def meanOscillationHolderConstant (n : ℕ) (α : ℝ) : ℝ :=
+@[expose] noncomputable def meanOscillationHolderConstant (n : ℕ) (α : ℝ) : ℝ :=
   2 * (2 : ℝ) ^ n *
     ((2 : ℝ) ^ α / (1 - (1 / 2 : ℝ) ^ α) + (4 : ℝ) ^ α)
+
+
+theorem meanOscillationHolderConstant_eq (n : ℕ) (α : ℝ) :
+    meanOscillationHolderConstant n α = 2 * (2 : ℝ)^n *
+      ((2 : ℝ)^α/(1-(1/2 : ℝ)^α) + (4 : ℝ)^α) := rfl
 
 /-- The limit tails and actual mean oscillation give a quantitative near-point estimate. -/
 theorem ballAverage_limit_holder_near

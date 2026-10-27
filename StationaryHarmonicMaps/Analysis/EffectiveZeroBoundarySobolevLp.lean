@@ -1,12 +1,13 @@
 module
 
 public import StationaryHarmonicMaps.Analysis.LpPoincareBall
+public import StationaryHarmonicMaps.Analysis.EffectiveEuclideanSobolev
 public import Mathlib.Analysis.FunctionalSpaces.SobolevInequality
 public import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 public import Mathlib.MeasureTheory.Function.LpSeminorm.Indicator
 
 /-!
-# Sobolev gain for actual zero-boundary weak graphs
+# Explicit Euclidean Sobolev gain for actual zero-boundary weak graphs
 
 The compact graph approximants in the literal W0 definition satisfy the
 proved Gagliardo--Nirenberg--Sobolev inequality. Actual lower-exponent
@@ -23,19 +24,19 @@ open scoped ContDiff Topology ENNReal NNReal
 namespace StationaryHarmonicMaps.Analysis
 
 /-- A constant chosen before the target and ball gives actual Sobolev gain for every native W0 graph. -/
-theorem exists_zeroBoundary_sobolev_lp_bound (n : ℕ) (hn : 0 < n)
+theorem exists_zeroBoundary_sobolev_lp_bound_explicit (n : ℕ) (hn : 0 < n)
     (p s : ℝ≥0) (hp : 1 ≤ p) (hp₂ : p ≤ 2) (_hs : 0 < s)
     (hsp : (s : ℝ)⁻¹=(p : ℝ)⁻¹-(n : ℝ)⁻¹) :
-    ∃ C : ℝ≥0, 0 < C ∧ ∀ (q : ℕ) (a : Domain n) (r : ℝ)
+    ∃ C : ℝ≥0, C=1+euclideanSobolevCoefficient n (p:ℝ) ∧ 0 < C ∧ ∀ (q : ℕ) (a : Domain n) (r : ℝ)
       (u : Domain n → Ambient q) (Du : Domain n → Gradient n q),
       HasZeroBoundaryValues (ballDomain a r) u Du →
       MemLp u (s : ℝ≥0∞) (volume.restrict (Metric.ball a r)) ∧
       eLpNorm u (s : ℝ≥0∞) (volume.restrict (Metric.ball a r)) ≤ (C : ℝ≥0∞) *
         eLpNorm (fun x => Real.sqrt (hsNormSq (Du x))) (p : ℝ≥0∞)
           (volume.restrict (Metric.ball a r)) := by
-  let C₀ : ℝ≥0 := eLpNormLESNormFDerivOfEqInnerConst (E := Domain n) volume (p : ℝ)
+  let C₀ : ℝ≥0 := euclideanSobolevCoefficient n (p:ℝ)
   let C : ℝ≥0 := 1+C₀
-  refine ⟨C,by dsimp only [C]; positivity,?_⟩
+  refine ⟨C,rfl,by dsimp only [C]; positivity,?_⟩
   intro q a r u Du hu
   let μ : Measure (Domain n) := volume.restrict (Metric.ball a r)
   letI : IsFiniteMeasure μ := isFiniteMeasure_restrict.mpr measure_ball_ne_top
@@ -66,11 +67,8 @@ theorem exists_zeroBoundary_sobolev_lp_bound (n : ℕ) (hn : 0 < n)
     simpa only [Lp.enorm_toLp] using hLp.enorm
   have hbound (k : ℕ) : eLpNorm (m k) (s : ℝ≥0∞) μ ≤
       (C₀ : ℝ≥0∞)*eLpNorm (H k) (p : ℝ≥0∞) μ := by
-    have hdim : 0 < Module.finrank ℝ (Domain n) := by
-      simpa only [Domain, finrank_euclideanSpace, Fintype.card_fin] using hn
-    have hrel : (s : ℝ)⁻¹=(p : ℝ)⁻¹-(Module.finrank ℝ (Domain n) : ℝ)⁻¹ := by
-      simpa only [Domain, finrank_euclideanSpace, Fintype.card_fin] using hsp
-    have HG := eLpNorm_le_eLpNorm_fderiv_of_eq_inner volume ((hm k).of_le (by simp)) (hmc k).1 hp hdim hrel
+    have HG := eLpNorm_le_explicit_euclidean_fderiv_of_eq_inner n
+      ((hm k).of_le (by simp)) (hmc k).1 hp hn hsp
     have hIndm : (Metric.ball a r).indicator (m k)=m k := by
       funext x
       by_cases hx : x ∈ Metric.ball a r

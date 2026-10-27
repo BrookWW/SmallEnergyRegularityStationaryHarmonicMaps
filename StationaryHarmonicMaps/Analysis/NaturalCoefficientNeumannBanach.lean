@@ -217,6 +217,52 @@ private theorem bounded_class_of_raw_response {n m k q : ℕ} (ν S L η : ℝ)
   exact canonical_response_unique ν (fun x i=>B (Z x i) (u x)) W Y
     (fun ψ Dψ hψ=>(hW.1 ψ Dψ hψ).2.2) (fun ψ Dψ hψ=>(hChar ψ Dψ hψ).2.2)
 
+private theorem bounded_class_of_raw_response_majorant {n m k q : ℕ} (ν S L C η : ℝ)
+    (hS : 0≤S) (hL : 0≤L) (hη : 0≤η)
+    (hCle : S * Real.sqrt L ≤ C)
+    (B : Ambient m→L[ℝ](Ambient k→L[ℝ]Ambient q)) (Z : Domain n→Gradient n m)
+    (X : MeanZeroNativeMorreySpace n k ν)
+    (Hnorm : ∀Y : MeanZeroNativeMorreySpace n q ν,
+      ‖Y‖≤S*‖meanZeroNativeMorreyGradientClass n q ν Y‖)
+    (hRawResponse : ∃(g : Domain n→Ambient q) (Q : Domain n→Gradient n q),
+      MemW12 (ballDomain (0:Domain n) 1) g Q ∧
+      (∫x in ball (0:Domain n) 1,g x)=0 ∧
+      (∀i,MemLp (fun x=>B (Z x i) (mapValue ν X x)) 2 (volume.restrict (ball (0:Domain n) 1))) ∧
+      (∀(ψ : Domain n→Ambient q) (Dψ : Domain n→Gradient n q),
+        MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+        IntegrableOn (fun x=>∑i : Fin n,inner ℝ (Q x i) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+        IntegrableOn (fun x=>∑i : Fin n,inner ℝ (B (Z x i) (mapValue ν X x)) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+        (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (Q x i) (Dψ x i))=
+          ∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (B (Z x i) (mapValue ν X x)) (Dψ x i)) ∧
+      ∀(a : Domain n) (r : ℝ),0<r →
+        (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (Q x))≤
+          L*‖B‖^2*η^2*‖meanZeroNativeMorreyGradientClass n k ν X‖^2*r^ν) :
+    ∃!Y : MeanZeroNativeMorreySpace n q ν,
+      (∀(ψ : Domain n→Ambient q) (Dψ : Domain n→Gradient n q),
+        MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+        IntegrableOn (fun x=>∑i : Fin n,inner ℝ (gradientValue ν Y x i) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+        IntegrableOn (fun x=>∑i : Fin n,inner ℝ (B (Z x i) (mapValue ν X x)) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+        (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (gradientValue ν Y x i) (Dψ x i))=
+          ∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (B (Z x i) (mapValue ν X x)) (Dψ x i)) ∧
+      ‖Y‖≤C*‖B‖*η*‖X‖ := by
+  let u := mapValue ν X
+  let G := ‖meanZeroNativeMorreyGradientClass n k ν X‖
+  have hG : 0≤G := norm_nonneg _
+  obtain ⟨g,Q,hg,hMean,_hRaw,hTests,hGrowth⟩ := hRawResponse
+  let K := L*‖B‖^2*η^2*G^2
+  have hK : 0≤K := by dsimp only [K];positivity
+  obtain ⟨Y,hChar,hYSq⟩ := exists_class_of_raw_response ν K (fun x i=>B (Z x i) (u x)) g Q hg
+    hMean hK (fun a _ha r hr=>hGrowth a r hr) hTests
+  have hRawBound := response_norm_bound ν S L η ‖B‖ hS hL hη (norm_nonneg B) X Y (Hnorm Y) hYSq
+  have hYBound : ‖Y‖≤C*‖B‖*η*‖X‖ := hRawBound.trans
+    (mul_le_mul_of_nonneg_right
+      (mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right hCle (norm_nonneg B)) hη)
+      (norm_nonneg X))
+  refine ⟨Y,⟨hChar,hYBound⟩,?_⟩
+  intro W hW
+  exact canonical_response_unique ν (fun x i=>B (Z x i) (u x)) W Y
+    (fun ψ Dψ hψ=>(hW.1 ψ Dψ hψ).2.2) (fun ψ Dψ hψ=>(hChar ψ Dψ hψ).2.2)
+
 /-- Original critical natural coefficient data construct exactly one
 actual mean-zero native stronger-Morrey response class for each input.
 Its canonical raw representatives satisfy every original native Neumann
@@ -261,6 +307,106 @@ theorem exists_unique_natural_coefficient_neumann_morrey_response
     (HL m k q B Z (mapValue ν X) (gradientValue ν X) η
       (‖meanZeroNativeMorreyGradientClass n k ν X‖^2) hZ hNatural hXNative.1 hη hCritical
       (sq_nonneg _) hXNative.2.2)
+
+@[expose] def effectiveNaturalNeumannOperatorConstant (n : ℕ) : ℚ :=
+  (EffectiveCoulomb.meanZeroBound n : ℚ) * (1 + effectiveNaturalNeumannPowerConstant n)
+
+theorem effectiveNaturalNeumannOperatorConstant_pos (n : ℕ) (hn : 1 ≤ n) :
+    0 < effectiveNaturalNeumannOperatorConstant n := by
+  have hS : (0 : ℚ) < EffectiveCoulomb.meanZeroBound n := by
+    exact_mod_cast EffectiveCoulomb.meanZeroBound_pos n
+  have hL := effectiveNaturalNeumannPowerConstant_pos n hn
+  unfold effectiveNaturalNeumannOperatorConstant
+  positivity
+
+theorem effectiveNaturalNeumannOperatorConstant_sqrt_le (n : ℕ) (hn : 1 ≤ n) :
+    (EffectiveCoulomb.meanZeroBound n : ℝ) * Real.sqrt (effectiveNaturalNeumannPowerConstant n : ℝ) ≤
+      (effectiveNaturalNeumannOperatorConstant n : ℝ) := by
+  let L : ℝ := effectiveNaturalNeumannPowerConstant n
+  have hL : 0 < L := by
+    change 0 < (effectiveNaturalNeumannPowerConstant n : ℝ)
+    exact_mod_cast effectiveNaturalNeumannPowerConstant_pos n hn
+  have hroot : Real.sqrt L ≤ 1 + L := by
+    have H := Real.sq_sqrt hL.le
+    have Hn := Real.sqrt_nonneg L
+    nlinarith only [H, Hn, hL, sq_nonneg L]
+  simpa only [effectiveNaturalNeumannOperatorConstant, Rat.cast_mul, Rat.cast_natCast,
+    Rat.cast_add, Rat.cast_one, L] using
+      mul_le_mul_of_nonneg_left hroot (Nat.cast_nonneg (EffectiveCoulomb.meanZeroBound n))
+
+private theorem effective_canonical_raw_response (n : ℕ) (hn : 2 ≤ n)
+    (m k q : ℕ) (B : Ambient m →L[ℝ] (Ambient k →L[ℝ] Ambient q))
+    (Z : Domain n → Gradient n m) (η : ℝ)
+    (hZ : ∀i, MemLp (fun x => Z x i) 2 (volume.restrict (ball (0 : Domain n) 1)))
+    (hNatural : ∀(ψ : Domain n → Ambient m) (Dψ : Domain n → Gradient n m),
+      MemW12 (ballDomain (0 : Domain n) 1) ψ Dψ →
+      (∫x in ball (0 : Domain n) 1, ∑i : Fin n, inner ℝ (Z x i) (Dψ x i)) = 0)
+    (hη : 0 ≤ η)
+    (hCritical : criticalGradientMorreySquare Z (ball (0 : Domain n) 1) ≤ ENNReal.ofReal (η ^ 2))
+    (X : MeanZeroNativeMorreySpace n k ((n : ℝ) - 1)) :
+∃(g : Domain n→Ambient q) (Q : Domain n→Gradient n q),
+      MemW12 (ballDomain (0:Domain n) 1) g Q ∧
+      (∫x in ball (0:Domain n) 1,g x)=0 ∧
+      (∀i,MemLp (fun x=>B (Z x i) (mapValue ((n : ℝ) - 1) X x)) 2 (volume.restrict (ball (0:Domain n) 1))) ∧
+      (∀(ψ : Domain n→Ambient q) (Dψ : Domain n→Gradient n q),
+        MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+        IntegrableOn (fun x=>∑i : Fin n,inner ℝ (Q x i) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+        IntegrableOn (fun x=>∑i : Fin n,inner ℝ (B (Z x i) (mapValue ((n : ℝ) - 1) X x)) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+        (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (Q x i) (Dψ x i))=
+          ∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (B (Z x i) (mapValue ((n : ℝ) - 1) X x)) (Dψ x i)) ∧
+      ∀(a : Domain n) (r : ℝ),0<r →
+        (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (Q x))≤
+          (effectiveNaturalNeumannPowerConstant n : ℝ)*‖B‖^2*η^2*‖meanZeroNativeMorreyGradientClass n k ((n : ℝ) - 1) X‖^2*r^((n : ℝ) - 1) := by
+  have hXNative := canonical_native (n:=n) (q:=k) ((n : ℝ) - 1) X
+  exact effective_natural_coefficient_neumann_full_power_growth n hn m k q B Z
+    (mapValue ((n : ℝ) - 1) X) (gradientValue ((n : ℝ) - 1) X) η
+    (‖meanZeroNativeMorreyGradientClass n k ((n : ℝ) - 1) X‖ ^ 2)
+    hZ hNatural hXNative.1 hη hCritical (sq_nonneg _) hXNative.2.2
+
+/-- Original critical natural coefficient data construct exactly one
+actual mean-zero native stronger-Morrey response class for each input.
+Its canonical raw representatives satisfy every original native Neumann
+pairing, and its norm has the uniform small coefficient. -/
+theorem effective_unique_natural_coefficient_neumann_morrey_response
+    (n : ℕ) (hn : 2≤n) :
+    ∀(m k q : ℕ)
+      (B : Ambient m→L[ℝ](Ambient k→L[ℝ]Ambient q))
+      (Z : Domain n→Gradient n m) (η : ℝ),
+      (∀i,MemLp (fun x=>Z x i) 2 (volume.restrict (ball (0:Domain n) 1))) →
+      (∀(ψ : Domain n→Ambient m) (Dψ : Domain n→Gradient n m),
+        MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+        (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (Z x i) (Dψ x i))=0) →
+      0≤η → criticalGradientMorreySquare Z (ball (0:Domain n) 1)≤ENNReal.ofReal (η^2) →
+      ∀X : MeanZeroNativeMorreySpace n k ((n:ℝ)-1),
+        let u : Domain n→Ambient k := (nativeMorreyMapClass (n:=n) (q:=k) ((n:ℝ)-1)) X.val
+        ∃!Y : MeanZeroNativeMorreySpace n q ((n:ℝ)-1),
+          let Q : Domain n→Gradient n q := fun x i=>WithLp.toLp 2
+            (fun j : Fin q=>(nativeMorreyHSClass (n:=n) (q:=q) ((n:ℝ)-1)) Y.val x (finProdFinEquiv (i,j)))
+          (∀(ψ : Domain n→Ambient q) (Dψ : Domain n→Gradient n q),
+            MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+            IntegrableOn (fun x=>∑i : Fin n,inner ℝ (Q x i) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+            IntegrableOn (fun x=>∑i : Fin n,inner ℝ (B (Z x i) (u x)) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+            (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (Q x i) (Dψ x i))=
+              ∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (B (Z x i) (u x)) (Dψ x i)) ∧
+          ‖Y‖≤(effectiveNaturalNeumannOperatorConstant n : ℝ)*‖B‖*η*‖X‖ := by
+  let ν : ℝ := (n : ℝ) - 1
+  let L : ℝ := effectiveNaturalNeumannPowerConstant n
+  have hL : 0 < L := by
+    change 0 < (effectiveNaturalNeumannPowerConstant n : ℝ)
+    exact_mod_cast effectiveNaturalNeumannPowerConstant_pos n (by omega)
+  have HL := effective_natural_coefficient_neumann_full_power_growth n hn
+  let S : ℝ := EffectiveCoulomb.meanZeroBound n
+  have hS : 0 < S := by
+    change 0 < (EffectiveCoulomb.meanZeroBound n : ℝ)
+    exact_mod_cast EffectiveCoulomb.meanZeroBound_pos n
+  have Hnorm (q : ℕ) (Y : MeanZeroNativeMorreySpace n q ν) :
+      ‖Y‖ ≤ S * ‖meanZeroNativeMorreyGradientClass n q ν Y‖ :=
+    EffectiveCoulomb.native_mean_zero_norm_le n q ν (by dsimp only [ν]; linarith) Y
+  have hCle := effectiveNaturalNeumannOperatorConstant_sqrt_le n (by omega)
+  intro m k q B Z η hZ hNatural hη hCritical X
+  have hRaw := effective_canonical_raw_response n hn m k q B Z η hZ hNatural hη hCritical X
+  exact bounded_class_of_raw_response_majorant ν S L
+    (effectiveNaturalNeumannOperatorConstant n : ℝ) η hS.le hL.le hη hCle B Z X (Hnorm q) hRaw
 
 private theorem mapValue_add {n q : ℕ} (ν : ℝ) (X Y : MeanZeroNativeMorreySpace n q ν) :
     mapValue ν (X+Y)=ᵐ[volume.restrict (ball (0:Domain n) 1)](fun x=>mapValue ν X x+mapValue ν Y x) := by
@@ -489,6 +635,44 @@ theorem exists_unique_natural_coefficient_neumann_morrey_operator
   letI : NormedAddCommGroup (MeanZeroNativeMorreySpace n k ((n:ℝ)-2+γ)) := Submodule.normedAddCommGroup _
   letI : NormedAddCommGroup (MeanZeroNativeMorreySpace n q ((n:ℝ)-2+γ)) := Submodule.normedAddCommGroup _
   exact operator_of_unique_responses ((n:ℝ)-2+γ) C η hC.le hη B Z
+    (Hclass m k q B Z η hZ hNatural hη hCritical)
+
+/-- The actual original critical natural coefficient defines exactly one
+bounded real-linear operator between the actual mean-zero native stronger
+Morrey spaces. Every input is characterized by the original uncentered
+forcing and all native Neumann tests. -/
+theorem effective_unique_natural_coefficient_neumann_morrey_operator
+    (n : ℕ) (hn : 2≤n) :
+    ∀(m k q : ℕ)
+      (B : Ambient m→L[ℝ](Ambient k→L[ℝ]Ambient q))
+      (Z : Domain n→Gradient n m) (η : ℝ),
+      (∀i,MemLp (fun x=>Z x i) 2 (volume.restrict (ball (0:Domain n) 1))) →
+      (∀(ψ : Domain n→Ambient m) (Dψ : Domain n→Gradient n m),
+        MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+        (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (Z x i) (Dψ x i))=0) →
+      0≤η → criticalGradientMorreySquare Z (ball (0:Domain n) 1)≤ENNReal.ofReal (η^2) →
+      letI : NormedAddCommGroup (MeanZeroNativeMorreySpace n k ((n:ℝ)-1)) := Submodule.normedAddCommGroup _
+      letI : NormedAddCommGroup (MeanZeroNativeMorreySpace n q ((n:ℝ)-1)) := Submodule.normedAddCommGroup _
+      ∃!T : MeanZeroNativeMorreySpace n k ((n:ℝ)-1)→L[ℝ]MeanZeroNativeMorreySpace n q ((n:ℝ)-1),
+        ‖T‖≤(effectiveNaturalNeumannOperatorConstant n : ℝ)*‖B‖*η ∧ ∀X : MeanZeroNativeMorreySpace n k ((n:ℝ)-1),
+          let u : Domain n→Ambient k := (nativeMorreyMapClass (n:=n) (q:=k) ((n:ℝ)-1)) X.val
+          let Q : Domain n→Gradient n q := fun x i=>WithLp.toLp 2
+            (fun j : Fin q=>(nativeMorreyHSClass (n:=n) (q:=q) ((n:ℝ)-1)) (T X).val x (finProdFinEquiv (i,j)))
+          ∀(ψ : Domain n→Ambient q) (Dψ : Domain n→Gradient n q),
+            MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+            IntegrableOn (fun x=>∑i : Fin n,inner ℝ (Q x i) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+            IntegrableOn (fun x=>∑i : Fin n,inner ℝ (B (Z x i) (u x)) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+            (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (Q x i) (Dψ x i))=
+              ∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (B (Z x i) (u x)) (Dψ x i) := by
+  let C : ℝ := effectiveNaturalNeumannOperatorConstant n
+  have hC : 0 < C := by
+    change 0 < (effectiveNaturalNeumannOperatorConstant n : ℝ)
+    exact_mod_cast effectiveNaturalNeumannOperatorConstant_pos n (by omega)
+  have Hclass := effective_unique_natural_coefficient_neumann_morrey_response n hn
+  intro m k q B Z η hZ hNatural hη hCritical
+  letI : NormedAddCommGroup (MeanZeroNativeMorreySpace n k ((n:ℝ)-1)) := Submodule.normedAddCommGroup _
+  letI : NormedAddCommGroup (MeanZeroNativeMorreySpace n q ((n:ℝ)-1)) := Submodule.normedAddCommGroup _
+  exact operator_of_unique_responses ((n:ℝ)-1) C η hC.le hη B Z
     (Hclass m k q B Z η hZ hNatural hη hCritical)
 
 end StationaryHarmonicMaps.Analysis

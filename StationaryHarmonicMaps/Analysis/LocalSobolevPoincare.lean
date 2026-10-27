@@ -1,6 +1,6 @@
 module
 
-public import StationaryHarmonicMaps.Analysis.ZeroBoundarySobolevLp
+public import StationaryHarmonicMaps.Analysis.EffectiveZeroBoundarySobolevLp
 public import StationaryHarmonicMaps.Analysis.LpPoincareNorm
 public import StationaryHarmonicMaps.Analysis.ScaledBallCutoff
 public import StationaryHarmonicMaps.Analysis.SobolevCutoff
@@ -22,11 +22,16 @@ open scoped ContDiff Topology ENNReal NNReal
 
 namespace StationaryHarmonicMaps.Analysis
 
+/-- The Euclidean local Sobolev--Poincaré coefficient with the fixed numerical cutoff. -/
+@[expose] noncomputable def localSobolevPoincareConstant (n : ℕ) (p : ℝ≥0) : ℝ :=
+  ((1+euclideanSobolevCoefficient n (p:ℝ):ℝ≥0):ℝ)*
+    (1+Real.sqrt (n:ℝ)+4*(n:ℝ)*(2:ℝ)^22*Real.sqrt (n:ℝ)*((2:ℝ)^n)^(1/(p:ℝ)))
+
 /-- Actual W12 data on the double ball produce higher local integrability and the scale-invariant Sobolev--Poincare bound. -/
-theorem exists_local_sobolev_poincare_bound (n : ℕ) (hn : 0 < n)
+theorem exists_local_sobolev_poincare_bound_explicit (n : ℕ) (hn : 0 < n)
     (p s : ℝ≥0) (hp : 1 ≤ p) (hp₂ : p ≤ 2) (hs : 0 < s)
     (hsp : (s : ℝ)⁻¹=(p : ℝ)⁻¹-(n : ℝ)⁻¹) :
-    ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (a : Domain n) (r : ℝ), 0 < r →
+    ∃ C : ℝ, C=localSobolevPoincareConstant n p ∧ 0 < C ∧ ∀ (q : ℕ) (a : Domain n) (r : ℝ), 0 < r →
       ∀ (u : Domain n → Ambient q) (Du : Domain n → Gradient n q),
       MemW12 (ballDomain a (2*r)) u Du →
       let c := ⨍ y in Metric.ball a (2*r),u y
@@ -34,15 +39,19 @@ theorem exists_local_sobolev_poincare_bound (n : ℕ) (hn : 0 < n)
       lpNorm (fun x => u x-c) (s : ℝ≥0∞) (volume.restrict (Metric.ball a r)) ≤
         C * lpNorm (fun x => Real.sqrt (hsNormSq (Du x))) (p : ℝ≥0∞)
           (volume.restrict (Metric.ball a (2*r))) := by
-  obtain ⟨S,hS,Hsob⟩ := exists_zeroBoundary_sobolev_lp_bound n hn p s hp hp₂ hs hsp
-  obtain ⟨M,hM,Hcut⟩ := exists_scaled_ball_cutoff n
+  obtain ⟨S,hSEq,hS,Hsob⟩ := exists_zeroBoundary_sobolev_lp_bound_explicit n hn p s hp hp₂ hs hsp
+  let M : ℝ := (2:ℝ)^22
+  have hM : 0<M := by norm_num [M]
+  have Hcut := scaled_ball_cutoff_explicit n
   let T : ℝ := ((2 : ℝ)^n)^(1/(p : ℝ))
   let L : ℝ := 1+Real.sqrt (n : ℝ)+4*(n : ℝ)*M*Real.sqrt (n : ℝ)*T
   let C : ℝ := (S : ℝ)*L
   have hT : 0 ≤ T := Real.rpow_nonneg (by positivity) _
   have hL : 0 < L := by dsimp only [L]; positivity
   have hSreal : 0 < (S : ℝ) := by exact_mod_cast hS
-  refine ⟨C,mul_pos hSreal hL,?_⟩
+  refine ⟨C,?_,mul_pos hSreal hL,?_⟩
+  · change (S:ℝ)*L=((1+euclideanSobolevCoefficient n (p:ℝ):ℝ≥0):ℝ)*L
+    rw [hSEq]
   intro q a r hr u Du hu
   dsimp only
   let μ : Measure (Domain n) := volume.restrict (Metric.ball a (2*r))
@@ -154,6 +163,20 @@ theorem exists_local_sobolev_poincare_bound (n : ℕ) (hn : 0 < n)
     _ ≤ (S : ℝ)*(L*lpNorm G (p : ℝ≥0∞) μ) :=
       mul_le_mul_of_nonneg_left hNormD' hSreal.le
     _ = _ := by dsimp only [C]; ring
+
+theorem exists_local_sobolev_poincare_bound (n : ℕ) (hn : 0 < n)
+    (p s : ℝ≥0) (hp : 1 ≤ p) (hp₂ : p ≤ 2) (hs : 0 < s)
+    (hsp : (s : ℝ)⁻¹=(p : ℝ)⁻¹-(n : ℝ)⁻¹) :
+    ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (a : Domain n) (r : ℝ), 0 < r →
+      ∀ (u : Domain n → Ambient q) (Du : Domain n → Gradient n q),
+      MemW12 (ballDomain a (2*r)) u Du →
+      let c := ⨍ y in Metric.ball a (2*r),u y
+      MemLp (fun x => u x-c) (s : ℝ≥0∞) (volume.restrict (Metric.ball a r)) ∧
+      lpNorm (fun x => u x-c) (s : ℝ≥0∞) (volume.restrict (Metric.ball a r)) ≤
+        C * lpNorm (fun x => Real.sqrt (hsNormSq (Du x))) (p : ℝ≥0∞)
+          (volume.restrict (Metric.ball a (2*r))) := by
+  obtain ⟨C,_hEq,hC,H⟩ := exists_local_sobolev_poincare_bound_explicit n hn p s hp hp₂ hs hsp
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

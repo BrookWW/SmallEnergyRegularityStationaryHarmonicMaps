@@ -22,9 +22,27 @@ open scoped Topology ENNReal
 namespace StationaryHarmonicMaps.Analysis
 
 /-- One actual Dirichlet projection and the same response simultaneously satisfy every Lp moment estimate, 1<p<infinity, and every allowed real power-growth estimate. -/
-theorem exists_same_dirichlet_operator_all_lp_and_power_growth_unitBall (n : ℕ) (hn : 2≤n) :
+
+@[expose] noncomputable def dirichletLpMomentConstant (n : ℕ) (p : ℝ) : ℝ :=
+  if p < 2 then (dirichletDensityMomentConstant n ((p/(p-1))/2))^(p-1)
+  else if p = 2 then 1 else dirichletDensityMomentConstant n (p/2)
+
+theorem dirichletLpMomentConstant_fixed (n : ℕ) (hn : 2 ≤ n) :
+    dirichletLpMomentConstant n (2 * (n : ℝ) + 1) =
+      (dirichletFixedHighMomentMajorant n : ℝ) := by
+  have hnR : (2 : ℝ) ≤ n := by exact_mod_cast hn
+  have hp : 2 < 2 * (n : ℝ) + 1 := by linarith only [hnR]
+  rw [dirichletLpMomentConstant, if_neg (not_lt.mpr hp.le), if_neg hp.ne']
+  unfold dirichletDensityMomentConstant dirichletFixedHighMomentMajorant
+  apply effectiveUniformGoodLambdaMomentConstant_eq_majorant
+  · linarith only [hnR]
+  · push_cast
+    linarith
+
+theorem exists_same_dirichlet_operator_all_lp_and_power_growth_unitBall_explicit (n : ℕ) (hn : 2≤n) :
     ∃ (Cp : {p : ℝ //1<p} → ℝ) (Cm : {ν : ℝ //0≤ν ∧ ν<(n:ℝ)} → ℝ),
-      (∀p,0<Cp p) ∧ (∀ν,0<Cm ν) ∧ ∀q : ℕ,
+      (∀p,0<Cp p) ∧ (∀ν,0<Cm ν) ∧
+      Cp = (fun p => dirichletLpMomentConstant n p.val) ∧ ∀q : ℕ,
       let μ := volume.restrict (ball (0:Domain n) 1)
       let D := fun (P : Domain n → Ambient (n*q)) x i=>WithLp.toLp 2
         (fun j : Fin q=>P x (finProdFinEquiv (i,j)))
@@ -44,7 +62,7 @@ theorem exists_same_dirichlet_operator_all_lp_and_power_growth_unitBall (n : ℕ
             ∀a : Domain n,a∈ball (0:Domain n) 1 → ∀r : ℝ,0<r →
               (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (D (T W) x))≤Cm ν*K*r^ν.val) := by
   classical
-  obtain ⟨Ch,hCh,HT⟩ := exists_dirichlet_class_all_high_moments_unitBall n hn
+  obtain ⟨Ch,hCh,hChFormula,HT⟩ := exists_dirichlet_class_all_high_moments_unitBall_explicit n hn
   have hConj (p : {p : ℝ //1<p}) (hp : p.val<2) : 2<p.val/(p.val-1) := by
     apply (lt_div_iff₀ (by linarith [p.property] : 0<p.val-1)).mpr
     linarith only [hp]
@@ -59,7 +77,11 @@ theorem exists_same_dirichlet_operator_all_lp_and_power_growth_unitBall (n : ℕ
     · exact hCh _
   choose Cm hCm Hgrowth using fun ν : {ν : ℝ //0≤ν ∧ ν<(n:ℝ)}=>
     exists_linear_zeroBoundary_full_real_power_growth n hn ν.val ν.property.1 ν.property.2
-  refine ⟨Cp,Cm,hCp,hCm,?_⟩
+  refine ⟨Cp,Cm,hCp,hCm,?_,?_⟩
+  · funext p
+    dsimp only [Cp, dirichletLpMomentConstant]
+    rw [hChFormula]
+    split_ifs <;> rfl
   intro q μ D
   letI : IsFiniteMeasure μ := isFiniteMeasure_restrict.mpr measure_ball_ne_top
   obtain ⟨T,hT,hSelf,hIdem,Hresponse⟩ := HT q
@@ -108,6 +130,30 @@ theorem exists_same_dirichlet_operator_all_lp_and_power_growth_unitBall (n : ℕ
       simpa only [inter_self,Real.one_rpow,mul_one] using H
     apply Hgrowth ν q u (D (T W)) F K hu hF hK hFgrowth (hEnergy.trans hTotal)
     simpa only [F,sub_eq_add_neg] using hEq
+
+theorem exists_same_dirichlet_operator_all_lp_and_power_growth_unitBall (n : ℕ) (hn : 2≤n) :
+    ∃ (Cp : {p : ℝ //1<p} → ℝ) (Cm : {ν : ℝ //0≤ν ∧ ν<(n:ℝ)} → ℝ),
+      (∀p,0<Cp p) ∧ (∀ν,0<Cm ν) ∧ ∀q : ℕ,
+      let μ := volume.restrict (ball (0:Domain n) 1)
+      let D := fun (P : Domain n → Ambient (n*q)) x i=>WithLp.toLp 2
+        (fun j : Fin q=>P x (finProdFinEquiv (i,j)))
+      ∃T : Lp (Ambient (n*q)) 2 μ →L[ℝ] Lp (Ambient (n*q)) 2 μ,
+        ‖T‖≤1 ∧ IsSelfAdjoint T ∧ (∀V,T (T V)=T V) ∧
+        ∀W : Lp (Ambient (n*q)) 2 μ,∃u : Domain n → Ambient q,
+          HasZeroBoundaryValues (ballDomain (0:Domain n) 1) u (D (T W)) ∧
+          HolderToCK.WeakPoissonOn (ballDomain (0:Domain n) 1)
+            (fun x i=>D (T W) x i-D W x i) (fun _=>0) ∧
+          (∫x,hsNormSq (D (T W) x) ∂μ)≤∫x,hsNormSq (D W x) ∂μ ∧
+          (∀p : {p : ℝ //1<p},MemLp (fun x=>W x) (ENNReal.ofReal p.val) μ →
+            MemLp (fun x=>(T W) x) (ENNReal.ofReal p.val) μ ∧
+            (∫x,‖(T W) x‖^p.val ∂μ)≤Cp p*(∫x,‖W x‖^p.val ∂μ)) ∧
+          (∀(ν : {ν : ℝ //0≤ν ∧ ν<(n:ℝ)}) (K : ℝ),0≤K →
+            (∀a : Domain n,a∈ball (0:Domain n) 1 → ∀r : ℝ,0<r →
+              (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (D W x))≤K*r^ν.val) →
+            ∀a : Domain n,a∈ball (0:Domain n) 1 → ∀r : ℝ,0<r →
+              (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (D (T W) x))≤Cm ν*K*r^ν.val) := by
+  obtain ⟨Cp,Cm,hCp,hCm,_hFormula,H⟩ := exists_same_dirichlet_operator_all_lp_and_power_growth_unitBall_explicit n hn
+  exact ⟨Cp,Cm,hCp,hCm,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

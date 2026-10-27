@@ -23,8 +23,8 @@ open scoped Topology ENNReal
 namespace StationaryHarmonicMaps.Analysis
 
 /-- Original raw off-support Dirichlet data give a genuine boundary essential-gradient bound and every finite-exponent bound for the same zero-extended gradient. -/
-theorem exists_boundary_offSupport_gradient_bounds (n : ℕ) (hn : 2≤n) :
-    ∃ K : ℝ,0<K ∧ ∀ (q : ℕ) (a : Domain n),‖a‖=1 → ∀ (r : ℝ),0<r → r≤1 →
+theorem exists_boundary_offSupport_gradient_bounds_explicit (n : ℕ) (hn : 2≤n) :
+    ∃ K : ℝ,0<K ∧ K = (oddKelvinBoundaryEnergyMajorant n : ℝ) ∧ ∀ (q : ℕ) (a : Domain n),‖a‖=1 → ∀ (r : ℝ),0<r → r≤1 →
       ∀ (u : Domain n → Ambient q) (Du F : Domain n → Gradient n q),
         HasZeroBoundaryValues (ballDomain (0 : Domain n) 1) u Du →
         (∀ i,MemLp (fun x=>F x i) 2 (volume.restrict (Metric.ball (0 : Domain n) 1))) →
@@ -41,8 +41,8 @@ theorem exists_boundary_offSupport_gradient_bounds (n : ℕ) (hn : 2≤n) :
             IntegrableOn (fun x=>(Real.sqrt (hsNormSq (D₀ x)))^p) (Metric.ball a (r/2)) volume ∧
             (∫ x in Metric.ball a (r/2),(Real.sqrt (hsNormSq (D₀ x)))^p)≤
               volume.real (Metric.ball a (r/2))*(Real.sqrt M)^p := by
-  obtain ⟨K,hK,Henergy⟩ := exists_odd_kelvin_boundary_gradient_energy_bound n hn
-  refine ⟨K,hK,?_⟩
+  obtain ⟨K,hK,hKFormula,Henergy⟩ := exists_odd_kelvin_boundary_gradient_energy_bound_majorant n hn
+  refine ⟨K,hK,hKFormula,?_⟩
   intro q a ha r hr hrOne u Du F hu hF hEq hZero D₀ M
   let I := inversion (0 : Domain n) 1
   let w := fun x : Domain n=>‖x‖^(2-(n:ℝ))
@@ -95,6 +95,28 @@ theorem exists_boundary_offSupport_gradient_bounds (n : ℕ) (hn : 2≤n) :
   refine ⟨hLp,hIntegral,?_⟩
   simpa only [ν,integral_const,smul_eq_mul,measureReal_restrict_apply_univ] using
     integral_mono_ae hIntegral (integrable_const ((Real.sqrt M)^p)) hPower
+
+
+theorem exists_boundary_offSupport_gradient_bounds (n : ℕ) (hn : 2≤n) :
+    ∃ K : ℝ,0<K ∧ ∀ (q : ℕ) (a : Domain n),‖a‖=1 → ∀ (r : ℝ),0<r → r≤1 →
+      ∀ (u : Domain n → Ambient q) (Du F : Domain n → Gradient n q),
+        HasZeroBoundaryValues (ballDomain (0 : Domain n) 1) u Du →
+        (∀ i,MemLp (fun x=>F x i) 2 (volume.restrict (Metric.ball (0 : Domain n) 1))) →
+        HolderToCK.WeakPoissonOn (ballDomain (0 : Domain n) 1)
+          (fun x i=>Du x i-F x i) (fun _=>(0 : Ambient q)) →
+        F =ᵐ[volume.restrict (Metric.ball (0 : Domain n) 1∩Metric.ball a r)] (fun _=>(0 : Gradient n q)) →
+        let D₀ := fun x i=>(Metric.ball (0 : Domain n) 1).indicator (fun y=>Du y i) x
+        let M := K*(volume.real (Metric.ball a (r/2)))⁻¹*(∫ x in Metric.ball a r,hsNormSq (D₀ x))
+        (∀ᵐ x ∂volume.restrict (Metric.ball a (r/2)),hsNormSq (D₀ x)≤M) ∧
+          MemLp (fun x=>Real.sqrt (hsNormSq (D₀ x))) ⊤ (volume.restrict (Metric.ball a (r/2))) ∧
+          ∀ p : ℝ,1≤p →
+            MemLp (fun x=>Real.sqrt (hsNormSq (D₀ x))) (ENNReal.ofReal p)
+              (volume.restrict (Metric.ball a (r/2))) ∧
+            IntegrableOn (fun x=>(Real.sqrt (hsNormSq (D₀ x)))^p) (Metric.ball a (r/2)) volume ∧
+            (∫ x in Metric.ball a (r/2),(Real.sqrt (hsNormSq (D₀ x)))^p)≤
+              volume.real (Metric.ball a (r/2))*(Real.sqrt M)^p := by
+  obtain ⟨K,hK,_hFormula,H⟩ := exists_boundary_offSupport_gradient_bounds_explicit n hn
+  exact ⟨K,hK,H⟩
 
 /-- The same original raw off-support data give genuine boundary energy decay for the literal zero-extended gradient, with a constant depending only on dimension. -/
 theorem exists_boundary_offSupport_gradient_energy_decay (n : ℕ) (hn : 2≤n) :

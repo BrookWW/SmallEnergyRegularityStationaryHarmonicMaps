@@ -20,8 +20,12 @@ open scoped ContDiff Topology ENNReal
 namespace StationaryHarmonicMaps.Analysis
 
 /-- Original open finite-volume data produce the same true normalized partition with genuine uniform derivatives and positive normalized masses. -/
-theorem exists_quantitative_whitney_smooth_partition (n : ℕ) (hn : 0<n) :
-    ∃ B : ℝ,0<B ∧ ∀ S : Set (Domain n),IsOpen S → volume S≠(∞ : ℝ≥0∞) →
+
+@[expose] noncomputable def whitneyPartitionDerivativeConstant (n : ℕ) : ℝ :=
+  ((1 + 3 * (60 : ℝ)^n) * (2 : ℝ)^22) / 5
+
+theorem exists_quantitative_whitney_smooth_partition_explicit (n : ℕ) (hn : 0<n) :
+    ∃ B : ℝ,0<B ∧ B = whitneyPartitionDerivativeConstant n ∧ ∀ S : Set (Domain n),IsOpen S → volume S≠(∞ : ℝ≥0∞) →
       let r := fun a=>Metric.infDist a Sᶜ/20
       ∃ U : Set (Domain n),U.Countable ∧ U⊆S ∧
         U.PairwiseDisjoint (fun a=>Metric.ball a (r a)) ∧ S=⋃ a : U,Metric.ball a.val (5*r a.val) ∧
@@ -33,12 +37,14 @@ theorem exists_quantitative_whitney_smooth_partition (n : ℕ) (hn : 0<n) :
             volume.real (Metric.ball a.val (5*r a.val))/(60 : ℝ)^n≤∫ x,θ a x) ∧
           (∀ x∈S,∑' a,θ a x=1) := by
   classical
-  obtain ⟨C,hC,Hpartition⟩ := exists_whitney_normalized_smooth_partition n hn
+  obtain ⟨C,hC,hCFormula,Hpartition⟩ := exists_whitney_normalized_smooth_partition_explicit n hn
   let N : ℝ := (60 : ℝ)^n
   have hN : 0<N := pow_pos (by norm_num) _
   let B : ℝ := ((1+3*N)*C)/5
   have hB : 0<B := by dsimp only [B];positivity
-  refine ⟨B,hB,?_⟩
+  refine ⟨B,hB,?_,?_⟩
+  · dsimp only [B, N, whitneyPartitionDerivativeConstant]
+    rw [hCFormula]
   intro S hOpen hFinite r
   obtain ⟨U,hCount,hUS,hDisj,hCover,η,hηData,hFiniteη,hPBounds,hFiniteθ,hθData,hθBounds,hPartition⟩ :=
     Hpartition S hOpen hFinite
@@ -76,6 +82,21 @@ theorem exists_quantitative_whitney_smooth_partition (n : ℕ) (hn : 0<n) :
   refine ⟨(hθData a).1,(hθData a).2.1,(hθData a).2.2.1,(hθData a).2.2.2,hθBounds a,?_,hMass a⟩
   intro x
   exact (hDθ a x).trans_eq (by dsimp only [B,N];ring)
+
+theorem exists_quantitative_whitney_smooth_partition (n : ℕ) (hn : 0<n) :
+    ∃ B : ℝ,0<B ∧ ∀ S : Set (Domain n),IsOpen S → volume S≠(∞ : ℝ≥0∞) →
+      let r := fun a=>Metric.infDist a Sᶜ/20
+      ∃ U : Set (Domain n),U.Countable ∧ U⊆S ∧
+        U.PairwiseDisjoint (fun a=>Metric.ball a (r a)) ∧ S=⋃ a : U,Metric.ball a.val (5*r a.val) ∧
+        ∃ θ : U → Domain n → ℝ,
+          (∀ x,Function.HasFiniteSupport (fun a=>θ a x)) ∧
+          (∀ a,ContDiff ℝ ∞ (θ a) ∧ HasCompactSupport (θ a) ∧
+            tsupport (θ a)⊆Metric.ball a.val (10*r a.val) ∧ tsupport (θ a)⊆S ∧
+            (∀ x,0≤θ a x ∧ θ a x≤1) ∧ (∀ x,‖fderiv ℝ (θ a) x‖≤B/r a.val) ∧
+            volume.real (Metric.ball a.val (5*r a.val))/(60 : ℝ)^n≤∫ x,θ a x) ∧
+          (∀ x∈S,∑' a,θ a x=1) := by
+  obtain ⟨B, hB, _hFormula, H⟩ := exists_quantitative_whitney_smooth_partition_explicit n hn
+  exact ⟨B, hB, H⟩
 
 end StationaryHarmonicMaps.Analysis
 

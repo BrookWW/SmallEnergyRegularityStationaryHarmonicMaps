@@ -49,19 +49,19 @@ private theorem dyadic_energy_level_ratio (n m : ℕ) {η : ℝ} (hη : 0 < η) 
     _ = _ := by rw [inv_mul_cancel₀ hL.ne', mul_one]
 
 /-- The same Sobolev map has a geometric outer-measure tail on the strict interior ball. -/
-theorem exists_distribution_tail_of_criticalMorrey (n : ℕ) (hn : 2 ≤ n) :
-    ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (u : Domain n → Ambient q)
+theorem effective_distribution_tail_of_criticalMorrey (n : ℕ) (hn : 2 ≤ n) :
+    ∀ (q : ℕ) (u : Domain n → Ambient q)
       (Du : Domain n → Gradient n q) (η : ℝ),
       MemW12 (ballDomain (0 : Domain n) 1) u Du → 0 < η →
       criticalGradientMorreySquare Du (Metric.ball (0 : Domain n) 1) ≤
         ENNReal.ofReal (η ^ 2) → ∀ m : ℕ,
       volume {x | x ∈ Metric.ball (0 : Domain n) (7 / 8 : ℝ) ∧
-        C * η * ((m : ℝ) + 1) <
+        (effectivePointwiseConstant n : ℝ) * η * ((m : ℝ) + 1) <
           ‖u x - (⨍ y in Metric.ball (0 : Domain n) 1, u y)‖} ≤
         ENNReal.ofReal ((5 : ℝ) ^ n * (1 / 4 : ℝ) ^ m) := by
   classical
-  obtain ⟨C, hC, hpoint⟩ := exists_pointwise_bound_of_criticalMorrey n hn
-  refine ⟨C, hC, ?_⟩
+  let C : ℝ := effectivePointwiseConstant n
+  have hpoint := effective_pointwise_bound_of_criticalMorrey n hn
   intro q u Du η hu hη hcritical m
   let B : Set (Domain n) := Metric.ball (0 : Domain n) 1
   let F : Domain n → Gradient n q := B.indicator Du
@@ -133,6 +133,20 @@ theorem exists_distribution_tail_of_criticalMorrey (n : ℕ) (hn : 2 ≤ n) :
     _ = ENNReal.ofReal (((5 : ℝ) ^ n / L) * η ^ 2) :=
       (ENNReal.ofReal_mul (by positivity)).symm
     _ ≤ _ := ENNReal.ofReal_le_ofReal (dyadic_energy_level_ratio n m hη)
+
+/-- The same Sobolev map has a geometric outer-measure tail on the strict interior ball. -/
+theorem exists_distribution_tail_of_criticalMorrey (n : ℕ) (hn : 2 ≤ n) :
+    ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (u : Domain n → Ambient q)
+      (Du : Domain n → Gradient n q) (η : ℝ),
+      MemW12 (ballDomain (0 : Domain n) 1) u Du → 0 < η →
+      criticalGradientMorreySquare Du (Metric.ball (0 : Domain n) 1) ≤
+        ENNReal.ofReal (η ^ 2) → ∀ m : ℕ,
+      volume {x | x ∈ Metric.ball (0 : Domain n) (7 / 8 : ℝ) ∧
+        C * η * ((m : ℝ) + 1) <
+          ‖u x - (⨍ y in Metric.ball (0 : Domain n) 1, u y)‖} ≤
+        ENNReal.ofReal ((5 : ℝ) ^ n * (1 / 4 : ℝ) ^ m) := by
+  exact ⟨(effectivePointwiseConstant n : ℝ), effectivePointwiseConstant_pos n,
+    effective_distribution_tail_of_criticalMorrey n hn⟩
 
 end StationaryHarmonicMaps.Analysis
 

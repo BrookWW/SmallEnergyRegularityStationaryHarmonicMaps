@@ -21,10 +21,27 @@ open scoped Topology ENNReal
 
 namespace StationaryHarmonicMaps.Analysis
 
+@[expose] def effectiveBoundaryScalarConstant (n : ℕ) : ℚ :=
+  effectiveLocalDivcurlPairingConstant n * (effectiveBoundaryCriticalMeanConstant n : ℚ) *
+    (1+(effectiveNativeBoundaryTestConstant n : ℚ))
+
+theorem effectiveBoundaryScalarConstant_pos (n : ℕ) (hn : 2≤n) :
+    0 < effectiveBoundaryScalarConstant n := by
+  obtain ⟨D,hD,hDEq,_H⟩ := existsUnique_local_divcurl_continuous_pairing_explicit n hn
+  have hDQ : 0<effectiveLocalDivcurlPairingConstant n := by
+    rw [hDEq] at hD
+    exact_mod_cast hD
+  have hBQ : 0<(effectiveBoundaryCriticalMeanConstant n : ℚ) := by
+    exact_mod_cast effectiveBoundaryCriticalMeanConstant_pos n
+  have hKQ : 0<(effectiveNativeBoundaryTestConstant n : ℚ) := by
+    exact_mod_cast effectiveNativeBoundaryTestConstant_pos n
+  unfold effectiveBoundaryScalarConstant
+  positivity
+
 /-- Full natural boundary cancellation and the original critical graph control
 ordinary native div-curl pairings over the entire source ball. -/
-theorem exists_boundary_critical_native_divcurl_bound (n : ℕ) (hn : 2≤n) :
-    ∃ C : ℝ,0<C ∧ ∀ (m : ℕ) (u : Domain n → Ambient m)
+theorem exists_boundary_critical_native_divcurl_bound_explicit (n : ℕ) (hn : 2≤n) :
+    ∃ C : ℝ,0<C ∧ C=(effectiveBoundaryScalarConstant n : ℝ) ∧ ∀ (m : ℕ) (u : Domain n → Ambient m)
       (Du : Domain n → Gradient n m) (η M : ℝ),
       MemW12 (ballDomain (0 : Domain n) 1) u Du → 0≤η →
       (∀ᵐx∂volume.restrict (ball (0 : Domain n) 1),‖u x‖≤M) →
@@ -41,10 +58,23 @@ theorem exists_boundary_critical_native_divcurl_bound (n : ℕ) (hn : 2≤n) :
           |∫x in ball (0 : Domain n) 1,(∑i : Fin n,inner ℝ (Z x i) (Dw x i))*L (u x)|≤
             C*‖L‖*η*Real.sqrt (∫x in ball (0 : Domain n) 1,hsNormSq (Z x))*
               Real.sqrt (∫x in ball (0 : Domain n) 1,hsNormSq (Dw x)) := by
-  obtain ⟨B,hB,HBMO⟩ := exists_boundary_critical_scalar_mean_oscillation_extension n hn
-  obtain ⟨K,hK,HExt⟩ := exists_native_boundary_test_extension n hn
-  obtain ⟨D,hD,Hpair⟩ := existsUnique_local_divcurl_continuous_pairing n hn
-  refine ⟨D*B*Real.sqrt K,mul_pos (mul_pos hD hB) (Real.sqrt_pos.mpr hK),?_⟩
+  let B : ℝ := effectiveBoundaryCriticalMeanConstant n
+  have hB : 0<B := effectiveBoundaryCriticalMeanConstant_pos n
+  have HBMO := effective_boundary_critical_scalar_mean_oscillation_extension n hn
+  let K : ℝ := effectiveNativeBoundaryTestConstant n
+  have hK : 0<K := effectiveNativeBoundaryTestConstant_pos n
+  have HExt := effective_native_boundary_test_extension n hn
+  obtain ⟨D,hD,hDEq,Hpair⟩ := existsUnique_local_divcurl_continuous_pairing_explicit n hn
+  have hRootK : Real.sqrt K≤1+K := by
+    have H := Real.sq_sqrt hK.le
+    have H0 := Real.sqrt_nonneg K
+    nlinarith [sq_nonneg (Real.sqrt K-1)]
+  have hCast : (effectiveBoundaryScalarConstant n : ℝ)=D*B*(1+K) := by
+    rw [hDEq]
+    simp only [effectiveBoundaryScalarConstant,Rat.cast_mul,Rat.cast_natCast,
+      Rat.cast_add,Rat.cast_one,B,K]
+  refine ⟨(effectiveBoundaryScalarConstant n : ℝ),
+    (by exact_mod_cast effectiveBoundaryScalarConstant_pos n hn),rfl,?_⟩
   intro m u Du η M hu hη huBound hCritical L q Z hZ hNatural w Dw hw
   let Ω := ballDomain (0 : Domain n) 1
   let μ := volume.restrict (ball (0 : Domain n) 1)
@@ -105,14 +135,57 @@ theorem exists_boundary_critical_native_divcurl_bound (n : ℕ) (hn : 2≤n) :
     (by norm_num) G hGν hDiv W DW hW b (B*‖L‖*η) hb (by positivity) hbBMO
   rw [(hAgree hProductI).trans hProductIntegral,hGRestrictedEnergy] at hBound
   have hRoot : Real.sqrt (∫x,hsNormSq (DW x) ∂ν)≤
-      Real.sqrt K*Real.sqrt (∫x,hsNormSq (Dw x) ∂μ) := by
-    exact (Real.sqrt_le_sqrt hWEnergy).trans_eq (Real.sqrt_mul hK.le _)
+      (1+K)*Real.sqrt (∫x,hsNormSq (Dw x) ∂μ) := by
+    exact ((Real.sqrt_le_sqrt hWEnergy).trans_eq (Real.sqrt_mul hK.le _)).trans
+      (mul_le_mul_of_nonneg_right hRootK (Real.sqrt_nonneg _))
   refine ⟨hOriginalI,hBound.trans ?_⟩
   calc
     _≤D*(B*‖L‖*η)*Real.sqrt (∫x,hsNormSq (Z x) ∂μ)*
-        (Real.sqrt K*Real.sqrt (∫x,hsNormSq (Dw x) ∂μ)) :=
+        ((1+K)*Real.sqrt (∫x,hsNormSq (Dw x) ∂μ)) :=
       mul_le_mul_of_nonneg_left hRoot (by positivity)
-    _=_ := by ring
+    _=_ := by rw [hCast]; ring
+
+theorem exists_boundary_critical_native_divcurl_bound (n : ℕ) (hn : 2≤n) :
+    ∃ C : ℝ,0<C ∧ ∀ (m : ℕ) (u : Domain n → Ambient m)
+      (Du : Domain n → Gradient n m) (η M : ℝ),
+      MemW12 (ballDomain (0 : Domain n) 1) u Du → 0≤η →
+      (∀ᵐx∂volume.restrict (ball (0 : Domain n) 1),‖u x‖≤M) →
+      criticalGradientMorreySquare Du (ball (0 : Domain n) 1)≤ENNReal.ofReal (η^2) →
+      ∀ (L : Ambient m →L[ℝ] ℝ) (q : ℕ) (Z : Domain n → Gradient n q),
+        (∀i,MemLp (fun x=>Z x i) 2 (volume.restrict (ball (0 : Domain n) 1))) →
+        (∀ (f : Domain n → Ambient q) (Df : Domain n → Gradient n q),
+          MemW12 (ballDomain (0 : Domain n) 1) f Df →
+          (∫x in ball (0 : Domain n) 1,∑i : Fin n,inner ℝ (Z x i) (Df x i))=0) →
+        ∀ (w : Domain n → Ambient q) (Dw : Domain n → Gradient n q),
+          MemW12 (ballDomain (0 : Domain n) 1) w Dw →
+          IntegrableOn (fun x=>(∑i : Fin n,inner ℝ (Z x i) (Dw x i))*L (u x))
+            (ball (0 : Domain n) 1) volume ∧
+          |∫x in ball (0 : Domain n) 1,(∑i : Fin n,inner ℝ (Z x i) (Dw x i))*L (u x)|≤
+            C*‖L‖*η*Real.sqrt (∫x in ball (0 : Domain n) 1,hsNormSq (Z x))*
+              Real.sqrt (∫x in ball (0 : Domain n) 1,hsNormSq (Dw x)) := by
+  obtain ⟨C,hC,_hCEq,H⟩ := exists_boundary_critical_native_divcurl_bound_explicit n hn
+  exact ⟨C,hC,H⟩
+
+theorem effective_boundary_critical_native_divcurl_bound (n : ℕ) (hn : 2≤n) :
+    ∀ (m : ℕ) (u : Domain n → Ambient m)
+      (Du : Domain n → Gradient n m) (η M : ℝ),
+      MemW12 (ballDomain (0 : Domain n) 1) u Du → 0≤η →
+      (∀ᵐx∂volume.restrict (ball (0 : Domain n) 1),‖u x‖≤M) →
+      criticalGradientMorreySquare Du (ball (0 : Domain n) 1)≤ENNReal.ofReal (η^2) →
+      ∀ (L : Ambient m →L[ℝ] ℝ) (q : ℕ) (Z : Domain n → Gradient n q),
+        (∀i,MemLp (fun x=>Z x i) 2 (volume.restrict (ball (0 : Domain n) 1))) →
+        (∀ (f : Domain n → Ambient q) (Df : Domain n → Gradient n q),
+          MemW12 (ballDomain (0 : Domain n) 1) f Df →
+          (∫x in ball (0 : Domain n) 1,∑i : Fin n,inner ℝ (Z x i) (Df x i))=0) →
+        ∀ (w : Domain n → Ambient q) (Dw : Domain n → Gradient n q),
+          MemW12 (ballDomain (0 : Domain n) 1) w Dw →
+          IntegrableOn (fun x=>(∑i : Fin n,inner ℝ (Z x i) (Dw x i))*L (u x))
+            (ball (0 : Domain n) 1) volume ∧
+          |∫x in ball (0 : Domain n) 1,(∑i : Fin n,inner ℝ (Z x i) (Dw x i))*L (u x)|≤
+            (effectiveBoundaryScalarConstant n : ℝ)*‖L‖*η*Real.sqrt (∫x in ball (0 : Domain n) 1,hsNormSq (Z x))*
+              Real.sqrt (∫x in ball (0 : Domain n) 1,hsNormSq (Dw x)) := by
+  obtain ⟨C,_hC,hCEq,H⟩ := exists_boundary_critical_native_divcurl_bound_explicit n hn
+  rwa [hCEq] at H
 
 end StationaryHarmonicMaps.Analysis
 

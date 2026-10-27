@@ -1,6 +1,6 @@
 module
 
-public import StationaryHarmonicMaps.Analysis.DivCurlScaleNormalization
+public import StationaryHarmonicMaps.Analysis.EffectiveDivCurlConstants
 public import StationaryHarmonicMaps.Analysis.DyadicBallMaximal
 
 /-!
@@ -20,9 +20,9 @@ open scoped ContDiff Topology ENNReal NNReal
 namespace StationaryHarmonicMaps.Analysis
 
 /-- The original rough divergence equation and native graph yield actual whole-space kernel pairings controlled by the two literal maximal fields. -/
-theorem exists_divcurl_dyadic_maximal_kernel_bound (n : ℕ) (hn : 2 ≤ n) :
+theorem exists_divcurl_dyadic_maximal_kernel_bound_explicit (n : ℕ) (hn : 2 ≤ n) :
     ∃ p : ℝ≥0, (p : ℝ)=2*(n : ℝ)/((n : ℝ)+1) ∧ 1 < p ∧ p < 2 ∧
-      ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (Z : Domain n → Gradient n q),
+      ∃ C : ℝ, 0 < C ∧ C=(divcurlDyadicKernelMajorant n:ℝ) ∧ ∀ (q : ℕ) (Z : Domain n → Gradient n q),
         (∀ i,LocallyMemL2 (⟨univ,isOpen_univ⟩ : OpenDomain n) (fun x => Z x i)) →
         HolderToCK.WeakPoissonOn (⟨univ,isOpen_univ⟩ : OpenDomain n) Z (fun _ => (0 : Ambient q)) →
         ∀ (w : Domain n → Ambient q) (Dw : Domain n → Gradient n q),
@@ -36,14 +36,22 @@ theorem exists_divcurl_dyadic_maximal_kernel_bound (n : ℕ) (hn : 2 ≤ n) :
               ENNReal.ofReal C *
                 (dyadicBallMaximal (fun x => ENNReal.ofReal ((Real.sqrt (hsNormSq (Z x)))^(p : ℝ))) a)^(1/(p : ℝ)) *
                 (dyadicBallMaximal (fun x => ENNReal.ofReal ((Real.sqrt (hsNormSq (Dw x)))^(p : ℝ))) a)^(1/(p : ℝ)) := by
-  obtain ⟨p,hpFormula,hp1,hp2,K,hK,Hkernel⟩ := exists_divcurl_scaled_average_kernel_bound n hn
+  obtain ⟨p,hpFormula,hp1,hp2,K,hK,hKEq,Hkernel⟩ := exists_divcurl_scaled_average_kernel_bound_effective n hn
   let α : ℝ := 1/(p : ℝ)
   have hpR : 0 < (p : ℝ) := by exact_mod_cast (lt_trans zero_lt_one hp1)
   have hα : 0 ≤ α := one_div_nonneg.mpr hpR.le
   let A : ℝ := ((2 : ℝ)^n)^α
-  let C : ℝ := K*A*A
+  let C : ℝ := (divcurlDyadicKernelMajorant n:ℝ)
   have hA : 0 < A := Real.rpow_pos_of_pos (by positivity) _
-  refine ⟨p,hpFormula,hp1,hp2,C,mul_pos (mul_pos hK hA) hA,?_⟩
+  have hpOne : 1≤(p:ℝ) := by exact_mod_cast hp1.le
+  have hAUpper : A≤(2:ℝ)^n := Real.rpow_le_self_of_one_le
+    (one_le_pow₀ (by norm_num : (1:ℝ)≤2)) ((div_le_one hpR).mpr hpOne)
+  have hCoefficientReal : K*A*A≤C := by
+    calc
+      _≤K*(2:ℝ)^n*(2:ℝ)^n := by gcongr
+      _=C := by rw [hKEq];dsimp only [C,divcurlDyadicKernelMajorant];push_cast;rfl
+  have hC : 0<C := (mul_pos (mul_pos hK hA) hA).trans_le hCoefficientReal
+  refine ⟨p,hpFormula,hp1,hp2,C,hC,rfl,?_⟩
   intro q Z hZ hdiv w Dw hw a r hr κ hκ hcκ hsκ hDκ
   have hZbig (i : Fin n) : MemLp (fun x => Z x i) 2 (volume.restrict (Metric.ball a (2*r))) :=
     (hZ i (Metric.closedBall a (2*r)) (isCompact_closedBall _ _) (subset_univ _)).mono_measure
@@ -112,19 +120,43 @@ theorem exists_divcurl_dyadic_maximal_kernel_bound (n : ℕ) (hn : 2 ≤ n) :
     ENNReal.ofReal (K*(⨍ x in Metric.ball a r,f x)^α*(⨍ x in Metric.ball a (2*r),g x)^α) at hLift
   rw [hLiftEq,hfAvg,hgAvg] at hLift
   have hCoefficient : ENNReal.ofReal K*(ENNReal.ofReal ((2 : ℝ)^n))^α*
-      (ENNReal.ofReal ((2 : ℝ)^n))^α=ENNReal.ofReal C := by
+      (ENNReal.ofReal ((2 : ℝ)^n))^α≤ENNReal.ofReal C := by
     rw [ENNReal.ofReal_rpow_of_nonneg (by positivity : 0 ≤ (2 : ℝ)^n) hα,
       ← ENNReal.ofReal_mul hK.le,← ENNReal.ofReal_mul (mul_nonneg hK.le (Real.rpow_nonneg (by positivity) _))]
+    exact ENNReal.ofReal_le_ofReal hCoefficientReal
   refine ⟨hWhole,hLift.trans ?_⟩
   calc
     _ ≤ ENNReal.ofReal K*((ENNReal.ofReal ((2 : ℝ)^n))^α*
         (dyadicBallMaximal (fun x => ENNReal.ofReal (f x)) a)^α)*
         ((ENNReal.ofReal ((2 : ℝ)^n))^α*(dyadicBallMaximal (fun x => ENNReal.ofReal (g x)) a)^α) :=
       mul_le_mul (mul_le_mul_right hfMax _) hgMax zero_le zero_le
-    _ = ENNReal.ofReal C*(dyadicBallMaximal (fun x => ENNReal.ofReal (f x)) a)^α*
+    _ ≤ ENNReal.ofReal C*(dyadicBallMaximal (fun x => ENNReal.ofReal (f x)) a)^α*
         (dyadicBallMaximal (fun x => ENNReal.ofReal (g x)) a)^α := by
-      rw [← hCoefficient]
-      ac_rfl
+      calc
+        _ = (ENNReal.ofReal K*(ENNReal.ofReal ((2 : ℝ)^n))^α*
+            (ENNReal.ofReal ((2 : ℝ)^n))^α)*
+            (dyadicBallMaximal (fun x => ENNReal.ofReal (f x)) a)^α*
+            (dyadicBallMaximal (fun x => ENNReal.ofReal (g x)) a)^α := by ac_rfl
+        _ ≤ _ := by gcongr
+
+theorem exists_divcurl_dyadic_maximal_kernel_bound (n : ℕ) (hn : 2 ≤ n) :
+    ∃ p : ℝ≥0, (p : ℝ)=2*(n : ℝ)/((n : ℝ)+1) ∧ 1 < p ∧ p < 2 ∧
+      ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (Z : Domain n → Gradient n q),
+        (∀ i,LocallyMemL2 (⟨univ,isOpen_univ⟩ : OpenDomain n) (fun x => Z x i)) →
+        HolderToCK.WeakPoissonOn (⟨univ,isOpen_univ⟩ : OpenDomain n) Z (fun _ => (0 : Ambient q)) →
+        ∀ (w : Domain n → Ambient q) (Dw : Domain n → Gradient n q),
+          MemW12Loc (⟨univ,isOpen_univ⟩ : OpenDomain n) w Dw →
+          ∀ (a : Domain n) (r : ℝ),0<r → ∀ (κ : Domain n → ℝ),
+            ContDiff ℝ ∞ κ → HasCompactSupport κ → tsupport κ ⊆ Metric.ball a r →
+            (∀ x ∈ Metric.ball a r,∀ i : Fin n,
+              |fderiv ℝ κ x (EuclideanSpace.single i 1)| ≤ r^(-(n : ℝ)-1)) →
+            Integrable (fun x => κ x*∑ i : Fin n,inner ℝ (Z x i) (Dw x i)) volume ∧
+            ENNReal.ofReal |∫ x,κ x*∑ i : Fin n,inner ℝ (Z x i) (Dw x i)| ≤
+              ENNReal.ofReal C *
+                (dyadicBallMaximal (fun x => ENNReal.ofReal ((Real.sqrt (hsNormSq (Z x)))^(p : ℝ))) a)^(1/(p : ℝ)) *
+                (dyadicBallMaximal (fun x => ENNReal.ofReal ((Real.sqrt (hsNormSq (Dw x)))^(p : ℝ))) a)^(1/(p : ℝ)) := by
+  obtain ⟨p,hpf,hp1,hp2,C,hC,_hCEq,H⟩ := exists_divcurl_dyadic_maximal_kernel_bound_explicit n hn
+  exact ⟨p,hpf,hp1,hp2,C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

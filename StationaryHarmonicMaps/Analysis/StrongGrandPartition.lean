@@ -23,8 +23,13 @@ open scoped ContDiff Topology ENNReal
 namespace StationaryHarmonicMaps.Analysis
 
 /-- Original finite grand data produce one quantitative normalized partition retaining all actual supports, masses, derivatives, good points and newly computed cancellation averages. -/
-theorem exists_strong_grand_superlevel_partition (n : ℕ) (hn : 0<n) :
-    ∃ B D : ℝ,0<B ∧ 0<D ∧ ∀ (f : Domain n → ℝ),Integrable f volume →
+
+@[expose] noncomputable def strongGrandPartitionKernelMajorant (n : ℕ) : ℝ :=
+  whitneyMassNormalizedKernelMajorant n (whitneyPartitionDerivativeConstant n)
+
+theorem exists_strong_grand_superlevel_partition_explicit (n : ℕ) (hn : 0<n) :
+    ∃ B D : ℝ,0<B ∧ 0<D ∧ B = whitneyPartitionDerivativeConstant n ∧
+      D = strongGrandPartitionKernelMajorant n ∧ ∀ (f : Domain n → ℝ),Integrable f volume →
       let J := fun a => ⨆ s : PositiveRadius, ⨆ κ : Domain n → ℝ,
         ⨆ (_ : ContDiff ℝ ∞ κ), ⨆ (_ : HasCompactSupport κ),
         ⨆ (_ : tsupport κ⊆Metric.ball a s.val),
@@ -50,9 +55,11 @@ theorem exists_strong_grand_superlevel_partition (n : ℕ) (hn : 0<n) :
               |c|≤D*L ∧ Integrable (fun x=>θ a x*(f x-c)) volume ∧
                 (∫ x,θ a x*(f x-c))=0 := by
   classical
-  obtain ⟨B,hB,Hpartition⟩ := exists_quantitative_whitney_smooth_partition n hn
-  obtain ⟨D,hD,Hkernel⟩ := exists_whitney_mass_normalized_kernel_bound n B hB
-  refine ⟨B,D,hB,hD,?_⟩
+  obtain ⟨B,hB,hBFormula,Hpartition⟩ := exists_quantitative_whitney_smooth_partition_explicit n hn
+  obtain ⟨D,hD,hDFormula,Hkernel⟩ := exists_whitney_mass_normalized_kernel_bound_majorant n B hB
+  refine ⟨B,D,hB,hD,hBFormula,?_,?_⟩
+  · rw [hDFormula, hBFormula]
+    rfl
   intro f hf J hJ L hL S r
   obtain ⟨hLS,hMeas⟩ := lowerSemicontinuous_measurable_smooth_grand_kernel f
   have hOpen : IsOpen S := hLS.isOpen_preimage (ENNReal.ofReal L)
@@ -93,6 +100,36 @@ theorem exists_strong_grand_superlevel_partition (n : ℕ) (hn : 0<n) :
   exact ⟨hra,(hθData a).1,(hθData a).2.1,(hθData a).2.2.1,(hθData a).2.2.2.1,
     (hθData a).2.2.2.2.1,(hθData a).2.2.2.2.2.1,hMass,⟨y,hy,hNear,hGood⟩,
     hMassPos,hAverage,hBadI,hZero⟩
+
+theorem exists_strong_grand_superlevel_partition (n : ℕ) (hn : 0<n) :
+    ∃ B D : ℝ,0<B ∧ 0<D ∧ ∀ (f : Domain n → ℝ),Integrable f volume →
+      let J := fun a => ⨆ s : PositiveRadius, ⨆ κ : Domain n → ℝ,
+        ⨆ (_ : ContDiff ℝ ∞ κ), ⨆ (_ : HasCompactSupport κ),
+        ⨆ (_ : tsupport κ⊆Metric.ball a s.val),
+        ⨆ (_ : ∀ x∈Metric.ball a s.val,∀ i : Fin n,
+          |fderiv ℝ κ x (EuclideanSpace.single i 1)|≤s.val^(-(n : ℝ)-1)),
+          ENNReal.ofReal |∫ x,κ x*f x|
+      (∫⁻ x,J x)<(∞ : ℝ≥0∞) → ∀ L : ℝ,0<L →
+        let S := {x | ENNReal.ofReal L<J x}
+        let r := fun a=>Metric.infDist a Sᶜ/20
+        IsOpen S ∧ volume S≠(∞ : ℝ≥0∞) ∧ Sᶜ.Nonempty ∧
+        ∃ U : Set (Domain n),U.Countable ∧ U⊆S ∧
+          U.PairwiseDisjoint (fun a=>Metric.ball a (r a)) ∧ S=⋃ a : U,Metric.ball a.val (5*r a.val) ∧
+          (∑' a : U,volume (Metric.ball a.val (r a.val)))≤volume S ∧
+          ∃ θ : U → Domain n → ℝ,(∀ x,Function.HasFiniteSupport (fun a=>θ a x)) ∧
+            (∀ x∈S,∑' a,θ a x=1) ∧ ∀ a,
+              0<r a.val ∧ ContDiff ℝ ∞ (θ a) ∧ HasCompactSupport (θ a) ∧
+              tsupport (θ a)⊆Metric.ball a.val (10*r a.val) ∧ tsupport (θ a)⊆S ∧
+              (∀ x,0≤θ a x ∧ θ a x≤1) ∧ (∀ x,‖fderiv ℝ (θ a) x‖≤B/r a.val) ∧
+              volume.real (Metric.ball a.val (5*r a.val))/(60 : ℝ)^n≤∫ x,θ a x ∧
+              (∃ y∈Sᶜ,dist y a.val=20*r a.val ∧ J y≤ENNReal.ofReal L) ∧
+              0<(∫ x,θ a x) ∧
+              let c := (∫ x,θ a x*f x)/(∫ x,θ a x)
+              |c|≤D*L ∧ Integrable (fun x=>θ a x*(f x-c)) volume ∧
+                (∫ x,θ a x*(f x-c))=0 := by
+  obtain ⟨B, D, hB, hD, _hBFormula, _hDFormula, H⟩ :=
+    exists_strong_grand_superlevel_partition_explicit n hn
+  exact ⟨B, D, hB, hD, H⟩
 
 end StationaryHarmonicMaps.Analysis
 

@@ -203,6 +203,67 @@ See
 [CompensatedCutoffPowerGrowth](../StationaryHarmonicMaps/Analysis/CompensatedCutoffPowerGrowth.lean)
 and [CompensatedSystemRepresentative](../StationaryHarmonicMaps/Analysis/CompensatedSystemRepresentative.lean).
 
+## Effective rational bounds
+
+The effective theorem fixes $p=1+1/(2n)$, conjugate exponent $2n+1$ and
+Hölder exponent $1/2$. Given certified embedding data, both the energy threshold and Hölder
+coefficient can be completely evaluated. All analytic coefficients used by
+this effective theorem are explicit natural numbers or rationals. The exact-arithmetic functions in
+[EffectiveStationaryConstants](../StationaryHarmonicMaps/Analysis/EffectiveStationaryConstants.lean)
+return an admissible normalized-energy threshold and Hölder coefficient.
+Their complete formulas, analytical roles and self-contained evaluator appear
+in the constant ledger and algorithm appendix of [the paper](../paper/main.tex).
+
+For certified geometric data, let $G$ be a compactly supported C¹ ambient
+extension of the orthogonal normal projection and let $\ell\in\mathbb Q$
+be nonnegative with $\|DG(y)\|\le\ell$ for every $y\in\mathbb R^q$.
+This derivative has the induced operator norm from Euclidean space to
+operator-norm matrices. The original stationary gradient and encoded connection then have joint
+critical square at most $M\Theta_u(a,R)$, where
+
+```math
+M=(1+4q\ell^2)4^{n-2},\qquad K=(1+C_g)(1+M).
+```
+
+The constructed frame has joint gradient/connection square at most $C_g$
+times the original connection's critical square. The given-frame
+representative theorem supplies the exact rational smallness $\theta$ and
+coefficient $C_r$ on the two-thirds ball. With its rational frame threshold
+$\kappa$, the actual final witnesses are
+
+```math
+\varepsilon_*(n,q,\ell)=\left(\frac{\min(\kappa,\theta)}K\right)^2,
+\qquad C(n,q,\ell)=2C_rK.
+```
+
+The factor two bounds $(3/4)^{-1/2}$ when transporting the two-thirds
+estimate on $B_{3R/4}(a)$ to the original half ball. The majorant
+$\sqrt M\le1+M$ removes real square roots from the coefficient algorithm.
+The resulting rational values are conservative and are not claimed optimal.
+
+The public exports
+[`stationary_small_energy_regularity_effective`](../StationaryHarmonicMaps/Frozen/EffectiveSmallEnergyRegularity.lean)
+and [`stationary_small_energy_smooth_regularity_effective`](../StationaryHarmonicMaps/Frozen/EffectiveSmallEnergySmoothRegularity.lean)
+consume the certified $G,\ell$ and prove the original all-point estimate for
+the same map and weak gradient. The smooth export retains exactly this
+Hölder bound and asserts C∞ regularity of the same representative; it does
+not give numerical all-order derivative bounds.
+
+[EffectiveNormalProjectionData](../StationaryHarmonicMaps/Geometry/EffectiveNormalProjectionData.lean)
+proves that each abstract compact C² target admits a suitable certificate.
+Numerical evaluation for a specified embedding uses a certified choice,
+including derivative control on the whole ambient extension region.
+Existence of that choice for an abstract manifold is not a numerical
+certificate-extraction algorithm. No such geometric choice is an additional
+hypothesis of the original existential theorem.
+
+The integer and rational defining values require neither the target's value
+bound nor an actual map or frame as computational inputs. Compactness still
+supplies the ordinary pairing admissibility used in the analytic proof.
+The exact input example $n=2,q=3,\ell=1$ is stored in
+[effective-constants.json](../verification/effective-constants.json); its
+presence does not certify that geometric bound for a particular embedding.
+
 ## Smoothness of the same representative
 
 For a smooth target, the normal projection has a smooth ambient extension.
@@ -230,15 +291,16 @@ estimates are not part of this stationary export.
 
 ## Formal closure and reproduction
 
-The public entry point imports only the two main theorem interfaces and
-their full proved dependencies. The required `HarmonicMaps` and `HolderToCK`
+The public entry point imports the regularity interfaces and their full
+proved dependencies. The required `HarmonicMaps` and `HolderToCK`
 modules are included as libraries in the same package; Mathlib is the only
 direct external Lake dependency. No external paper theorem is introduced as a
 project axiom, and no unformalized analytic lemma occurs in the main
 theorems' hypotheses.
 
-The source checker, complete theorem-type checker, axiom checker and public
-consumer checks are shipped with the package. Only `propext`,
+The source checker, complete theorem-type checker, axiom checker, public
+consumer checks and exact rational computation checker are shipped with the
+package. Only `propext`,
 `Classical.choice` and `Quot.sound` are permitted by the axiom audit.
 Compiled-declaration replay uses Lean's `leanchecker`. The exact commands and
 pins are in the [README](../README.md).

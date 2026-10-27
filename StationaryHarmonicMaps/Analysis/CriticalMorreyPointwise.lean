@@ -18,9 +18,18 @@ open scoped Topology
 
 namespace StationaryHarmonicMaps.Analysis
 
+@[expose] def effectivePointwiseConstant (n : ℕ) : ℕ :=
+  effectiveDyadicMeanConstant n + 2 ^ (2 * (n + 1)) * (n + 1) + 1
+
+theorem effectivePointwiseConstant_pos (n : ℕ) :
+    0 < (effectivePointwiseConstant n : ℝ) := by
+  simp only [effectivePointwiseConstant, Nat.cast_add, Nat.cast_one, Nat.cast_mul,
+    Nat.cast_pow, Nat.cast_ofNat]
+  positivity
+
 /-- Outside an actual energy-average superlevel, the original value has a quantitative dyadic bound. -/
-theorem exists_pointwise_bound_of_criticalMorrey (n : ℕ) (hn : 2 ≤ n) :
-    ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (u : Domain n → Ambient q)
+theorem effective_pointwise_bound_of_criticalMorrey (n : ℕ) (hn : 2 ≤ n) :
+    ∀ (q : ℕ) (u : Domain n → Ambient q)
       (Du : Domain n → Gradient n q) (η : ℝ),
       MemW12 (ballDomain (0 : Domain n) 1) u Du → 0 ≤ η →
       criticalGradientMorreySquare Du (Metric.ball (0 : Domain n) 1) ≤
@@ -31,13 +40,28 @@ theorem exists_pointwise_bound_of_criticalMorrey (n : ℕ) (hn : 2 ≤ n) :
       (∀ r : ℝ, 0 < r → r ≤ 1 / 16 →
         (∫ y in Metric.ball x r, hsNormSq (Du y)) ≤
           (16 * η * (2 : ℝ) ^ m) ^ 2 * volume.real (Metric.ball x r)) →
-      ‖u x - (⨍ y in Metric.ball (0 : Domain n) 1, u y)‖ ≤ C * η * ((m : ℝ) + 1) := by
-  obtain ⟨C₀, hC₀, hmeans⟩ := exists_dyadic_mean_bound_of_criticalMorrey n hn
+      ‖u x - (⨍ y in Metric.ball (0 : Domain n) 1, u y)‖ ≤ (effectivePointwiseConstant n : ℝ) * η * ((m : ℝ) + 1) := by
+  let C₀ : ℝ := effectiveDyadicMeanConstant n
+  have hC₀ : 0 < C₀ := effectiveDyadicMeanConstant_pos n
+  have hmeans := effective_dyadic_mean_bound_of_criticalMorrey n hn
   let T : ℝ := (2 : ℝ) ^ (n + 1) * ((2 : ℝ) ^ (n + 1) * Real.sqrt (n : ℝ))
-  let C : ℝ := C₀ + T + 1
+  let C : ℝ := effectivePointwiseConstant n
   have hT : 0 ≤ T := by dsimp only [T]; positivity
-  have hC : 0 < C := by dsimp only [C]; positivity
-  refine ⟨C, hC, ?_⟩
+  have hTbound : T ≤ (2 : ℝ) ^ (2 * (n + 1)) * ((n : ℝ) + 1) := by
+    have hnR : 0 ≤ (n : ℝ) := Nat.cast_nonneg n
+    have hsqrt : Real.sqrt (n : ℝ) ≤ (n : ℝ) + 1 := by
+      have H := Real.sq_sqrt hnR
+      have Hn := Real.sqrt_nonneg (n : ℝ)
+      nlinarith only [H, Hn, hnR, sq_nonneg (n : ℝ)]
+    have H := mul_le_mul_of_nonneg_left hsqrt
+      (show 0 ≤ (2 : ℝ) ^ (n + 1) * (2 : ℝ) ^ (n + 1) by positivity)
+    have hp : (2 : ℝ) ^ (2 * (n + 1)) = (2 : ℝ) ^ (n + 1) * (2 : ℝ) ^ (n + 1) := by
+      rw [two_mul, pow_add]
+    simpa only [T, hp, mul_assoc] using H
+  have hCbound : C₀ + T + 1 ≤ C := by
+    dsimp only [C, C₀, effectivePointwiseConstant]
+    push_cast
+    linarith only [hTbound]
   intro q u Du η hu hη hcritical x hx hLebesgue m henergy
   let r₀ : ℝ := (1 / 16 : ℝ) * (1 / 2 : ℝ) ^ m
   have hr₀ : 0 < r₀ := mul_pos (by norm_num) (pow_pos (by norm_num) m)
@@ -66,8 +90,7 @@ theorem exists_pointwise_bound_of_criticalMorrey (n : ℕ) (hn : 2 ≤ n) :
   have hscalar : T + C₀ * ((m : ℝ) + 1) ≤ C * ((m : ℝ) + 1) := by
     have hm : 0 ≤ (m : ℝ) := Nat.cast_nonneg m
     have hTm := mul_nonneg hT hm
-    dsimp only [C]
-    nlinarith only [hm, hTm]
+    nlinarith only [hm, hTm, mul_nonneg (sub_nonneg.mpr hCbound) (by linarith : 0 ≤ (m : ℝ) + 1)]
   calc
     _ ≤ ‖u x - (⨍ y in Metric.ball x r₀, u y)‖ +
         ‖(⨍ y in Metric.ball x r₀, u y) - (⨍ y in Metric.ball (0 : Domain n) 1, u y)‖ :=
@@ -76,6 +99,23 @@ theorem exists_pointwise_bound_of_criticalMorrey (n : ℕ) (hn : 2 ≤ n) :
     _ = (T + C₀ * ((m : ℝ) + 1)) * η := by ring
     _ ≤ (C * ((m : ℝ) + 1)) * η := mul_le_mul_of_nonneg_right hscalar hη
     _ = _ := by ring
+
+/-- Outside an actual energy-average superlevel, the original value has a quantitative dyadic bound. -/
+theorem exists_pointwise_bound_of_criticalMorrey (n : ℕ) (hn : 2 ≤ n) :
+    ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (u : Domain n → Ambient q)
+      (Du : Domain n → Gradient n q) (η : ℝ),
+      MemW12 (ballDomain (0 : Domain n) 1) u Du → 0 ≤ η →
+      criticalGradientMorreySquare Du (Metric.ball (0 : Domain n) 1) ≤
+        ENNReal.ofReal (η ^ 2) →
+      ∀ x ∈ Metric.ball (0 : Domain n) (7 / 8 : ℝ),
+      Tendsto (fun r : ℝ => ⨍ y in Metric.ball x r, u y)
+        (𝓝[>] (0 : ℝ)) (𝓝 (u x)) → ∀ m : ℕ,
+      (∀ r : ℝ, 0 < r → r ≤ 1 / 16 →
+        (∫ y in Metric.ball x r, hsNormSq (Du y)) ≤
+          (16 * η * (2 : ℝ) ^ m) ^ 2 * volume.real (Metric.ball x r)) →
+      ‖u x - (⨍ y in Metric.ball (0 : Domain n) 1, u y)‖ ≤ C * η * ((m : ℝ) + 1) := by
+  exact ⟨(effectivePointwiseConstant n : ℝ), effectivePointwiseConstant_pos n,
+    effective_pointwise_bound_of_criticalMorrey n hn⟩
 
 end StationaryHarmonicMaps.Analysis
 

@@ -29,9 +29,9 @@ private theorem norm_sq_half_rpow_coexact {E : Type*} [NormedAddCommGroup E]
 /-- The original natural solenoidal field produces an actual relative closed
 normal native tensor whose divergence has the conjugate moment and exact
 power pairing. No conjugate estimate on the full tensor derivative is assumed. -/
-theorem exists_native_coexact_dual_test_unitBall (n : ℕ) (hn : 2≤n)
+theorem exists_native_coexact_dual_test_unitBall_explicit (n : ℕ) (hn : 2≤n)
     (p : ℝ) (hpOne : 1<p) (hpTwo : p<2) :
-    ∃C : ℝ,0<C ∧ ∀q : ℕ,
+    ∃C : ℝ,0<C ∧ C = effectiveCoexactLpMomentConstant n (p/(p-1)) ∧ ∀q : ℕ,
       let μ := volume.restrict (ball (0:Domain n) 1)
       let r := p/(p-1)
       ∀F : Domain n → Gradient n q,
@@ -69,8 +69,9 @@ theorem exists_native_coexact_dual_test_unitBall (n : ℕ) (hn : 2≤n)
   have hrTwo : 2<p/(p-1) := (lt_div_iff₀ hpm).mpr (by linarith only [hpTwo])
   have hrOne : 1<p/(p-1) := lt_trans (by norm_num) hrTwo
   have hr0 : 0<p/(p-1) := zero_lt_one.trans hrOne
-  obtain ⟨Cp,hCp,HT⟩ := exists_same_coexact_operator_all_lp_unitBall n hn
-  refine ⟨Cp ⟨p/(p-1),hrOne⟩,hCp _,?_⟩
+  obtain ⟨Cp,hCp,hCpEq,HT⟩ := exists_same_coexact_operator_all_lp_unitBall_explicit n hn
+  refine ⟨Cp ⟨p/(p-1),hrOne⟩,hCp _,?_,?_⟩
+  · rw [hCpEq]
   intro q μ r F hF hFNatural
   letI : IsFiniteMeasure μ := isFiniteMeasure_restrict.mpr measure_ball_ne_top
   let E : Gradient n q → Ambient (n*q) := fun G=>WithLp.toLp 2
@@ -173,6 +174,44 @@ theorem exists_native_coexact_dual_test_unitBall (n : ℕ) (hn : 2≤n)
   · simp_rw [hOutput]
     rw [hYMoment] at hBound
     exact hBound.trans_eq (by rw [integral_congr_ae hInputAE])
+
+theorem exists_native_coexact_dual_test_unitBall (n : ℕ) (hn : 2≤n)
+    (p : ℝ) (hpOne : 1<p) (hpTwo : p<2) :
+    ∃C : ℝ,0<C ∧ ∀q : ℕ,
+      let μ := volume.restrict (ball (0:Domain n) 1)
+      let r := p/(p-1)
+      ∀F : Domain n → Gradient n q,
+        (∀i,MemLp (fun x=>F x i) 2 μ) →
+        (∀(ψ : Domain n → Ambient q) (Dψ : Domain n → Gradient n q),
+          MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+          (∫x,∑i : Fin n,inner ℝ (F x i) (Dψ x i) ∂μ)=0) →
+        ∃(c : Fin n → Fin n → Domain n → Ambient q)
+          (Dc : Fin n → Fin n → Domain n → Gradient n q) (Q : Domain n → Gradient n q),
+          (∀i j,MemW12 (ballDomain (0:Domain n) 1) (c i j) (Dc i j)) ∧
+          (∀ᵐx∂μ,∀i j,c i j x= -c j i x) ∧
+          (∀ᵐx∂μ,∀i j k,Dc i j x k+Dc j k x i+Dc k i x j=0) ∧
+          (∀ᵐx∂μ,∀j,(∑i : Fin n,Dc i j x i)=Q x j) ∧
+          (∀(j : Fin n) (ψ : Domain n → Ambient q) (Dψ : Domain n → Gradient n q),
+            MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+            Integrable (fun x=>∑i : Fin n,inner ℝ (c i j x) (Dψ x i)) μ ∧
+            Integrable (fun x=>inner ℝ (Q x j) (ψ x)) μ ∧
+            (∫x,∑i : Fin n,inner ℝ (c i j x) (Dψ x i) ∂μ)=-(∫x,inner ℝ (Q x j) (ψ x) ∂μ)) ∧
+          (∀(ψ : Domain n → Ambient q) (Dψ : Domain n → Gradient n q),
+            MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+            Integrable (fun x=>∑i : Fin n,inner ℝ (Q x i) (Dψ x i)) μ ∧
+            (∫x,∑i : Fin n,inner ℝ (Q x i) (Dψ x i) ∂μ)=0) ∧
+          ((∫x,∑j : Fin n,∑i : Fin n,‖c i j x‖^2 ∂μ)+
+            (∫x,∑j : Fin n,∑k : Fin n,∑i : Fin n,‖Dc i j x k‖^2 ∂μ)≤
+              (4*(2 : ℝ)^(n+1)+2*(n : ℝ)+2)*(∫x,hsNormSq (Q x) ∂μ)) ∧
+          MemLp (fun x=>WithLp.toLp 2 (fun k : Fin (n*q)=>
+            Q x (finProdFinEquiv.symm k).1 (finProdFinEquiv.symm k).2)) (ENNReal.ofReal r) μ ∧
+          Integrable (fun x=>∑i : Fin n,inner ℝ (F x i) (Q x i)) μ ∧
+          Integrable (fun x=>(hsNormSq (F x))^(p/2)) μ ∧
+          Integrable (fun x=>(hsNormSq (Q x))^(r/2)) μ ∧
+          (∫x,∑i : Fin n,inner ℝ (F x i) (Q x i) ∂μ)=∫x,(hsNormSq (F x))^(p/2) ∂μ ∧
+          (∫x,(hsNormSq (Q x))^(r/2) ∂μ)≤C*(∫x,(hsNormSq (F x))^(p/2) ∂μ) := by
+  obtain ⟨C,hC,_hCEq,H⟩ := exists_native_coexact_dual_test_unitBall_explicit n hn p hpOne hpTwo
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

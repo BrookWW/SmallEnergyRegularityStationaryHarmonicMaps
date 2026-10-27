@@ -19,9 +19,13 @@ open scoped Topology
 namespace StationaryHarmonicMaps.Analysis
 
 /-- Outside an actual energy-average superlevel, the original value has a quantitative dyadic bound. -/
-theorem exists_pointwise_bound_of_criticalLp_growth (n : ℕ)
+
+@[expose] def criticalLpPointwiseTailMajorant (n : ℕ) : ℕ :=
+  criticalLpDyadicMeanMajorant n + 2^(n+1) * 2^(n+1) * (n+1) + 1
+
+theorem exists_pointwise_bound_of_criticalLp_growth_explicit (n : ℕ)
     (p : ℝ) (hpOne : 1≤p) (hpTwo : p≤2) :
-    ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (u : Domain n → Ambient q)
+    ∃ C : ℝ, 0 < C ∧ C = (criticalLpPointwiseTailMajorant n : ℝ) ∧ ∀ (q : ℕ) (u : Domain n → Ambient q)
       (Du : Domain n → Gradient n q) (η : ℝ),
       MemW12 (ballDomain (0 : Domain n) 1) u Du → 0 ≤ η →
       (∀a∈Metric.ball (0 : Domain n) 1,∀r : ℝ,0<r →
@@ -34,12 +38,26 @@ theorem exists_pointwise_bound_of_criticalLp_growth (n : ℕ)
         (∫ y in Metric.ball x r, (Real.sqrt (hsNormSq (Du y)))^p) ≤
           (16 * η * (2 : ℝ) ^ m) ^ p * volume.real (Metric.ball x r)) →
       ‖u x - (⨍ y in Metric.ball (0 : Domain n) 1, u y)‖ ≤ C * η * ((m : ℝ) + 1) := by
-  obtain ⟨C₀, hC₀, hmeans⟩ := exists_dyadic_mean_bound_of_criticalLp_growth n p hpOne hpTwo
+  obtain ⟨C₀, hC₀, hC₀Formula, hmeans⟩ := exists_dyadic_mean_bound_of_criticalLp_growth_explicit n p hpOne hpTwo
   let T : ℝ := (2 : ℝ) ^ (n + 1) * ((2 : ℝ) ^ (n + 1) * Real.sqrt (n : ℝ))
-  let C : ℝ := C₀ + T + 1
+  let C : ℝ := criticalLpPointwiseTailMajorant n
   have hT : 0 ≤ T := by dsimp only [T]; positivity
-  have hC : 0 < C := by dsimp only [C]; positivity
-  refine ⟨C, hC, ?_⟩
+  have hC : 0 < C := by dsimp only [C, criticalLpPointwiseTailMajorant]; positivity
+  have hTBound : T ≤ (2 : ℝ)^(n+1)*(2 : ℝ)^(n+1)*((n : ℝ)+1) := by
+    have hn : 0 ≤ (n : ℝ) := Nat.cast_nonneg n
+    have hsqrt : Real.sqrt (n : ℝ) ≤ (n : ℝ)+1 := by
+      have Hsq := Real.sq_sqrt hn
+      have Hnonneg := Real.sqrt_nonneg (n : ℝ)
+      nlinarith only [Hsq, Hnonneg, hn, sq_nonneg (n : ℝ)]
+    have H := mul_le_mul_of_nonneg_left hsqrt
+      (show 0 ≤ (2 : ℝ)^(n+1)*(2 : ℝ)^(n+1) by positivity)
+    simpa only [T, mul_assoc] using H
+  have hCT : C₀+T ≤ C := by
+    dsimp only [C, criticalLpPointwiseTailMajorant]
+    simp only [Nat.cast_add, Nat.cast_mul, Nat.cast_pow, Nat.cast_ofNat, Nat.cast_one]
+    rw [hC₀Formula]
+    linarith only [hTBound]
+  refine ⟨C, hC, rfl, ?_⟩
   intro q u Du η hu hη hcritical x hx hLebesgue m henergy
   let r₀ : ℝ := (1 / 16 : ℝ) * (1 / 2 : ℝ) ^ m
   have hr₀ : 0 < r₀ := mul_pos (by norm_num) (pow_pos (by norm_num) m)
@@ -66,8 +84,8 @@ theorem exists_pointwise_bound_of_criticalLp_growth (n : ℕ)
   have hscalar : T + C₀ * ((m : ℝ) + 1) ≤ C * ((m : ℝ) + 1) := by
     have hm : 0 ≤ (m : ℝ) := Nat.cast_nonneg m
     have hTm := mul_nonneg hT hm
-    dsimp only [C]
-    nlinarith only [hm, hTm]
+    have H := mul_le_mul_of_nonneg_right hCT (show 0 ≤ (m : ℝ)+1 by positivity)
+    nlinarith only [hTm,H]
   calc
     _ ≤ ‖u x - (⨍ y in Metric.ball x r₀, u y)‖ +
         ‖(⨍ y in Metric.ball x r₀, u y) - (⨍ y in Metric.ball (0 : Domain n) 1, u y)‖ :=
@@ -76,6 +94,24 @@ theorem exists_pointwise_bound_of_criticalLp_growth (n : ℕ)
     _ = (T + C₀ * ((m : ℝ) + 1)) * η := by ring
     _ ≤ (C * ((m : ℝ) + 1)) * η := mul_le_mul_of_nonneg_right hscalar hη
     _ = _ := by ring
+
+theorem exists_pointwise_bound_of_criticalLp_growth (n : ℕ)
+    (p : ℝ) (hpOne : 1≤p) (hpTwo : p≤2) :
+    ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (u : Domain n → Ambient q)
+      (Du : Domain n → Gradient n q) (η : ℝ),
+      MemW12 (ballDomain (0 : Domain n) 1) u Du → 0 ≤ η →
+      (∀a∈Metric.ball (0 : Domain n) 1,∀r : ℝ,0<r →
+        (∫y in Metric.ball a r∩Metric.ball (0 : Domain n) 1,(Real.sqrt (hsNormSq (Du y)))^p)≤
+          η^p*r^((n : ℝ)-p)) →
+      ∀ x ∈ Metric.ball (0 : Domain n) (7 / 8 : ℝ),
+      Tendsto (fun r : ℝ => ⨍ y in Metric.ball x r, u y)
+        (𝓝[>] (0 : ℝ)) (𝓝 (u x)) → ∀ m : ℕ,
+      (∀ r : ℝ, 0 < r → r ≤ 1 / 16 →
+        (∫ y in Metric.ball x r, (Real.sqrt (hsNormSq (Du y)))^p) ≤
+          (16 * η * (2 : ℝ) ^ m) ^ p * volume.real (Metric.ball x r)) →
+      ‖u x - (⨍ y in Metric.ball (0 : Domain n) 1, u y)‖ ≤ C * η * ((m : ℝ) + 1) := by
+  obtain ⟨C,hC,_hFormula,H⟩ := exists_pointwise_bound_of_criticalLp_growth_explicit n p hpOne hpTwo
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

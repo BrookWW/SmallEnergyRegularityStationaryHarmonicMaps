@@ -279,5 +279,115 @@ theorem exists_unique_skew_linearized_neumann_inverse
   funext X
   exact congrArg (fun L : S→L[ℝ]S=>L X) hEqual
 
+/-- Original small critical natural skew coefficients construct the unique
+actual inverse of the linearized Coulomb Neumann problem on the genuine
+skew native space, with full ordinary integrability and every native test. -/
+theorem effective_unique_skew_linearized_neumann_inverse
+    (n : ℕ) (hn : 2≤n)
+    (q : ℕ) (e : Ambient (q*q)≃L[ℝ](Ambient q→L[ℝ]Ambient q))
+    (hE : ∀ T : Ambient q →L[ℝ] Ambient q,
+      ‖e.symm T‖ ^ 2 = ∑ j : Fin q, ‖T (EuclideanSpace.single j 1)‖ ^ 2) :
+    let ν : ℝ := (n:ℝ)-1
+    let S := SkewMeanZeroNativeMorreySpace n q ν e
+    letI : NormedAddCommGroup S := Submodule.normedAddCommGroup (skewMeanZeroNativeMorreySubmodule n q ν e)
+    letI : SeminormedAddCommGroup S :=
+      (Submodule.normedAddCommGroup (skewMeanZeroNativeMorreySubmodule n q ν e)).toSeminormedAddCommGroup
+    letI : NormedSpace ℝ S := Submodule.normedSpace (skewMeanZeroNativeMorreySubmodule n q ν e)
+    ∀(Z : Domain n→Gradient n (q*q)) (η : ℝ),
+      (∀i,MemLp (fun x=>Z x i) 2 (volume.restrict (ball (0:Domain n) 1))) →
+      (∀(ψ : Domain n→Ambient (q*q)) (Dψ : Domain n→Gradient n (q*q)),
+        MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+        (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (Z x i) (Dψ x i))=0) →
+      0≤η → η≤(effectiveSkewNeumannAmplitude n q : ℝ) → criticalGradientMorreySquare Z (ball (0:Domain n) 1)≤ENNReal.ofReal (η^2) →
+      (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),∀i : Fin n,star (e (Z x i))=-(e (Z x i))) →
+      ∃!A : S≃L[ℝ]S,
+        (∀X : S,
+          let u : Domain n→Ambient (q*q) := (nativeMorreyMapClass (n:=n) (q:=q*q) ν) X.val.val
+          let Du : Domain n→Gradient n (q*q) := fun x i=>WithLp.toLp 2
+            (fun j : Fin (q*q)=>(nativeMorreyHSClass (n:=n) (q:=q*q) ν) X.val.val x (finProdFinEquiv (i,j)))
+          let Y : S := A X
+          let DY : Domain n→Gradient n (q*q) := fun x i=>WithLp.toLp 2
+            (fun j : Fin (q*q)=>(nativeMorreyHSClass (n:=n) (q:=q*q) ν) Y.val.val x (finProdFinEquiv (i,j)))
+          ∀(ψ : Domain n→Ambient (q*q)) (Dψ : Domain n→Gradient n (q*q)),
+            MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+            IntegrableOn (fun x=>∑i : Fin n,inner ℝ (DY x i) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+            IntegrableOn (fun x=>∑i : Fin n,inner ℝ
+              (Du x i+morreyMatrixCommutator q e (Z x i) (u x)) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+            (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (DY x i) (Dψ x i))=
+              ∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ
+                (Du x i+morreyMatrixCommutator q e (Z x i) (u x)) (Dψ x i)) ∧ ‖(A.symm : S→L[ℝ]S)‖≤2 := by
+  intro ν S
+  letI : NormedAddCommGroup S := Submodule.normedAddCommGroup (skewMeanZeroNativeMorreySubmodule n q ν e)
+  letI : SeminormedAddCommGroup S :=
+    (Submodule.normedAddCommGroup (skewMeanZeroNativeMorreySubmodule n q ν e)).toSeminormedAddCommGroup
+  letI : NormedSpace ℝ S := Submodule.normedSpace (skewMeanZeroNativeMorreySubmodule n q ν e)
+  have Hε := effective_small_skew_natural_neumann_morrey_inverse n hn q e hE
+  change ∀ (Z : Domain n → Gradient n (q*q)) (η : ℝ), _
+  intro Z η hZ hNatural hη hηle hCritical hSkew
+  have hOperator := Hε Z η hZ hNatural hη hηle hCritical hSkew
+  let T := hOperator.choose
+  have hT := hOperator.choose_spec.1.2
+  have hInverse := hOperator.choose_spec.2.2
+  let A := hInverse.choose
+  have hA := hInverse.choose_spec.1
+  have hRaw := identity_response_tests ν (skewMeanZeroNativeMorreySubmodule n q ν e)
+    (morreyMatrixCommutator q e) Z T hT A.toContinuousLinearMap hA.1
+  refine ⟨A,⟨hRaw,hA.2⟩,?_⟩
+  intro D hD
+  have hEqual := skew_linearized_neumann_maps_unique n q ν e Z D.toContinuousLinearMap A.toContinuousLinearMap
+    (fun X ψ Dψ hψ=>(hD.1 X ψ Dψ hψ).2.2) (fun X ψ Dψ hψ=>(hRaw X ψ Dψ hψ).2.2)
+  apply ContinuousLinearEquiv.ext
+  funext X
+  exact congrArg (fun L : S→L[ℝ]S=>L X) hEqual
+
+@[expose] def effectiveSkewLinearizedInverseProperty (n q : ℕ)
+    (e : Ambient (q*q) ≃L[ℝ] (Ambient q →L[ℝ] Ambient q)) (ν : ℝ) : Prop :=
+    let S := SkewMeanZeroNativeMorreySpace n q ν e
+    letI : NormedAddCommGroup S := Submodule.normedAddCommGroup (skewMeanZeroNativeMorreySubmodule n q ν e)
+    letI : SeminormedAddCommGroup S :=
+      (Submodule.normedAddCommGroup (skewMeanZeroNativeMorreySubmodule n q ν e)).toSeminormedAddCommGroup
+    letI : NormedSpace ℝ S := Submodule.normedSpace (skewMeanZeroNativeMorreySubmodule n q ν e)
+    ∀(Z : Domain n→Gradient n (q*q)) (η : ℝ),
+      (∀i,MemLp (fun x=>Z x i) 2 (volume.restrict (ball (0:Domain n) 1))) →
+      (∀(ψ : Domain n→Ambient (q*q)) (Dψ : Domain n→Gradient n (q*q)),
+        MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+        (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (Z x i) (Dψ x i))=0) →
+      0≤η → η≤(effectiveSkewNeumannAmplitude n q : ℝ) → criticalGradientMorreySquare Z (ball (0:Domain n) 1)≤ENNReal.ofReal (η^2) →
+      (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),∀i : Fin n,star (e (Z x i))=-(e (Z x i))) →
+      ∃!A : S≃L[ℝ]S,
+        (∀X : S,
+          let u : Domain n→Ambient (q*q) := (nativeMorreyMapClass (n:=n) (q:=q*q) ν) X.val.val
+          let Du : Domain n→Gradient n (q*q) := fun x i=>WithLp.toLp 2
+            (fun j : Fin (q*q)=>(nativeMorreyHSClass (n:=n) (q:=q*q) ν) X.val.val x (finProdFinEquiv (i,j)))
+          let Y : S := A X
+          let DY : Domain n→Gradient n (q*q) := fun x i=>WithLp.toLp 2
+            (fun j : Fin (q*q)=>(nativeMorreyHSClass (n:=n) (q:=q*q) ν) Y.val.val x (finProdFinEquiv (i,j)))
+          ∀(ψ : Domain n→Ambient (q*q)) (Dψ : Domain n→Gradient n (q*q)),
+            MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+            IntegrableOn (fun x=>∑i : Fin n,inner ℝ (DY x i) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+            IntegrableOn (fun x=>∑i : Fin n,inner ℝ
+              (Du x i+morreyMatrixCommutator q e (Z x i) (u x)) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+            (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (DY x i) (Dψ x i))=
+              ∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ
+                (Du x i+morreyMatrixCommutator q e (Z x i) (u x)) (Dψ x i)) ∧ ‖(A.symm : S→L[ℝ]S)‖≤2
+
+theorem effective_unique_skew_linearized_neumann_inverse_property
+    (n : ℕ) (hn : 2 ≤ n) (q : ℕ)
+    (e : Ambient (q*q) ≃L[ℝ] (Ambient q →L[ℝ] Ambient q))
+    (hE : ∀ T : Ambient q →L[ℝ] Ambient q,
+      ‖e.symm T‖ ^ 2 = ∑ j : Fin q, ‖T (EuclideanSpace.single j 1)‖ ^ 2) :
+    effectiveSkewLinearizedInverseProperty n q e ((n : ℝ) - 1) :=
+  effective_unique_skew_linearized_neumann_inverse n hn q e hE
+
+theorem effective_unique_skew_linearized_neumann_inverse_one
+    (n : ℕ) (hn : 2 ≤ n) (q : ℕ)
+    (e : Ambient (q*q) ≃L[ℝ] (Ambient q →L[ℝ] Ambient q))
+    (hE : ∀ T : Ambient q →L[ℝ] Ambient q,
+      ‖e.symm T‖ ^ 2 = ∑ j : Fin q, ‖T (EuclideanSpace.single j 1)‖ ^ 2) :
+    effectiveSkewLinearizedInverseProperty n q e ((n : ℝ) - 2 + 1) := by
+  have hExponent : (n : ℝ) - 2 + 1 = (n : ℝ) - 1 := by ring
+  exact Eq.mpr (congrArg (effectiveSkewLinearizedInverseProperty n q e) hExponent)
+    (effective_unique_skew_linearized_neumann_inverse_property n hn q e hE)
+
 end StationaryHarmonicMaps.Analysis
 end

@@ -33,13 +33,21 @@ theorem coexact_three_factor_exponents (p : ℝ) (hpOne : 1<p) (hpTwo : p<2) :
   field_simp
   ring
 
+@[expose] def effectiveCoexactCompensatedConstant (n : ℕ) : ℕ :=
+  1+effectiveCoexactDimensionalDualConstant n
+
+theorem effectiveCoexactCompensatedConstant_pos (n : ℕ) :
+    0<(effectiveCoexactCompensatedConstant n : ℝ) := by
+  unfold effectiveCoexactCompensatedConstant
+  positivity
+
 /-- Every actual relative coexact field of the original native frame-cutoff
 forcing has its compensated Lp bound. The power dual, exact pairing and
 all pairing integrability are constructed; no high-power full tensor
 derivative is assumed. -/
-theorem exists_coexact_compensated_lp_bound_ball (n : ℕ) (hn : 2≤n)
+theorem exists_coexact_compensated_lp_bound_ball_explicit (n : ℕ) (hn : 2≤n)
     (p : ℝ) (hpOne : 1<p) (hpTwo : p<2) :
-    ∃C : ℝ,0<C ∧ ∀m q : ℕ,
+    ∃C : ℝ,0<C ∧ C=(effectiveCoexactLpMomentConstant n (p/(p-1)))^(1/(p/(p-1))) ∧ ∀m q : ℕ,
       ∀(b : Domain n) (R : ℝ),0<R →
       ∀(U : Domain n → Ambient m) (DU : Domain n → Gradient n m),
       MemW12 (ballDomain b R) U DU →
@@ -65,8 +73,9 @@ theorem exists_coexact_compensated_lp_bound_ball (n : ℕ) (hn : 2≤n)
   let r := p/(p-1)
   obtain ⟨hr,hs,hInv⟩ := coexact_three_factor_exponents p hpOne hpTwo
   have hr0 : 0<r := lt_trans (by norm_num) hr
-  obtain ⟨D,hD,Hdual⟩ := exists_native_coexact_dual_test_ball n hn p hpOne hpTwo
-  refine ⟨D^(1/r),Real.rpow_pos_of_pos hD _,?_⟩
+  obtain ⟨D,hD,hDEq,Hdual⟩ := exists_native_coexact_dual_test_ball_explicit n hn p hpOne hpTwo
+  refine ⟨D^(1/r),Real.rpow_pos_of_pos hD _,?_,?_⟩
+  · rw [hDEq]
   intro m q b R hR U DU hU M hUBound L v Dv hv N hvBound a t ht hSub z s μ hw P f Df hf hP hPN hDecomp
   have hF (i : Fin n) : MemLp (fun x=>L (U x) (Dv x i)) 2 μ :=
     (memLp_bounded_native_frame_columns (ballDomain b R) U DU hU M hUBound L Dv hv.1.2.2 i).mono_measure
@@ -112,6 +121,84 @@ theorem exists_coexact_compensated_lp_bound_ball (n : ℕ) (hn : 2≤n)
       exact (mul_le_mul_iff_left₀ (Real.rpow_pos_of_pos hI (1/r))).mp
         (by simpa only [mul_comm] using hSplit.symm.trans_le hStep)
   exact ⟨hPI,hRoot.trans_eq (by dsimp only [A];ring)⟩
+
+theorem exists_coexact_compensated_lp_bound_ball (n : ℕ) (hn : 2≤n)
+    (p : ℝ) (hpOne : 1<p) (hpTwo : p<2) :
+    ∃C : ℝ,0<C ∧ ∀m q : ℕ,
+      ∀(b : Domain n) (R : ℝ),0<R →
+      ∀(U : Domain n → Ambient m) (DU : Domain n → Gradient n m),
+      MemW12 (ballDomain b R) U DU →
+      ∀M : ℝ,(∀ᵐx∂volume.restrict (ball b R),‖U x‖≤M) →
+      ∀L : Ambient m →L[ℝ] (Ambient q →L[ℝ] Ambient q),
+      ∀(v : Domain n → Ambient q) (Dv : Domain n → Gradient n q),
+      HasZeroBoundaryValues (ballDomain b R) v Dv →
+      ∀N : ℝ,(∀ᵐx∂volume.restrict (ball b R),‖v x‖≤N) →
+      ∀(a : Domain n) (t : ℝ),0<t → ball a t⊆ball b R → ∀z : Ambient q,
+      let s := 2*p/(2-p)
+      let μ := volume.restrict (ball a t)
+      MemLp (fun x=>v x-z) (ENNReal.ofReal s) μ →
+      ∀(P : Domain n → Gradient n q) (f : Domain n → Ambient q) (Df : Domain n → Gradient n q),
+        MemW12 (ballDomain a t) f Df → (∀i,MemLp (fun x=>P x i) 2 μ) →
+        (∀(ψ : Domain n → Ambient q) (Dψ : Domain n → Gradient n q),
+          MemW12 (ballDomain a t) ψ Dψ →
+          (∫x,∑i : Fin n,inner ℝ (P x i) (Dψ x i) ∂μ)=0) →
+        (∀ᵐx∂μ,∀i,L (U x) (Dv x i)=Df x i+P x i) →
+        Integrable (fun x=>(hsNormSq (P x))^(p/2)) μ ∧
+        (∫x,(hsNormSq (P x))^(p/2) ∂μ)^(1/p)≤
+          C*‖L‖*Real.sqrt (∫x,hsNormSq (DU x) ∂μ)*(∫x,‖v x-z‖^s ∂μ)^(1/s) := by
+  obtain ⟨C,hC,_hCEq,H⟩ := exists_coexact_compensated_lp_bound_ball_explicit n hn p hpOne hpTwo
+  exact ⟨C,hC,H⟩
+
+theorem effective_coexact_compensated_lp_bound_ball (n : ℕ) (hn : 2≤n)
+    (p : ℝ) (hpOne : 1<p) (hpTwo : p<2)
+    (hConjugate : p/(p-1)=((2*n+1 : ℕ) : ℝ)) :
+    ∀m q : ℕ,
+      ∀(b : Domain n) (R : ℝ),0<R →
+      ∀(U : Domain n → Ambient m) (DU : Domain n → Gradient n m),
+      MemW12 (ballDomain b R) U DU →
+      ∀M : ℝ,(∀ᵐx∂volume.restrict (ball b R),‖U x‖≤M) →
+      ∀L : Ambient m →L[ℝ] (Ambient q →L[ℝ] Ambient q),
+      ∀(v : Domain n → Ambient q) (Dv : Domain n → Gradient n q),
+      HasZeroBoundaryValues (ballDomain b R) v Dv →
+      ∀N : ℝ,(∀ᵐx∂volume.restrict (ball b R),‖v x‖≤N) →
+      ∀(a : Domain n) (t : ℝ),0<t → ball a t⊆ball b R → ∀z : Ambient q,
+      let s := 2*p/(2-p)
+      let μ := volume.restrict (ball a t)
+      MemLp (fun x=>v x-z) (ENNReal.ofReal s) μ →
+      ∀(P : Domain n → Gradient n q) (f : Domain n → Ambient q) (Df : Domain n → Gradient n q),
+        MemW12 (ballDomain a t) f Df → (∀i,MemLp (fun x=>P x i) 2 μ) →
+        (∀(ψ : Domain n → Ambient q) (Dψ : Domain n → Gradient n q),
+          MemW12 (ballDomain a t) ψ Dψ →
+          (∫x,∑i : Fin n,inner ℝ (P x i) (Dψ x i) ∂μ)=0) →
+        (∀ᵐx∂μ,∀i,L (U x) (Dv x i)=Df x i+P x i) →
+        Integrable (fun x=>(hsNormSq (P x))^(p/2)) μ ∧
+        (∫x,(hsNormSq (P x))^(p/2) ∂μ)^(1/p)≤
+          (effectiveCoexactCompensatedConstant n : ℝ)*‖L‖*Real.sqrt (∫x,hsNormSq (DU x) ∂μ)*(∫x,‖v x-z‖^s ∂μ)^(1/s) := by
+  obtain ⟨C,_hC,hCEq,H⟩ := exists_coexact_compensated_lp_bound_ball_explicit n hn p hpOne hpTwo
+  let D : ℝ := effectiveCoexactDimensionalDualConstant n
+  have hD : 0≤D := Nat.cast_nonneg _
+  have hN : 0≤1+D := by positivity
+  have hr : 1<p/(p-1) := (coexact_three_factor_exponents p hpOne hpTwo).1.trans' (by norm_num)
+  have hExponent : 0≤1/(p/(p-1)) := by positivity
+  have hExponentOne : 1/(p/(p-1))≤1 := (div_le_one (by linarith : 0<p/(p-1))).mpr hr.le
+  have hC : C≤(effectiveCoexactCompensatedConstant n : ℝ) := by
+    rw [hCEq]
+    have hNumeric : effectiveCoexactLpMomentConstant n (p/(p-1))=D := by
+      rw [hConjugate,effectiveCoexactLpMomentConstant_dimensional n hn]
+    rw [hNumeric]
+    calc
+      _≤(1+D)^(1/(p/(p-1))) := Real.rpow_le_rpow hD (by linarith) hExponent
+      _≤(1+D)^(1 : ℝ) := Real.rpow_le_rpow_of_exponent_le (by linarith) hExponentOne
+      _=(effectiveCoexactCompensatedConstant n : ℝ) := by
+        rw [Real.rpow_one]
+        simp only [effectiveCoexactCompensatedConstant,Nat.cast_add,Nat.cast_one,D]
+  intro m q b R hR U DU hU M hUBound L v Dv hv N hvBound a t ht hSub z s μ hw P f Df hf hP hPN hDecomp
+  obtain ⟨hI,hEstimate⟩ := H m q b R hR U DU hU M hUBound L v Dv hv N hvBound
+    a t ht hSub z hw P f Df hf hP hPN hDecomp
+  refine ⟨hI,hEstimate.trans ?_⟩
+  exact mul_le_mul_of_nonneg_right
+    (mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right hC (norm_nonneg L))
+      (Real.sqrt_nonneg _)) (Real.rpow_nonneg (integral_nonneg fun _=>Real.rpow_nonneg (norm_nonneg _) _) _)
 
 end StationaryHarmonicMaps.Analysis
 

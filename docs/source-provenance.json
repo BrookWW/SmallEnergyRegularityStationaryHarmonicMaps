@@ -1,20 +1,18 @@
 {
-  "description": "Selected transitive source closure of the two public stationary regularity theorems. Included-source SHA-256 values and corresponding origin-source SHA-256 values identify mathematical provenance.",
+  "description": "Sources of the stationary regularity theorems, their computable rational constants, geometric existence proof and public facades. Included-source and origin-source SHA-256 values identify mathematical provenance.",
   "upstream": {
     "repository": "https://github.com/BrookWW/SchoenUhlenbeckSmallEnergyRegularityFormalization",
     "commit": "f3a3097025ab9ddd956859600211d1d4edf0654e"
   },
   "roots": [
     "StationaryHarmonicMaps.Frozen.SmallEnergyRegularity",
-    "StationaryHarmonicMaps.Frozen.SmallEnergySmoothRegularity"
+    "StationaryHarmonicMaps.Frozen.SmallEnergySmoothRegularity",
+    "StationaryHarmonicMaps.Frozen.EffectiveSmallEnergyRegularity",
+    "StationaryHarmonicMaps.Frozen.EffectiveSmallEnergySmoothRegularity",
+    "StationaryHarmonicMaps.Geometry.EffectiveNormalProjectionData",
+    "StationaryHarmonicMaps.Analysis.EffectiveStationaryConstants"
   ],
   "sources": [
-    {
-      "path": "HarmonicMaps.lean",
-      "sha256": "3a445b40241d896b27a36368da612c0f8ecbbebabb6e6f11babb8a212000c65c",
-      "origin": "harmonicMaps",
-      "origin_sha256": "5517fd9e3aab8b6538d700f61cd19b137005de462c8756ae6a2d9bd8e8d8aad8"
-    },
     {
       "path": "HarmonicMaps/Analysis/AffineBallMeasure.lean",
       "sha256": "16de1930d00a3204f3696856c65953f4cb05d86404f3e8883a906d5e0678439d",
@@ -940,10 +938,10 @@
       "origin_sha256": "bcaa232b595b5e24a7f65b95984ecb103f2f98a2afdce40d400e850aa5052293"
     },
     {
-      "path": "HolderToCK.lean",
-      "sha256": "fb1fa085395b9466954f07ed2ca1df70cb33f9aeb8608b12bb4b4e68b94e9808",
+      "path": "HarmonicMaps.lean",
+      "sha256": "3a445b40241d896b27a36368da612c0f8ecbbebabb6e6f11babb8a212000c65c",
       "origin": "harmonicMaps",
-      "origin_sha256": "7c0f51905ed3cd6234eb7785f8157ac963db8c9c99d50bfc471c97f204fb5d5d"
+      "origin_sha256": "5517fd9e3aab8b6538d700f61cd19b137005de462c8756ae6a2d9bd8e8d8aad8"
     },
     {
       "path": "HolderToCK/Analysis/Bootstrap/AffineDerivatives.lean",
@@ -1606,6 +1604,12 @@
       "origin_sha256": "4d50fa83e496cf35b26056b93f70826fd6f5ab02525ca9252d111db9ed50145d"
     },
     {
+      "path": "HolderToCK.lean",
+      "sha256": "fb1fa085395b9466954f07ed2ca1df70cb33f9aeb8608b12bb4b4e68b94e9808",
+      "origin": "harmonicMaps",
+      "origin_sha256": "7c0f51905ed3cd6234eb7785f8157ac963db8c9c99d50bfc471c97f204fb5d5d"
+    },
+    {
       "path": "StationaryHarmonicMaps/Analysis/AbsolutelyIntegrableSeries.lean",
       "sha256": "e52b3f11f77cc0d0db76ed0b99677355d7e6bbba71fd5b0650a4c5697881db90",
       "origin": "stationary",
@@ -1637,19 +1641,19 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/AlternatingBoundaryNearEnergy.lean",
-      "sha256": "765c8036bbf90735c585296f37eb2acf193564b6562115800148aed65d05374f",
+      "sha256": "8da0f5c193bdfd80f68db03dbd3067c5f1123de1eac3a50d5ec55a9231c6701b",
       "origin": "stationary",
       "origin_sha256": "765c8036bbf90735c585296f37eb2acf193564b6562115800148aed65d05374f"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/AlternatingCoexactNearFar.lean",
-      "sha256": "8aff3443315e06e71ae5670885b58729d71146617c06318b6680e7081ae27080",
+      "sha256": "0af966b530bf20d524e452e52fbb43ace0baaabab1fc423e86b55692dcbaec8d",
       "origin": "stationary",
       "origin_sha256": "8aff3443315e06e71ae5670885b58729d71146617c06318b6680e7081ae27080"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/AlternatingCoexactPowerGrowth.lean",
-      "sha256": "59b446d3464cd418e67239a5aa23392b271340469acd51de7ba35bd2696429d6",
+      "sha256": "5194f7321f96539f84f1257370ce503743a2af4183738d1f5e2f6df345edc392",
       "origin": "stationary",
       "origin_sha256": "59b446d3464cd418e67239a5aa23392b271340469acd51de7ba35bd2696429d6"
     },
@@ -1751,25 +1755,25 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/BoundaryCenteredCoexactEnergy.lean",
-      "sha256": "aec6174c7b48d0e76835a04b7eb90f593727a5fbddc8f7cadeff2b3ad33760dc",
+      "sha256": "02c227dbba3e9b6132e4615c8a0042ae1f336481e30f7345cfe1b8060bdb2a00",
       "origin": "stationary",
       "origin_sha256": "aec6174c7b48d0e76835a04b7eb90f593727a5fbddc8f7cadeff2b3ad33760dc"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/BoundaryCoexactCompensatedEnergy.lean",
-      "sha256": "132c45c955100a1202ad40fd12daed62d8deef84f7ca81978be482ee576feaa5",
+      "sha256": "ed08a88ddec98c5692977b93a1f635b39948db1aa3479f636dba1cf2b73381b2",
       "origin": "stationary",
       "origin_sha256": "132c45c955100a1202ad40fd12daed62d8deef84f7ca81978be482ee576feaa5"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/BoundaryCompensatedBilinear.lean",
-      "sha256": "79a49b7954c0daf49443b558f337466766069577ceb528522570a242cc059cb0",
+      "sha256": "a84f856b5a6571551b40fdae870f2b14eade4715c969be38d660e931636b39b9",
       "origin": "stationary",
       "origin_sha256": "79a49b7954c0daf49443b558f337466766069577ceb528522570a242cc059cb0"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/BoundaryCriticalBMOExtension.lean",
-      "sha256": "c740fb3d643dc5396376fe6c0bf27bce2a7e2db6428396473253c93ba57317ab",
+      "sha256": "0de2d97490c49a11a2be4ff0609eff012ef83781beb2f05dc98a9ca1e2d460bc",
       "origin": "stationary",
       "origin_sha256": "c740fb3d643dc5396376fe6c0bf27bce2a7e2db6428396473253c93ba57317ab"
     },
@@ -1781,7 +1785,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/BoundaryCriticalNativeDivCurl.lean",
-      "sha256": "5d990964d41eada469e5e2ee86090f91b3e4e4d7f7741d327581f4cbf36ad7f9",
+      "sha256": "2e1b572d8164402dc3d35cebd55b138ddb76136a67e8163cc56d3379ab37d7e5",
       "origin": "stationary",
       "origin_sha256": "5d990964d41eada469e5e2ee86090f91b3e4e4d7f7741d327581f4cbf36ad7f9"
     },
@@ -1793,7 +1797,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/BoundaryHarmonicGradient.lean",
-      "sha256": "eb5a3e24f880e3f1d1d93b58ca26087d115275b4881d1b048f941623d85120be",
+      "sha256": "093b89bdb3602bef1e67ae412aef2d2f9940320aaf476f762e719ec0ed969cc3",
       "origin": "stationary",
       "origin_sha256": "eb5a3e24f880e3f1d1d93b58ca26087d115275b4881d1b048f941623d85120be"
     },
@@ -1805,7 +1809,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/BoundaryKelvinEnergy.lean",
-      "sha256": "2b0e513a52500e7888b16132147ff981f4ea1c46030511bbf13b4519fedc4674",
+      "sha256": "499cb2e5a9fae6d6a8ac7c13fbaf252c2d035d744cb78cef079f6efea67eb883",
       "origin": "stationary",
       "origin_sha256": "2b0e513a52500e7888b16132147ff981f4ea1c46030511bbf13b4519fedc4674"
     },
@@ -1817,7 +1821,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/BoundaryLocalizedTest.lean",
-      "sha256": "90d947e93d55c3f17960f31fa16c2a5f45d605b6d00dc2f01c0645c4e2e7ad76",
+      "sha256": "88e309e1e074d88c1fa574c5660971a8783aef510da37e5a41a3cb05dc53d7ac",
       "origin": "stationary",
       "origin_sha256": "90d947e93d55c3f17960f31fa16c2a5f45d605b6d00dc2f01c0645c4e2e7ad76"
     },
@@ -1847,7 +1851,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/BoundaryStrongerMorreyRepresentative.lean",
-      "sha256": "3216dbe139e75bfa1f168403a211e81bbed11a85be5f63d626d476520e1b2402",
+      "sha256": "14ebcda323e9e425f897f2717243f383410ba303e49c528364f65a7c7b9e788b",
       "origin": "stationary",
       "origin_sha256": "3216dbe139e75bfa1f168403a211e81bbed11a85be5f63d626d476520e1b2402"
     },
@@ -1871,7 +1875,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/BoundedDirichletBallDualTest.lean",
-      "sha256": "c9f0197014fca1d8785ba69c59e22162236191c7c3e86ad54775230deff542bb",
+      "sha256": "6b84f19b5b2f3d863d128e1cfd9df1b7b9f9e5bb57cdb18784902a104521650b",
       "origin": "stationary",
       "origin_sha256": "c9f0197014fca1d8785ba69c59e22162236191c7c3e86ad54775230deff542bb"
     },
@@ -1967,19 +1971,19 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CampanatoRepresentative.lean",
-      "sha256": "6b6974b342800fac8b7731342e2c1ca7b99c692af826fbae886627248205652b",
+      "sha256": "9522c784b6225aabab962b639cd7385a37ad2a619474ffca591c623cdaf23ba1",
       "origin": "stationary",
       "origin_sha256": "6b6974b342800fac8b7731342e2c1ca7b99c692af826fbae886627248205652b"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CappedEnvelopeImprovement.lean",
-      "sha256": "3a5c122805636795bd29d1742316e8f39cf7145e16205018465c99b1846a32e6",
+      "sha256": "bf3814876c83c53145f1f0bee8b59ea574475ce58a4dd69afae2f19a59d2a190",
       "origin": "stationary",
       "origin_sha256": "3a5c122805636795bd29d1742316e8f39cf7145e16205018465c99b1846a32e6"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CappedEnvelopeValueMoments.lean",
-      "sha256": "5ba2da178bb0409cce7d23f52c5d0b5dfdf2146fda2461138930900086c33fa5",
+      "sha256": "b6b281c7d7329419c971fa3e81c4351ccd95c98a27c74f0aefc3bacdd79c0e1b",
       "origin": "stationary",
       "origin_sha256": "5ba2da178bb0409cce7d23f52c5d0b5dfdf2146fda2461138930900086c33fa5"
     },
@@ -2051,13 +2055,13 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CoexactAllBallOffSupport.lean",
-      "sha256": "5874f52db19628e064b2c5b695a5cdca6305e075a203dde46a18a311b3d2c07f",
+      "sha256": "2b7f867736bfebee4765a0ac85cccb7c44d3db9e657fb300f6b58b7386095c21",
       "origin": "stationary",
       "origin_sha256": "5874f52db19628e064b2c5b695a5cdca6305e075a203dde46a18a311b3d2c07f"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CoexactCompensatedLp.lean",
-      "sha256": "228e96fdcf25edf4e0c56d7f2c1fef2a2e1e47d84d9d104d822127accc14bc4b",
+      "sha256": "16c55cc6be5e2a7cd213362bb88b6d0245a13cece3f4300ab60455eee81ba637",
       "origin": "stationary",
       "origin_sha256": "90080e52139c730177ff0367b7f6315fbfb1e92cd77555e49926c80ce4f48b1b"
     },
@@ -2099,13 +2103,13 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CoexactNativeDualTest.lean",
-      "sha256": "e2c0af9d1bbd80206d1cb59c5a6e957fe7e365c61995b9f913f668e3f6a51d00",
+      "sha256": "a91d134a01ef74e7bdc0f451bbc1513167f5704e411b65d78703214554a09804",
       "origin": "stationary",
       "origin_sha256": "e2c0af9d1bbd80206d1cb59c5a6e957fe7e365c61995b9f913f668e3f6a51d00"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CoexactNativeDualTestBall.lean",
-      "sha256": "5627eac6b10846cc4690b7faae9153cf291ab918549169e315c5d20518022b35",
+      "sha256": "cf867afeacc50bce083a2ef7b2b45b74639d216a47b514a55af40dd3e22ee8a7",
       "origin": "stationary",
       "origin_sha256": "5627eac6b10846cc4690b7faae9153cf291ab918549169e315c5d20518022b35"
     },
@@ -2123,13 +2127,13 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CoexactOperatorAllLp.lean",
-      "sha256": "493d5a3d9dc96a224de0113c64b51895931b881c11572e18378968a020557630",
+      "sha256": "fae59b0fb0b6752653ed009cf4f75560a3aa5061ee2c5e69db938b8fdc64d17c",
       "origin": "stationary",
       "origin_sha256": "493d5a3d9dc96a224de0113c64b51895931b881c11572e18378968a020557630"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CoexactOperatorLpMorrey.lean",
-      "sha256": "52f1aa75cb817c7cdddd0a989951dff15a398a2baf1eeef50f5e3a96734652af",
+      "sha256": "39fa8580debc7c82b51f9198c7f816de4590079ad85cf1814136bc176829a8db",
       "origin": "stationary",
       "origin_sha256": "52f1aa75cb817c7cdddd0a989951dff15a398a2baf1eeef50f5e3a96734652af"
     },
@@ -2159,7 +2163,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CompactTargetNativeDivCurl.lean",
-      "sha256": "ff609b0c67ef3dbc342a050fb9489cdc7431b135bfd1be670134464ea280244b",
+      "sha256": "b06c9bd8e6fbf26180c48964b3dbd11079ca20edcfc69e2a31672a33478356d4",
       "origin": "stationary",
       "origin_sha256": "ff609b0c67ef3dbc342a050fb9489cdc7431b135bfd1be670134464ea280244b"
     },
@@ -2171,19 +2175,19 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CompensatedCutoffPowerGrowth.lean",
-      "sha256": "2abfc1a035898b4608aff6a04b50e112c8174120137ff17c65e9ab453df1d42c",
+      "sha256": "e9e089b015542dcb958af3a5dba3c87f97fb8986593b47bc604d22b8e34bcc5a",
       "origin": "stationary",
       "origin_sha256": "2abfc1a035898b4608aff6a04b50e112c8174120137ff17c65e9ab453df1d42c"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CompensatedCutoffRepresentative.lean",
-      "sha256": "5e4f3c8ca883cd3a86c7d75fe35a30b2b3754e27f740a1269c54013ae18b0dff",
+      "sha256": "b29c7f7297acee47cd37da4c3132acd454789ec12b4ba5bc01f4e2c925b6cb04",
       "origin": "stationary",
       "origin_sha256": "5e4f3c8ca883cd3a86c7d75fe35a30b2b3754e27f740a1269c54013ae18b0dff"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CompensatedSystemRepresentative.lean",
-      "sha256": "068dbdaa7c14e37e3d8a6b5a06f3fe29c7c4d152b6b9979ade9eb6f102dec487",
+      "sha256": "62cd0691fcf20c5381f34380773c2d1542b0107b0d5da96bfbf6e872186d9c53",
       "origin": "stationary",
       "origin_sha256": "068dbdaa7c14e37e3d8a6b5a06f3fe29c7c4d152b6b9979ade9eb6f102dec487"
     },
@@ -2225,7 +2229,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CorrectedGrandPieces.lean",
-      "sha256": "6d0825abf24f4fc35663b08ca6a1c0649b700cbe99abbf7ace3c0fe689220717",
+      "sha256": "91ba96486cb54b74282ad0092a5769cee3b02006a460088234dc07cbf61c91a2",
       "origin": "stationary",
       "origin_sha256": "6d0825abf24f4fc35663b08ca6a1c0649b700cbe99abbf7ace3c0fe689220717"
     },
@@ -2255,25 +2259,25 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CoulombBoundaryAbsorption.lean",
-      "sha256": "36ee52527f9eb84c93ae652d90ec83bac4bf782f689e5ddf69bbaa1de1da237e",
+      "sha256": "d6a1deef36de82d72690eb9a72d1a519d46f44af111b815b1e7c741a4a5cbd58",
       "origin": "stationary",
       "origin_sha256": "36ee52527f9eb84c93ae652d90ec83bac4bf782f689e5ddf69bbaa1de1da237e"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CoulombBoundaryCompensatedEnergy.lean",
-      "sha256": "338aca53530e6252fb0c19048b4b765851937a0e2696a736de48845a98020da0",
+      "sha256": "558a2f8f27cc98412f637bbaff551b0e9a470dffd7f621cba45195347db34067",
       "origin": "stationary",
       "origin_sha256": "338aca53530e6252fb0c19048b4b765851937a0e2696a736de48845a98020da0"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CoulombBoundaryCriticalMorrey.lean",
-      "sha256": "65d841c3ed5549b6521672c72fa65c9ae027dd6d859304b7b28560c70b4bad61",
+      "sha256": "1d8b0ebfe95fe509eb88e89e052e65a438a49e574a17c999ac221e202ea35129",
       "origin": "stationary",
       "origin_sha256": "65d841c3ed5549b6521672c72fa65c9ae027dd6d859304b7b28560c70b4bad61"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CoulombBoundaryMorreyPart.lean",
-      "sha256": "594650b60e53345b3b0ef50243850983edd30370973ffaa1b776e338936b4b87",
+      "sha256": "91ba183df0e6584254e66e1a87f964d5fb02c0c96aef36c669af652e88b14b5d",
       "origin": "stationary",
       "origin_sha256": "594650b60e53345b3b0ef50243850983edd30370973ffaa1b776e338936b4b87"
     },
@@ -2285,67 +2289,67 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CoulombGivenFrameRelativeSplit.lean",
-      "sha256": "245f1af7970a145d0daa4b02eefeebeb767ca38c234573feadf7e414de9f65c4",
+      "sha256": "cf2bf363b41fd930ed8d556aeda68997dcb486fc5157a75af91bfbb033d7a8d9",
       "origin": "stationary",
       "origin_sha256": "245f1af7970a145d0daa4b02eefeebeb767ca38c234573feadf7e414de9f65c4"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CoulombTwoExponentAbsorption.lean",
-      "sha256": "5a2d7a09581f4501bed0abde55cd3786d6d529d2960f81d521f8420c435cf8f7",
+      "sha256": "71e8aa28f05322fc64efa8a71ab0ef86bf7b61bc0ae95fac7ab00689bc612fab",
       "origin": "stationary",
       "origin_sha256": "5a2d7a09581f4501bed0abde55cd3786d6d529d2960f81d521f8420c435cf8f7"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CriticalLpMorreyDistribution.lean",
-      "sha256": "b111a1eafafd8b18297419fabc0e3be9c7f6ae220fbb54d972a86e900e5f00b4",
+      "sha256": "3c7392425b8d30c689bab471f9ebed17b83d2c63566c440c50b7158a359d4493",
       "origin": "stationary",
       "origin_sha256": "b111a1eafafd8b18297419fabc0e3be9c7f6ae220fbb54d972a86e900e5f00b4"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CriticalLpMorreyDyadicMeans.lean",
-      "sha256": "3ad654c11d44f60447116c38eeae6210a737f0895bcf0f09f49b478ec0fd84e7",
+      "sha256": "1400b6f12fef22eac4728571a408025f21d7c36e01b65147dae790e31f427a1e",
       "origin": "stationary",
       "origin_sha256": "3ad654c11d44f60447116c38eeae6210a737f0895bcf0f09f49b478ec0fd84e7"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CriticalLpMorreyIntegerMoments.lean",
-      "sha256": "17fc2e2cf1955b79ae3842db34b36e7e9676a59b84697d1ff59926ecd3095396",
+      "sha256": "81be7456852269c10ef6d4cd80aa57659b97f6d78b6e512ad6474fdaa86dc91e",
       "origin": "stationary",
       "origin_sha256": "17fc2e2cf1955b79ae3842db34b36e7e9676a59b84697d1ff59926ecd3095396"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CriticalLpMorreyPointwise.lean",
-      "sha256": "351a69d15823e3c102deef48b0881466f3a86b7acad412871d67e39741047137",
+      "sha256": "c2c371270296002b6a9fc402a3a7e57599f492c53b97194085ee77aaa673d150",
       "origin": "stationary",
       "origin_sha256": "351a69d15823e3c102deef48b0881466f3a86b7acad412871d67e39741047137"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CriticalLpMorreyRealMoments.lean",
-      "sha256": "f39c91db3df62eedc864172c1d5d1f7349cd84148e5457fc8cffcc91b58b267e",
+      "sha256": "5fc8207518875e65f1810a0eec3de3096f621f005f8dfd006980c9d72b2fc764",
       "origin": "stationary",
       "origin_sha256": "f39c91db3df62eedc864172c1d5d1f7349cd84148e5457fc8cffcc91b58b267e"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CriticalLpValueMomentBall.lean",
-      "sha256": "450e2d9b4bf1c760badc8e0a6de063ed587c773d6248aed1480835ca156c6a43",
+      "sha256": "fe145737f857f868e171522abb61c4c221784fdab0073047769dac2cef58e7ea",
       "origin": "stationary",
       "origin_sha256": "450e2d9b4bf1c760badc8e0a6de063ed587c773d6248aed1480835ca156c6a43"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CriticalMorreyDistribution.lean",
-      "sha256": "87f84532fdb25225ca7463bdc13d439f35577c75a6624f6e4496afd1e0ab22c5",
+      "sha256": "302f032f8fc17ac3f68e5630270b1edea4042b7348d3c8088374d73e8d500cac",
       "origin": "stationary",
       "origin_sha256": "87f84532fdb25225ca7463bdc13d439f35577c75a6624f6e4496afd1e0ab22c5"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CriticalMorreyDyadicMeans.lean",
-      "sha256": "6f439195e60e15523210ec386f72f31f7f2c7c14b4d3e15ce9e232f27266dece",
+      "sha256": "bcc810454035d68814178ed7982de0a7686aad0df91d54b9b967c57fb04072da",
       "origin": "stationary",
       "origin_sha256": "6f439195e60e15523210ec386f72f31f7f2c7c14b4d3e15ce9e232f27266dece"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CriticalMorreyIntegerMoments.lean",
-      "sha256": "23ff4c4da3cdc872a0be9be82f17b861a79240699fd1734ce5e76013b3e7efcc",
+      "sha256": "ec18cc0d2872d07a1f88f9d25c94006d7e7bcc5f1d7fea35a2f91dc9f070cf31",
       "origin": "stationary",
       "origin_sha256": "23ff4c4da3cdc872a0be9be82f17b861a79240699fd1734ce5e76013b3e7efcc"
     },
@@ -2357,7 +2361,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CriticalMorreyLocalValueBound.lean",
-      "sha256": "dc13aef8fa552b6656474bf1e2fde9199a72f92f080454eb6bf11d3e8319ffd8",
+      "sha256": "3665f6cddb0332130d4e734abd9c20013cb74d5136c50299625ee5becb8edab1",
       "origin": "stationary",
       "origin_sha256": "dc13aef8fa552b6656474bf1e2fde9199a72f92f080454eb6bf11d3e8319ffd8"
     },
@@ -2369,7 +2373,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CriticalMorreyPointwise.lean",
-      "sha256": "c17e1b10798b811694d743e89414daf6115220280489729d7d4173dc8908e534",
+      "sha256": "6264569b6eaad5a3c67260e925a009b7c604e3d1b25dbb98228630f70fecaa48",
       "origin": "stationary",
       "origin_sha256": "c17e1b10798b811694d743e89414daf6115220280489729d7d4173dc8908e534"
     },
@@ -2387,19 +2391,19 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CriticalMorreyValueGrowth.lean",
-      "sha256": "2d36879ddda50eeaa1e7245979d866e7c0c907c1a8ffdd6f8907700e19adb7ed",
+      "sha256": "85e1d9c9e82686c2e22390374c26a1526105db10a4374edaec7bad4c44a4f800",
       "origin": "stationary",
       "origin_sha256": "2d36879ddda50eeaa1e7245979d866e7c0c907c1a8ffdd6f8907700e19adb7ed"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CriticalNativeCoulombBallExistence.lean",
-      "sha256": "900e8b21a9a2114ea078a348ad81d4f384e37d8de12823f8036e6dbf55ca3cc8",
+      "sha256": "59cfecfefab93b42b10a344e04c7408f8f9dde98e775313f8b3f72f1dedb62ac",
       "origin": "stationary",
       "origin_sha256": "900e8b21a9a2114ea078a348ad81d4f384e37d8de12823f8036e6dbf55ca3cc8"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CriticalNativeCoulombExistence.lean",
-      "sha256": "1a3ca8f66f7f6ecb05b52db18fc1705c4010ef21072ec156eac474f8c80fa09f",
+      "sha256": "2dbbfbafee01789d58f96372d0193dd9614d50585ce3ca0810167f4274a55383",
       "origin": "stationary",
       "origin_sha256": "1a3ca8f66f7f6ecb05b52db18fc1705c4010ef21072ec156eac474f8c80fa09f"
     },
@@ -2411,13 +2415,13 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CutoffCappedEnvelope.lean",
-      "sha256": "d5c9df2eec1ba2777a9fc0f1f127b531946db5f56e2e24104b3abc75c7ad1118",
+      "sha256": "231bd9e0146695e546cf8da753589ffe925c6d3536cc15015a308d6ba062210a",
       "origin": "stationary",
       "origin_sha256": "d5c9df2eec1ba2777a9fc0f1f127b531946db5f56e2e24104b3abc75c7ad1118"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CutoffCriticalMorrey.lean",
-      "sha256": "a6fd384cad03bbd80cbcf7195893e7f15ed28b4a0db2376c126775a10d347952",
+      "sha256": "2ac38b25093ceab5c6a81655a5778b4c8a7293bba7eea99483bc5cfd414f0f98",
       "origin": "stationary",
       "origin_sha256": "a6fd384cad03bbd80cbcf7195893e7f15ed28b4a0db2376c126775a10d347952"
     },
@@ -2435,7 +2439,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CutoffErrorIntegralEstimate.lean",
-      "sha256": "b2575803294e1362018d89cc18f226932c49ede8dc9ca68f90076235a911ed5d",
+      "sha256": "0bb310d0903b1a9f6dd266e389c65db3ed0866d098f1b1c8d23fbd46bb39752e",
       "origin": "stationary",
       "origin_sha256": "b2575803294e1362018d89cc18f226932c49ede8dc9ca68f90076235a911ed5d"
     },
@@ -2447,7 +2451,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CutoffGlobalMeanOscillation.lean",
-      "sha256": "b3b28e97c23256064ec8ec886642a098c4e3cb1cdac2d910370ebb4619ef6075",
+      "sha256": "3c7501298a63fd626c70625a63bfbadcf00ec453eb5f2e5246728bd192b4b59c",
       "origin": "stationary",
       "origin_sha256": "b3b28e97c23256064ec8ec886642a098c4e3cb1cdac2d910370ebb4619ef6075"
     },
@@ -2459,49 +2463,49 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/CutoffLpEnvelope.lean",
-      "sha256": "e1b7beab9bc9f36b45b8e222692152571aeb34c995d332d5aa0b0ff3f359fabd",
+      "sha256": "1c66d995004133c8d671237c94fcd3779011a363b2379b8ea0fee1d68c5d7a96",
       "origin": "stationary",
       "origin_sha256": "e1b7beab9bc9f36b45b8e222692152571aeb34c995d332d5aa0b0ff3f359fabd"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/DirichletBallDualTest.lean",
-      "sha256": "e42ec6d21ceb367774f7aeb63b2df03b6b01046dd0ba892fbe9576b543c05258",
+      "sha256": "d114c82b2926efecc6f32ddc61e1a0c3e15d749b17ce2fa36f4780df76082c19",
       "origin": "stationary",
       "origin_sha256": "e42ec6d21ceb367774f7aeb63b2df03b6b01046dd0ba892fbe9576b543c05258"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/DirichletBallWeakTest.lean",
-      "sha256": "7cb7be124c3b8383d1cef1de2743ccc644dff8993a6fc4abeb11e51c31315f89",
+      "sha256": "54414d229a8f791e0a69b39eaa5b92580ec0459964ed52a33cd96597dcf305b5",
       "origin": "stationary",
       "origin_sha256": "7cb7be124c3b8383d1cef1de2743ccc644dff8993a6fc4abeb11e51c31315f89"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/DirichletClassHighMoments.lean",
-      "sha256": "eaa93106e0444e786994d5732a76385d63566c54a789f89f8a973c109e63291a",
+      "sha256": "d97cf7211f04727e8053b2e14e87dffecddbbb49b7ff163fe5f5e2df3ae3925f",
       "origin": "stationary",
       "origin_sha256": "eaa93106e0444e786994d5732a76385d63566c54a789f89f8a973c109e63291a"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/DirichletNativeDualTest.lean",
-      "sha256": "f437eaf424d969277bb543541c69268cb2b36f765036bd5c20f28cc3176de517",
+      "sha256": "d713b0579b8fc07791e866946c8531d6546b2197da89e7cf15564218cc8ba6b5",
       "origin": "stationary",
       "origin_sha256": "f437eaf424d969277bb543541c69268cb2b36f765036bd5c20f28cc3176de517"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/DirichletOperatorGoodLambda.lean",
-      "sha256": "3f342cf1c83f0228520baf92a6ba71aeed440324885bdc3e224b5d0a06a72233",
+      "sha256": "a9853484818284bed2dbcf6f8759862fd4f775bc73fa5366c8dc3811b985f710",
       "origin": "stationary",
       "origin_sha256": "3f342cf1c83f0228520baf92a6ba71aeed440324885bdc3e224b5d0a06a72233"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/DirichletOperatorHighMoments.lean",
-      "sha256": "9e71da8d46fc8daad0e451ab5d8ed81f0418aec01d7af9cf4d2695a6a1e79bfa",
+      "sha256": "2a4b7f46b20bb1ef973188346f84683e658136664c9498ef250e6b0404928032",
       "origin": "stationary",
       "origin_sha256": "9e71da8d46fc8daad0e451ab5d8ed81f0418aec01d7af9cf4d2695a6a1e79bfa"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/DirichletOperatorLpMorrey.lean",
-      "sha256": "0491a4c0e85aa6dc7d2d7baa4382bdbb05c7a65fcd853ede0bc46f4ff580a24f",
+      "sha256": "f98995837849a22722b2e22dd17af812ce4f586f0701beed79ce9e33e42aa17f",
       "origin": "stationary",
       "origin_sha256": "0491a4c0e85aa6dc7d2d7baa4382bdbb05c7a65fcd853ede0bc46f4ff580a24f"
     },
@@ -2531,7 +2535,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/DivCurlHardyMajorant.lean",
-      "sha256": "b1fdab697b4294d768d3a9841df9aa1287923078ed3b0185d8014feafaf9fe17",
+      "sha256": "cc18beeb5c2997be6a210bafe0760960c2ce44a9168e84a8589983f2cbd556d4",
       "origin": "stationary",
       "origin_sha256": "b1fdab697b4294d768d3a9841df9aa1287923078ed3b0185d8014feafaf9fe17"
     },
@@ -2543,19 +2547,19 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/DivCurlLowerExponent.lean",
-      "sha256": "8be334428ff6c582fd3d29b3d929f547ebf831f250b2efb435bd40d5fa72b201",
+      "sha256": "e248986082204682c5a91cb1881d5bd7a38e82449535311e1c2fb6fc5aea4f4d",
       "origin": "stationary",
       "origin_sha256": "8be334428ff6c582fd3d29b3d929f547ebf831f250b2efb435bd40d5fa72b201"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/DivCurlMaximalPointwise.lean",
-      "sha256": "4e41352f4f262b4cecacc5aa76082a8e50241d7bbb489e7bd97646694587a980",
+      "sha256": "4d3fb195dac7a6a9f487d61cef91e0f7831c3ccf3fc5fc6d4b3ba17f5f0683aa",
       "origin": "stationary",
       "origin_sha256": "4e41352f4f262b4cecacc5aa76082a8e50241d7bbb489e7bd97646694587a980"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/DivCurlScaleNormalization.lean",
-      "sha256": "2f821c8e96056fff4f65725dc28aad80a9e5e08cc96f025ebf5de4da5b0476af",
+      "sha256": "0ea548cbff365448aca28e71bbedaf1dc2ae9846132a514ffcdb72ff247ec97d",
       "origin": "stationary",
       "origin_sha256": "2f821c8e96056fff4f65725dc28aad80a9e5e08cc96f025ebf5de4da5b0476af"
     },
@@ -2632,6 +2636,96 @@
       "origin_sha256": "044e0ad79fb822d4a5c4fa50240cd72854608aa3cb9a9b64bca56804a83abffa"
     },
     {
+      "path": "StationaryHarmonicMaps/Analysis/EffectiveBallCutoff.lean",
+      "sha256": "189a598d7c4826fd69bfe52caa1c97b4f4a331568f97e4faa25f29a6fc9599cb",
+      "origin": "stationary",
+      "origin_sha256": "189a598d7c4826fd69bfe52caa1c97b4f4a331568f97e4faa25f29a6fc9599cb"
+    },
+    {
+      "path": "StationaryHarmonicMaps/Analysis/EffectiveCoulombConstants.lean",
+      "sha256": "ce76de357f455d21c32a9cf18f99a9cdcefa9637327471e98cceb6aaddfceb77",
+      "origin": "stationary",
+      "origin_sha256": "ce76de357f455d21c32a9cf18f99a9cdcefa9637327471e98cceb6aaddfceb77"
+    },
+    {
+      "path": "StationaryHarmonicMaps/Analysis/EffectiveDivCurlConstants.lean",
+      "sha256": "fd24d5cce2d694e58518abb12755b4fafa70770dc56cdf7e5e35da8ad4408061",
+      "origin": "stationary",
+      "origin_sha256": "fd24d5cce2d694e58518abb12755b4fafa70770dc56cdf7e5e35da8ad4408061"
+    },
+    {
+      "path": "StationaryHarmonicMaps/Analysis/EffectiveElementaryPowers.lean",
+      "sha256": "129c459745569024ec8d801232bb2700ac5bfdc9f6ab00d4d118c13e7b48d7e3",
+      "origin": "stationary",
+      "origin_sha256": "129c459745569024ec8d801232bb2700ac5bfdc9f6ab00d4d118c13e7b48d7e3"
+    },
+    {
+      "path": "StationaryHarmonicMaps/Analysis/EffectiveEnergyAmplitudes.lean",
+      "sha256": "51a451c442881b89bf9f116e4cc8e4e038498c37f2d097b5e27b032f81fc7e8a",
+      "origin": "stationary",
+      "origin_sha256": "51a451c442881b89bf9f116e4cc8e4e038498c37f2d097b5e27b032f81fc7e8a"
+    },
+    {
+      "path": "StationaryHarmonicMaps/Analysis/EffectiveEuclideanSobolev.lean",
+      "sha256": "8ee24b4cc5167e92517bc69019f21c11edbe4aab7099b0eb41e36da48957c60d",
+      "origin": "stationary",
+      "origin_sha256": "8ee24b4cc5167e92517bc69019f21c11edbe4aab7099b0eb41e36da48957c60d"
+    },
+    {
+      "path": "StationaryHarmonicMaps/Analysis/EffectiveEuclideanVolume.lean",
+      "sha256": "4e78f59f63b6d5f64a48f558b72a5c4f7bcabe3518daf3b7a9e430b4787c04c9",
+      "origin": "stationary",
+      "origin_sha256": "4e78f59f63b6d5f64a48f558b72a5c4f7bcabe3518daf3b7a9e430b4787c04c9"
+    },
+    {
+      "path": "StationaryHarmonicMaps/Analysis/EffectiveGeometricMoments.lean",
+      "sha256": "deb1b8d48da42c719b8673721262e048ad22983557e9e414b9182fbef066d05e",
+      "origin": "stationary",
+      "origin_sha256": "deb1b8d48da42c719b8673721262e048ad22983557e9e414b9182fbef066d05e"
+    },
+    {
+      "path": "StationaryHarmonicMaps/Analysis/EffectiveHolderConstants.lean",
+      "sha256": "0b493b57dfd0b1e143d72cd29cc86f7b174689fce1dca597c5d3ffc79d1f4458",
+      "origin": "stationary",
+      "origin_sha256": "0b493b57dfd0b1e143d72cd29cc86f7b174689fce1dca597c5d3ffc79d1f4458"
+    },
+    {
+      "path": "StationaryHarmonicMaps/Analysis/EffectiveMatrixCoefficientBounds.lean",
+      "sha256": "2651fb795cc9f7c6e46ccf48c0f2f4497f441c016fbbf50473c4a6acca161283",
+      "origin": "stationary",
+      "origin_sha256": "2651fb795cc9f7c6e46ccf48c0f2f4497f441c016fbbf50473c4a6acca161283"
+    },
+    {
+      "path": "StationaryHarmonicMaps/Analysis/EffectiveNeumannBoundary.lean",
+      "sha256": "930fbc4b8b7997718f9a3e60c8fd0b8df7f10e9e519fedf42aecefcd0186ed73",
+      "origin": "stationary",
+      "origin_sha256": "8e6e987a0695a7efab1703aebeff8c1a714636a18d666ae9fa2f6a8bb93b6071"
+    },
+    {
+      "path": "StationaryHarmonicMaps/Analysis/EffectiveOperatorCoordinates.lean",
+      "sha256": "6a465e5ff38e139270513f569ff7fbbee44d6f0800e2766e9948c6acaab8f6cc",
+      "origin": "stationary",
+      "origin_sha256": "6a465e5ff38e139270513f569ff7fbbee44d6f0800e2766e9948c6acaab8f6cc"
+    },
+    {
+      "path": "StationaryHarmonicMaps/Analysis/EffectiveSmoothTransition.lean",
+      "sha256": "db35396f1995b60beeebda3bce57224278958c2a6f60912c30685398141f10b7",
+      "origin": "stationary",
+      "origin_sha256": "db35396f1995b60beeebda3bce57224278958c2a6f60912c30685398141f10b7"
+    },
+    {
+      "path": "StationaryHarmonicMaps/Analysis/EffectiveStationaryConstants.lean",
+      "sha256": "3f64c687e056750f26cd446959a982b31df7d8707e3adea7f28e44370e7e7474",
+      "origin": "stationary",
+      "origin_sha256": "3f64c687e056750f26cd446959a982b31df7d8707e3adea7f28e44370e7e7474"
+    },
+    {
+      "path": "StationaryHarmonicMaps/Analysis/EffectiveZeroBoundarySobolevLp.lean",
+      "sha256": "62ca30a51ad2d60b9fef9093f86df00a781f4f37ed2ed99a92a6dc2af1f72d66",
+      "origin": "stationary",
+      "origin_sha256": "62ca30a51ad2d60b9fef9093f86df00a781f4f37ed2ed99a92a6dc2af1f72d66"
+    },
+    {
       "path": "StationaryHarmonicMaps/Analysis/EncodedPotentialMorrey.lean",
       "sha256": "114fbe82fe785df8a358a1dd5effbd1f0463289b4a07795905f9177f2345098b",
       "origin": "stationary",
@@ -2687,13 +2781,13 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/GeometricTailLp.lean",
-      "sha256": "14ba9d66758533299333e760bfda434dc401d33f7a803be81c6829af09916a10",
+      "sha256": "89eb3107135de11a6a2090d1bfb6fe1fc2eebb30b5f33ce3b4afec1cc98e9775",
       "origin": "stationary",
       "origin_sha256": "14ba9d66758533299333e760bfda434dc401d33f7a803be81c6829af09916a10"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/GlobalCriticalMeanOscillation.lean",
-      "sha256": "6c4a217bb54428542ba1979081e64700d1fcbb2a52009a8331379210b5b5f088",
+      "sha256": "cd74f9a1a60e5ab008e8b051419a829fac87d028ce7201b7cea6668440eb58bd",
       "origin": "stationary",
       "origin_sha256": "6c4a217bb54428542ba1979081e64700d1fcbb2a52009a8331379210b5b5f088"
     },
@@ -2723,7 +2817,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/GrandKernelCutoffAverage.lean",
-      "sha256": "7447aa2545573457739902ed135f0c11ef2a26a149801e5e52618cc08b0bc742",
+      "sha256": "e50ff9c96122fec2cfad4eaf1a4282ebff0c8f78cb7ed9e5517cdc33abee4568",
       "origin": "stationary",
       "origin_sha256": "7447aa2545573457739902ed135f0c11ef2a26a149801e5e52618cc08b0bc742"
     },
@@ -2741,7 +2835,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/GrandMaximalLebesgueDomination.lean",
-      "sha256": "3196be6d22e664ee90a2908bd38b8fc4efcd0c287bc6bcca49ee610a6ea87c32",
+      "sha256": "763c1d0606375b87a1ff818b0c43cc337d56ee4cfdf15719b428adfbf8a744b8",
       "origin": "stationary",
       "origin_sha256": "3196be6d22e664ee90a2908bd38b8fc4efcd0c287bc6bcca49ee610a6ea87c32"
     },
@@ -2777,7 +2871,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/HardyMeanOscillationPairing.lean",
-      "sha256": "5191abf700abbaedaaaf7721e3f4cc9e35ec39e3422e1f10e736242eb5bd54ec",
+      "sha256": "edcd8dd904a5b74d0ff0166fc8efbc6b02a4cb65857cef16df9631ee564f55dc",
       "origin": "stationary",
       "origin_sha256": "5191abf700abbaedaaaf7721e3f4cc9e35ec39e3422e1f10e736242eb5bd54ec"
     },
@@ -2837,7 +2931,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/HodgeLowPComparison.lean",
-      "sha256": "e304fa31fab2344ee3e4fccf769f94d5eabc96f345836a5ebc989cfb50241482",
+      "sha256": "3fd40d8ebb22608979e1176f82528418d63a655bbf396ac5c1a07cf672e94186",
       "origin": "stationary",
       "origin_sha256": "e304fa31fab2344ee3e4fccf769f94d5eabc96f345836a5ebc989cfb50241482"
     },
@@ -2957,31 +3051,31 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/LocalCampanatoRepresentative.lean",
-      "sha256": "46688540ab8a2df8c3d8f0a44f9a9831e1dbeb74681451839e1ae4ace6b42b01",
+      "sha256": "660b09715185517e0bcd4b79e885328641c1383ea26587ae228b7754cd22337d",
       "origin": "stationary",
       "origin_sha256": "46688540ab8a2df8c3d8f0a44f9a9831e1dbeb74681451839e1ae4ace6b42b01"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/LocalDivCurlContinuousPairing.lean",
-      "sha256": "fa0def5c2a447e0064b3d6638e6a08c31dcc16c4bd7e429f323acfcaa0dd5eca",
+      "sha256": "d913f0e406ed91c901388f54b4532e978c7a6a0658c145c34362920d04a2e314",
       "origin": "stationary",
       "origin_sha256": "fa0def5c2a447e0064b3d6638e6a08c31dcc16c4bd7e429f323acfcaa0dd5eca"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/LocalDivCurlHardy.lean",
-      "sha256": "c844e27663cbc43d357aa81f88815bcbe1e45e9c65f09bcdcf9f5edc7e1e3176",
+      "sha256": "a3471b6df46bf8c8b7e3d6a7fdbad60515a7ba1785f11e5208c4adb1df67132e",
       "origin": "stationary",
       "origin_sha256": "c844e27663cbc43d357aa81f88815bcbe1e45e9c65f09bcdcf9f5edc7e1e3176"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/LocalLpCriticalCutoff.lean",
-      "sha256": "6d3708bf2e072231864743cd1c7e39cb17fe9dfd3aed3379085b73ba394c1f11",
+      "sha256": "93c50d00907fbdb9e863e7214fbf33dc473dd789cff0f91bb899800dcac9b425",
       "origin": "stationary",
       "origin_sha256": "6d3708bf2e072231864743cd1c7e39cb17fe9dfd3aed3379085b73ba394c1f11"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/LocalLpMorreyRepresentative.lean",
-      "sha256": "7b800349393e7d248cc7b481aa0c8d44e3e21a8ed6b3b31118ea780e04e87d96",
+      "sha256": "33e6a514096ec03375b368c8480f634a00821b2142367fa9a3bdbc7af9db0629",
       "origin": "stationary",
       "origin_sha256": "7b800349393e7d248cc7b481aa0c8d44e3e21a8ed6b3b31118ea780e04e87d96"
     },
@@ -2993,13 +3087,13 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/LocalMeanOscillationCutoff.lean",
-      "sha256": "bd7b28c957e47174276e14320cdbd4e483908227343fb376ce5a5b8cd8d4887d",
+      "sha256": "7da0cc2405227cc2ed553dc26198a33a35a34d487842a5deda8bb918f0869ac0",
       "origin": "stationary",
       "origin_sha256": "bd7b28c957e47174276e14320cdbd4e483908227343fb376ce5a5b8cd8d4887d"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/LocalSobolevPoincare.lean",
-      "sha256": "519c731aed3fb9e74cf27e5639487cb1339841d876cfaba4fc83a581af1e43e0",
+      "sha256": "6a472352f73d505016aaf36497a692084af408662c44239fe99e4d5f6bf99bf4",
       "origin": "stationary",
       "origin_sha256": "519c731aed3fb9e74cf27e5639487cb1339841d876cfaba4fc83a581af1e43e0"
     },
@@ -3023,7 +3117,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/LpMorreyRepresentative.lean",
-      "sha256": "812dfd4ec598ba8f48fee682f0c2824a5475847d88ad565589c5ad90b82b2128",
+      "sha256": "5d52c71903ff0af0bd0c40f126d376eb5486547e5c887a1782dbc200b70c7c2c",
       "origin": "stationary",
       "origin_sha256": "812dfd4ec598ba8f48fee682f0c2824a5475847d88ad565589c5ad90b82b2128"
     },
@@ -3095,7 +3189,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/MaximalGoodLambdaMoment.lean",
-      "sha256": "59f67b65a91e7d3dd69e51c11be6bb51abb868b3c62ef25854b921233eabee58",
+      "sha256": "2968d880b639b2c73784e214483d871966604149708f464d371b8912eb6bb665",
       "origin": "stationary",
       "origin_sha256": "59f67b65a91e7d3dd69e51c11be6bb51abb868b3c62ef25854b921233eabee58"
     },
@@ -3179,7 +3273,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/NativeBoundaryTestExtension.lean",
-      "sha256": "11a619cfc719d8b56a1ae32adc932a5e40dd5827664fad60314f4fe093b84a64",
+      "sha256": "fca18fc70614f828bd0e759095c9c00a960ab5637f9a3d0bb7afb69c63fe53b6",
       "origin": "stationary",
       "origin_sha256": "11a619cfc719d8b56a1ae32adc932a5e40dd5827664fad60314f4fe093b84a64"
     },
@@ -3191,7 +3285,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/NativeCoulombPerturbations.lean",
-      "sha256": "506427bb0c03545515851fad26f09b57e8b4472719b6202a4077feff45b21190",
+      "sha256": "f1b2c5cb60fe949fa2ea6aba684fcc833dea2b1eefe5090543ffde5e2f68e356",
       "origin": "stationary",
       "origin_sha256": "506427bb0c03545515851fad26f09b57e8b4472719b6202a4077feff45b21190"
     },
@@ -3287,7 +3381,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/NativeSupercriticalTestBound.lean",
-      "sha256": "15ffa3fd8a46b52d9e974de2f0fa7d4f99c82084f18b379edfc34b8cec46792a",
+      "sha256": "a259a8b3549c21fe2317a1c657d6a7620c5927067817a4cf09a8268398d7ae1d",
       "origin": "stationary",
       "origin_sha256": "15ffa3fd8a46b52d9e974de2f0fa7d4f99c82084f18b379edfc34b8cec46792a"
     },
@@ -3299,7 +3393,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/NaturalCoefficientNeumannBanach.lean",
-      "sha256": "84a219e41724cbcca1c887af7ef0f84fc2358e22885e7771353efb19bd9892b4",
+      "sha256": "c8b1dab60df96c7c4e3c151bbe7f332aae2334bb4e96fcdb462c7ede11c5a9f8",
       "origin": "stationary",
       "origin_sha256": "84a219e41724cbcca1c887af7ef0f84fc2358e22885e7771353efb19bd9892b4"
     },
@@ -3311,13 +3405,13 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/NaturalCoefficientNeumannBanachInverse.lean",
-      "sha256": "5013f7f90689bed550f217ed40e381b4dc0cfe0bdc887dffebbd1835220afb4c",
+      "sha256": "4b5d47d1b1dd705ec1e14e0fd3b0f713eb2f8a31a79f5591728565837fbb2d2d",
       "origin": "stationary",
       "origin_sha256": "5013f7f90689bed550f217ed40e381b4dc0cfe0bdc887dffebbd1835220afb4c"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/NaturalCoefficientNeumannBanachKernelInverse.lean",
-      "sha256": "1a2708f8df45ce15374b1223d5d2e193ad80f9dda0ccf0795618c3a4cd859afd",
+      "sha256": "2573428dce09e159a6c4ad66f7f32211ddbc6586464a6fdf092d893ceec14988",
       "origin": "stationary",
       "origin_sha256": "1a2708f8df45ce15374b1223d5d2e193ad80f9dda0ccf0795618c3a4cd859afd"
     },
@@ -3329,7 +3423,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/NaturalCoefficientNeumannInitialResponse.lean",
-      "sha256": "9aabdccd0fd76d357bc0e488640f6b030bb6f73c2ca1893840adcd5b79479b2d",
+      "sha256": "09da11f80f42ae4adb6b871d086517c533dc7f36f527d3d5c2a69a04f1c5835f",
       "origin": "stationary",
       "origin_sha256": "9aabdccd0fd76d357bc0e488640f6b030bb6f73c2ca1893840adcd5b79479b2d"
     },
@@ -3341,19 +3435,19 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/NaturalCoefficientNeumannNearEnergy.lean",
-      "sha256": "b00fb270b086bc2c2529d78fd0d44cd119a7dc40601888da6a3280663bf55ca8",
+      "sha256": "2d9c114537326076e1c27be7d1594801d7152c2655984ece480f790a97993de5",
       "origin": "stationary",
       "origin_sha256": "b00fb270b086bc2c2529d78fd0d44cd119a7dc40601888da6a3280663bf55ca8"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/NaturalCoefficientNeumannNearFar.lean",
-      "sha256": "ed954189630caf0d8b3efe31ddbf9297e9dea0d20e96999e820e24951eaa6d59",
+      "sha256": "89292635b0e5bd8cc2a1902569d39f4aa4d7b0e517d8df361874db00696f1395",
       "origin": "stationary",
       "origin_sha256": "ed954189630caf0d8b3efe31ddbf9297e9dea0d20e96999e820e24951eaa6d59"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/NaturalCoefficientNeumannPowerGrowth.lean",
-      "sha256": "0d9e8f12246b4dc48829572ffcb416d4c1db24533fb7a2800d6c31c7add00125",
+      "sha256": "5c399eb4e300b30c8164a3eb074e084b017c8da504d3a4c7656ec7127836e4a9",
       "origin": "stationary",
       "origin_sha256": "0d9e8f12246b4dc48829572ffcb416d4c1db24533fb7a2800d6c31c7add00125"
     },
@@ -3382,14 +3476,8 @@
       "origin_sha256": "d5738c30c69e9b35b30da31eb12cbcb9a64f0f903c6e22c7bf83fcf6244067da"
     },
     {
-      "path": "StationaryHarmonicMaps/Analysis/NeumannBoundaryHarmonicGradient.lean",
-      "sha256": "f6676a1c3a6bfbeab22ae6e504ff5d314f66fb58bfa2990b6a3d0c129e9c32af",
-      "origin": "stationary",
-      "origin_sha256": "f6676a1c3a6bfbeab22ae6e504ff5d314f66fb58bfa2990b6a3d0c129e9c32af"
-    },
-    {
       "path": "StationaryHarmonicMaps/Analysis/NeumannClassHighMoments.lean",
-      "sha256": "c1ec860a6ec199e11939c422ea8a3889ee93431d04dd14e9f807c296362dc3f4",
+      "sha256": "f598646c3069c1cdba47159528441452d3363f8d6b11cdc9123ba142586bc56c",
       "origin": "stationary",
       "origin_sha256": "c1ec860a6ec199e11939c422ea8a3889ee93431d04dd14e9f807c296362dc3f4"
     },
@@ -3401,7 +3489,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/NeumannFullPowerGrowth.lean",
-      "sha256": "f17814244336adcc99982f171e0ff45625d29af070b5d18597bf927f1e21aca0",
+      "sha256": "a6ef802338cc590900c12c487377ddbfbe9b8d1c8c35847641291c4dcf59a960",
       "origin": "stationary",
       "origin_sha256": "f17814244336adcc99982f171e0ff45625d29af070b5d18597bf927f1e21aca0"
     },
@@ -3533,19 +3621,19 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/NeumannOperatorAllLp.lean",
-      "sha256": "bb2f8150abbd2e8901f57ead5015215ffb5ac9b733ece6713537b65edc23bdf7",
+      "sha256": "4571e600965769bc006b1feeae605ae3bccd2b8cb3b11281dc4c1fbfcc7e7cdb",
       "origin": "stationary",
       "origin_sha256": "bb2f8150abbd2e8901f57ead5015215ffb5ac9b733ece6713537b65edc23bdf7"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/NeumannOperatorGoodLambda.lean",
-      "sha256": "5632e4447c0010ed9ef9b3bca6ab377e2fd8431c30a8174a6842caef684cca3e",
+      "sha256": "0c96c811d140bd160cb56df6c297efcc66507ca3d56ca83d4212597c3e126ba3",
       "origin": "stationary",
       "origin_sha256": "5632e4447c0010ed9ef9b3bca6ab377e2fd8431c30a8174a6842caef684cca3e"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/NeumannOperatorHighMoments.lean",
-      "sha256": "7b5078c47160d37b9be2c9718d09ae2449e658fc0a391f51d52df620bd64e1ea",
+      "sha256": "ba20bd6af248fa6186662129bbfa6803ceb9c397e47f0a1dcb240da58fd07b40",
       "origin": "stationary",
       "origin_sha256": "7b5078c47160d37b9be2c9718d09ae2449e658fc0a391f51d52df620bd64e1ea"
     },
@@ -3653,7 +3741,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/NormalizedGrandAtoms.lean",
-      "sha256": "ab775c870bbdff647a6c0cc4d24802cd93340c9fbb9a9162a5e8f943d3bfe70b",
+      "sha256": "48b94330dc7f15d8102e1dbe38aeda1fb385ea52d114d278b55290e7f2893944",
       "origin": "stationary",
       "origin_sha256": "ab775c870bbdff647a6c0cc4d24802cd93340c9fbb9a9162a5e8f943d3bfe70b"
     },
@@ -3665,7 +3753,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/OneBallCompensatedDecay.lean",
-      "sha256": "056cd5d96be2d5142cd7402abd5378314b77b530f0e769412ffabf918c06786a",
+      "sha256": "6dad14400d32b94fcbd024866a95d6908774d434d7f75d7b8537e74ae6cbd0bb",
       "origin": "stationary",
       "origin_sha256": "056cd5d96be2d5142cd7402abd5378314b77b530f0e769412ffabf918c06786a"
     },
@@ -3809,7 +3897,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/RealDensityGoodLambda.lean",
-      "sha256": "7ecee23fbc8cea0e15789b4639d6637deaae1658c85edb49dccf637debe85a06",
+      "sha256": "462b784a29f4d92d6cda00b328e4ffd163d9338c4e8030ce43083e550b553660",
       "origin": "stationary",
       "origin_sha256": "7ecee23fbc8cea0e15789b4639d6637deaae1658c85edb49dccf637debe85a06"
     },
@@ -3845,25 +3933,25 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/SameDirichletDensitySplit.lean",
-      "sha256": "cb8a078f7783ead71f97d9e3cf9a34dd83ad2f0a7c76b7643c624853cd6dd3ec",
+      "sha256": "30c4325f5fee580efe0f4e06425e248e7c19fa9db3f66ad6931765c62b1b7d65",
       "origin": "stationary",
       "origin_sha256": "cb8a078f7783ead71f97d9e3cf9a34dd83ad2f0a7c76b7643c624853cd6dd3ec"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/SameDirichletOperatorOffSupport.lean",
-      "sha256": "110c0eecf6f58206880c56f5c5cf2bd0a3205defbb5e16ecd85511e8b6328fb0",
+      "sha256": "e88855e1bf1a0075a9c8e8ae0efeb8116410e9b387090710e6e5e94f2de37eaa",
       "origin": "stationary",
       "origin_sha256": "110c0eecf6f58206880c56f5c5cf2bd0a3205defbb5e16ecd85511e8b6328fb0"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/SameNeumannDensitySplit.lean",
-      "sha256": "cfaa29f09359ad8930c8294bd9bfb028264f23b9ded7bd389b2f4f10f3419fa9",
+      "sha256": "76ec838585529ae6247dc878f4f8b56ad43b39d5147414fb772a1d10fad5fa47",
       "origin": "stationary",
       "origin_sha256": "cfaa29f09359ad8930c8294bd9bfb028264f23b9ded7bd389b2f4f10f3419fa9"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/SameNeumannOperatorOffSupport.lean",
-      "sha256": "dcec0df1ea598d96db2e0c8e70d106554b1d9ab8ddf194776da0414e772f4fc1",
+      "sha256": "10a835dff44c6a5323c2f521818c722516c681faf447dca98815eeec53b13247",
       "origin": "stationary",
       "origin_sha256": "dcec0df1ea598d96db2e0c8e70d106554b1d9ab8ddf194776da0414e772f4fc1"
     },
@@ -3899,7 +3987,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/ScaledBallCutoff.lean",
-      "sha256": "736a22779cf72e616dbde36d5a94d025ee0c172aa8baf8170b6b0a2e8212f0a0",
+      "sha256": "385ac798df69e877d13539d6d4948482a267d7399e870f40a1eeeb22c05e89a8",
       "origin": "stationary",
       "origin_sha256": "736a22779cf72e616dbde36d5a94d025ee0c172aa8baf8170b6b0a2e8212f0a0"
     },
@@ -3935,7 +4023,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/SkewCoulombLinearMorrey.lean",
-      "sha256": "ecb10dfe9a8593098025672706325ac256f02230d80a104f88f4d027c4986a91",
+      "sha256": "ae4be9009ccabd53e8cacf0788b00522ab7817ab0e2d47715b51c8f48431c524",
       "origin": "stationary",
       "origin_sha256": "dd71f1cdb358bf9e1ca5b389390185cfa26825b8d11fd1559036da57ac201aa9"
     },
@@ -3953,7 +4041,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/SkewLinearizedNeumann.lean",
-      "sha256": "23a5aeb95b5adf0dad867567284bdf282e3ada8e0624e612b41884ebd7119970",
+      "sha256": "28bf7ab5e9823baafd0626bbb8857393610a1d2d3bc52f50566b0ee5edfdb2b7",
       "origin": "stationary",
       "origin_sha256": "23a5aeb95b5adf0dad867567284bdf282e3ada8e0624e612b41884ebd7119970"
     },
@@ -3995,7 +4083,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/SkewNaturalCoefficientNeumannInverse.lean",
-      "sha256": "fc03297b8db99d3a74be6225887fa6278a8ab64e2777d5fc8f1dbe569b001595",
+      "sha256": "aa5e5018947403ae76059ee71725d9e10f6af1fe932a24e90e6b2ad010175816",
       "origin": "stationary",
       "origin_sha256": "fc03297b8db99d3a74be6225887fa6278a8ab64e2777d5fc8f1dbe569b001595"
     },
@@ -4013,7 +4101,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/SmoothGrandMaximalMeasurability.lean",
-      "sha256": "728c3eb9265ed1eedda3e90067022610576e15c15b86058616c25732fc361504",
+      "sha256": "5c2553242110fbf451035130069b5b46cfefeb1b90d4976cda5186911e4d99ac",
       "origin": "stationary",
       "origin_sha256": "728c3eb9265ed1eedda3e90067022610576e15c15b86058616c25732fc361504"
     },
@@ -4175,13 +4263,13 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/StrongGrandDyadicFamily.lean",
-      "sha256": "45a530ee66a3ea89667a49d333d35ff6a9be0fcc29fe71c2f70c41138e9d8513",
+      "sha256": "2ddf183666e7245f919eb9664c03a5307dd63d95b14c0b9fb0fd0aad55188e9a",
       "origin": "stationary",
       "origin_sha256": "45a530ee66a3ea89667a49d333d35ff6a9be0fcc29fe71c2f70c41138e9d8513"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/StrongGrandPartition.lean",
-      "sha256": "e1f82bae4603913c283f377e26197e23706dedbba9b5fb20011615aac69bfea3",
+      "sha256": "5f3d99f07fa997281cda83041de014210b47e4236c24caf36693794acf223cf2",
       "origin": "stationary",
       "origin_sha256": "e1f82bae4603913c283f377e26197e23706dedbba9b5fb20011615aac69bfea3"
     },
@@ -4193,13 +4281,13 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/StrongerMorreyMeanBound.lean",
-      "sha256": "ad654a671ad3a095bf850e39e0bac13e91d2179763d55813272aab5cf4a83e84",
+      "sha256": "aec611cc933cf4a74f3f251d69919b9ece8d2eef74d38653bc88067b1c2f74e4",
       "origin": "stationary",
       "origin_sha256": "ad654a671ad3a095bf850e39e0bac13e91d2179763d55813272aab5cf4a83e84"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/StrongerNativeCoulombExistence.lean",
-      "sha256": "6098c1f1e3d2b1b40956a48dad8b7d173b493db042f682e2d130508f845a19f0",
+      "sha256": "141ded211b9d4a9916c35cd809cb86d946669f07e64780098331a0990bcccd5a",
       "origin": "stationary",
       "origin_sha256": "6098c1f1e3d2b1b40956a48dad8b7d173b493db042f682e2d130508f845a19f0"
     },
@@ -4217,19 +4305,19 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/SystemCoexactCompensation.lean",
-      "sha256": "83342a23bb45b798ff81cd22f3d0ca94750918aa08f4f5cca2c5850076f1c199",
+      "sha256": "ea68a1bf9604c2f6166acdd4ce0b0b36944d675197f611280866c5be384e3739",
       "origin": "stationary",
       "origin_sha256": "83342a23bb45b798ff81cd22f3d0ca94750918aa08f4f5cca2c5850076f1c199"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/SystemCompensatedHodgeFields.lean",
-      "sha256": "8eae145286118558b6db010e3baa1eaac9314ab302a89f1ed3de3c91f7d2beaa",
+      "sha256": "12a55b664adc5a474d6901837b01396b5281bd5075fcc7d041d623fc97b9cc08",
       "origin": "stationary",
       "origin_sha256": "8eae145286118558b6db010e3baa1eaac9314ab302a89f1ed3de3c91f7d2beaa"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/SystemCutoffCompensation.lean",
-      "sha256": "66999f6e56d080989b4f1c0a880b875c8406a7c0af1abddf608470724cce9c76",
+      "sha256": "0d5e00044a54e98dcb983b17a4bb8499254f945ed718d75e722bd104182f1054",
       "origin": "stationary",
       "origin_sha256": "66999f6e56d080989b4f1c0a880b875c8406a7c0af1abddf608470724cce9c76"
     },
@@ -4241,13 +4329,13 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/SystemCutoffDirichletResponse.lean",
-      "sha256": "d0acc57997c47ea6f7806c109527f3c48c947d6ebe1c8d2b0c98102299dc2307",
+      "sha256": "39fbe69c1d6c84fb9d2cfe4ee26c5bd7b6e39a8ceeeaa64394a3b21a9160233f",
       "origin": "stationary",
       "origin_sha256": "d0acc57997c47ea6f7806c109527f3c48c947d6ebe1c8d2b0c98102299dc2307"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/SystemDirichletCompensation.lean",
-      "sha256": "ceaab203137105500d5df710618f454d7af74669225080d34e224ea2eb1f7483",
+      "sha256": "ec3e3d930265fe0ec70fc4477261c679d2ae1cd7b1ef68e43257e6bbc0cc56b2",
       "origin": "stationary",
       "origin_sha256": "ceaab203137105500d5df710618f454d7af74669225080d34e224ea2eb1f7483"
     },
@@ -4259,7 +4347,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/SystemMatrixSupercriticalEnergy.lean",
-      "sha256": "a2531dc3850e7ce095a7e8eecabe4044e28dc99042e7dbe32cfef4b16bf697e2",
+      "sha256": "78e074094613b1126053239326507d7873e35bbbcde6a67f91343596204ad0dc",
       "origin": "stationary",
       "origin_sha256": "a2531dc3850e7ce095a7e8eecabe4044e28dc99042e7dbe32cfef4b16bf697e2"
     },
@@ -4277,7 +4365,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/SystemNativeForcingCompensation.lean",
-      "sha256": "2a49b2e85719a1e2f395595dd91302fa3b90216668c60f2daba69cd86ca8a771",
+      "sha256": "346b3345ca57af78f4ecf1e6d667d1a56f48e6abe21508a65d1fcd17fd722c39",
       "origin": "stationary",
       "origin_sha256": "2a49b2e85719a1e2f395595dd91302fa3b90216668c60f2daba69cd86ca8a771"
     },
@@ -4487,7 +4575,7 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/WhitneyCompensationCoefficient.lean",
-      "sha256": "9460a5e011b157541c7ce9d8139c0921e2e1e6493bea75b7e150e3218bf089da",
+      "sha256": "1a6b1fd850d65a00b764425792a8926a02ccba975160e2fde270d14767a4fc9b",
       "origin": "stationary",
       "origin_sha256": "9460a5e011b157541c7ce9d8139c0921e2e1e6493bea75b7e150e3218bf089da"
     },
@@ -4505,19 +4593,19 @@
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/WhitneyNormalizedKernel.lean",
-      "sha256": "2c1d74ee0085277f22688661924eeefa30170172d32f07dfbb2fcbc39ff811b9",
+      "sha256": "e343462b6ec3c2f17a01693f97333df4f461110595bc7b8dc2398b9a56c3539d",
       "origin": "stationary",
       "origin_sha256": "2c1d74ee0085277f22688661924eeefa30170172d32f07dfbb2fcbc39ff811b9"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/WhitneyPartitionQuantitative.lean",
-      "sha256": "539ad01fde92d09e69030c09414b60ea29304455aca94d7ee78205820b9e93c9",
+      "sha256": "d2f670e62f0b3aa2972da373a83c823475cc24b4417aab829155141d5b31a4bb",
       "origin": "stationary",
       "origin_sha256": "539ad01fde92d09e69030c09414b60ea29304455aca94d7ee78205820b9e93c9"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/WhitneySmoothPartition.lean",
-      "sha256": "b5830965c5dbd01dff9ddcd3648145aa48466a9ef46ddea9c72ddde14ede1d8a",
+      "sha256": "f3327571b7d64903d753323daa7581f081ca8f6e32f3485d9530aa3dfee03a00",
       "origin": "stationary",
       "origin_sha256": "b5830965c5dbd01dff9ddcd3648145aa48466a9ef46ddea9c72ddde14ede1d8a"
     },
@@ -4538,12 +4626,6 @@
       "sha256": "0b2dd2dade9e827b8fb45e870ec579742ff4e3d9403d1d276f258fce403e6073",
       "origin": "stationary",
       "origin_sha256": "0b2dd2dade9e827b8fb45e870ec579742ff4e3d9403d1d276f258fce403e6073"
-    },
-    {
-      "path": "StationaryHarmonicMaps/Analysis/ZeroBoundarySobolevLp.lean",
-      "sha256": "f5ba03f7e1a0b2d19aa9b7855f1fff54fa3f97f44462b94847645c9ded08e456",
-      "origin": "stationary",
-      "origin_sha256": "f5ba03f7e1a0b2d19aa9b7855f1fff54fa3f97f44462b94847645c9ded08e456"
     },
     {
       "path": "StationaryHarmonicMaps/Analysis/ZeroBoundaryZeroExtension.lean",
@@ -4568,6 +4650,12 @@
       "sha256": "a3ce21c7a03067c0cec4ed686f49fd589a107db5efda974fef825fc7b3688acd",
       "origin": "stationary",
       "origin_sha256": "a3ce21c7a03067c0cec4ed686f49fd589a107db5efda974fef825fc7b3688acd"
+    },
+    {
+      "path": "StationaryHarmonicMaps/EffectiveRegularity.lean",
+      "sha256": "588cd01398cc1a7a29070408239a9494b025a2fa83abc40d5a48055540bf36da",
+      "origin": "stationary",
+      "origin_sha256": "d1387a14e8c2a2d6fbe93e41e6c3459d2c9e41ed3e262da5c7324be2df43f495"
     },
     {
       "path": "StationaryHarmonicMaps/Foundation/C2Target.lean",
@@ -4604,6 +4692,18 @@
       "sha256": "4a4e2f82eed8c4ae08825ae638a49701ff1473d19a1604d80267b52f3b5b703c",
       "origin": "stationary",
       "origin_sha256": "4a4e2f82eed8c4ae08825ae638a49701ff1473d19a1604d80267b52f3b5b703c"
+    },
+    {
+      "path": "StationaryHarmonicMaps/Frozen/EffectiveSmallEnergyRegularity.lean",
+      "sha256": "3cc4664d759845c503b8bf362c09acca06568b76f42a9c551970bd6c9c0117d4",
+      "origin": "stationary",
+      "origin_sha256": "3cc4664d759845c503b8bf362c09acca06568b76f42a9c551970bd6c9c0117d4"
+    },
+    {
+      "path": "StationaryHarmonicMaps/Frozen/EffectiveSmallEnergySmoothRegularity.lean",
+      "sha256": "081501c8421994485ce90096f28990f68db8b5940891285850b4c31ba2face96",
+      "origin": "stationary",
+      "origin_sha256": "081501c8421994485ce90096f28990f68db8b5940891285850b4c31ba2face96"
     },
     {
       "path": "StationaryHarmonicMaps/Frozen/Monotonicity.lean",
@@ -4682,6 +4782,12 @@
       "sha256": "2d927ecbeadfd57575cf02a746862d071433af0e15d7f85b012ef85f069b869b",
       "origin": "stationary",
       "origin_sha256": "2d927ecbeadfd57575cf02a746862d071433af0e15d7f85b012ef85f069b869b"
+    },
+    {
+      "path": "StationaryHarmonicMaps/Geometry/EffectiveNormalProjectionData.lean",
+      "sha256": "f3509374330e254bb6b2e3eb16d19619d12125422dc2bb3149aac79bc2537ba1",
+      "origin": "stationary",
+      "origin_sha256": "f3509374330e254bb6b2e3eb16d19619d12125422dc2bb3149aac79bc2537ba1"
     },
     {
       "path": "StationaryHarmonicMaps/Geometry/GaugedEnergyAlgebra.lean",
@@ -4798,6 +4904,12 @@
       "origin_sha256": "126c718576bcf8de4cd777a35e5ae57bfe500f1b5de0752176734407a6a8e44e"
     },
     {
+      "path": "StationaryHarmonicMaps/Providers/EffectiveSmallEnergyRegularity.lean",
+      "sha256": "b568c7477ef196715990db8e5f5e0de6b067a2f6e28d48ec547c77a220424ee3",
+      "origin": "stationary",
+      "origin_sha256": "b568c7477ef196715990db8e5f5e0de6b067a2f6e28d48ec547c77a220424ee3"
+    },
+    {
       "path": "StationaryHarmonicMaps/Providers/Monotonicity.lean",
       "sha256": "77403acdedaa3cccd04851356995b93bf17b1bc9cbe6c0f4ca5a1025def53f2b",
       "origin": "stationary",
@@ -4838,10 +4950,26 @@
       "sha256": "ba8ba0facc2666ebab2e6476327f709d7a81ff2582c4f5b7481008c663e1671d",
       "origin": "stationary",
       "origin_sha256": "ba8ba0facc2666ebab2e6476327f709d7a81ff2582c4f5b7481008c663e1671d"
+    },
+    {
+      "path": "StationaryHarmonicMaps.lean",
+      "sha256": "aa00c34bb267bd23e4e114c3d6338258288f1f03dcc2367995ce1b068cfb61a2",
+      "origin": "stationary",
+      "origin_sha256": "4a500a6ac56692d8de9b13c406ae1ce920a3af9bb8f77116f9414e974466f0c9"
     }
   ],
   "origins": {
     "harmonicMaps": "The public upstream repository and commit listed above.",
     "stationary": "Stationary harmonic map proofs included in this repository."
-  }
+  },
+  "adapted_sources": [
+    {
+      "path": "StationaryHarmonicMaps/Analysis/EffectiveEuclideanSobolev.lean",
+      "upstream_repository": "https://github.com/leanprover-community/mathlib4",
+      "upstream_commit": "905b95818eb32af7874a58b427f50c1711a5e96c",
+      "upstream_path": "Mathlib/Analysis/FunctionalSpaces/SobolevInequality.lean",
+      "license": "LICENSES/Mathlib-Apache-2.0.txt",
+      "subject": "The norm-power Sobolev argument."
+    }
+  ]
 }

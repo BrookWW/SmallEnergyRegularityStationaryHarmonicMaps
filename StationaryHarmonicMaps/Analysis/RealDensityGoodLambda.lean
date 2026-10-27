@@ -19,9 +19,36 @@ open scoped Topology ENNReal
 
 namespace StationaryHarmonicMaps.Analysis
 
+@[expose] def densityGoodLambdaAmplitudeReal (n : ℕ) (C : ℝ) : ℝ :=
+  1 + (64 : ℝ)^n + 16*C*(64 : ℝ)^n
+
+@[expose] def densityGoodLambdaAmplitude (n c : ℕ) : ℕ :=
+  1 + 64^n + 16*c*64^n
+
+@[expose] def densityGoodLambdaTailFactor (n : ℕ) : ℕ :=
+  1 + 4*5^n*64^n*1536^n
+
+theorem densityGoodLambdaAmplitude_cast (n c : ℕ) :
+    (densityGoodLambdaAmplitude n c : ℝ) = densityGoodLambdaAmplitudeReal n c := by
+  simp only [densityGoodLambdaAmplitude, densityGoodLambdaAmplitudeReal,
+    Nat.cast_add, Nat.cast_one, Nat.cast_pow, Nat.cast_ofNat, Nat.cast_mul]
+
+theorem densityGoodLambdaAmplitude_one_lt (n : ℕ) (C : ℝ) (hC : 0<C) :
+    1 < densityGoodLambdaAmplitudeReal n C := by
+  unfold densityGoodLambdaAmplitudeReal
+  have hPow : 0 < (64 : ℝ)^n := pow_pos (by norm_num) _
+  nlinarith
+
+theorem densityGoodLambdaTailFactor_pos (n : ℕ) :
+    0 < (densityGoodLambdaTailFactor n : ℝ) := by
+  unfold densityGoodLambdaTailFactor
+  positivity
+
 /-- A real nonnegative near/far factory produces an actual full-scale good-lambda estimate, with dimensional constants fixed before the densities. -/
-theorem exists_real_density_goodLambda_constants (n : ℕ) (hn : 0<n) (C : ℝ) (hC : 0<C) :
-    ∃A D : ℝ,1<A ∧ 0<D ∧ ∀(f k : Domain n → ℝ),
+theorem exists_real_density_goodLambda_constants_explicit (n : ℕ) (hn : 0<n) (C : ℝ) (hC : 0<C) :
+    ∃A D : ℝ,1<A ∧ 0<D ∧
+      A = densityGoodLambdaAmplitudeReal n C ∧ D = (densityGoodLambdaTailFactor n : ℝ) ∧
+      ∀(f k : Domain n → ℝ),
       Integrable f volume → Integrable k volume → (∀x,0≤f x) → (∀x,0≤k x) →
       (∀(a : Domain n) (R : ℝ),0<R → ∃g h : Domain n → ℝ,
         Integrable g volume ∧ Integrable h volume ∧ (∀x,0≤g x) ∧ (∀x,0≤h x) ∧
@@ -41,7 +68,11 @@ theorem exists_real_density_goodLambda_constants (n : ℕ) (hn : 0<n) (C : ℝ) 
   have hb : 0<b₀ := by dsimp [b₀];positivity
   have hA : 1<A := by dsimp [A];linarith
   have hD : 0<D := by dsimp [D];positivity
-  refine ⟨A,D,hA,hD,?_⟩
+  refine ⟨A,D,hA,hD,?_,?_,?_⟩
+  · dsimp only [A,b₀,a₀,densityGoodLambdaAmplitudeReal]
+    ring
+  · simp only [D,a₀,densityGoodLambdaTailFactor,Nat.cast_add,Nat.cast_one,
+      Nat.cast_mul,Nat.cast_ofNat,Nat.cast_pow]
   intro f k hf hk hf0 hk0 Hresponse L δ hL hδ hδ1
   let fE := fun x=>ENNReal.ofReal (f x)
   let kE := fun x=>ENNReal.ofReal (k x)
@@ -123,6 +154,44 @@ theorem exists_real_density_goodLambda_constants (n : ℕ) (hn : 0<n) (C : ℝ) 
         ENNReal.ofReal_mul (by positivity : 0≤4*(5:ℝ)^n/(A*L))]
       ac_rfl
     _ ≤ _ := mul_le_mul_of_nonneg_right (ENNReal.ofReal_le_ofReal hCoefficient) zero_le
+
+theorem exists_real_density_goodLambda_constants (n : ℕ) (hn : 0<n) (C : ℝ) (hC : 0<C) :
+    ∃A D : ℝ,1<A ∧ 0<D ∧ ∀(f k : Domain n → ℝ),
+      Integrable f volume → Integrable k volume → (∀x,0≤f x) → (∀x,0≤k x) →
+      (∀(a : Domain n) (R : ℝ),0<R → ∃g h : Domain n → ℝ,
+        Integrable g volume ∧ Integrable h volume ∧ (∀x,0≤g x) ∧ (∀x,0≤h x) ∧
+        (∀ᵐx∂volume,f x≤2*g x+2*h x) ∧
+        (∫x,g x)≤∫x in ball a (256*R),k x ∧
+        ∀ᵐx∂volume.restrict (ball a R),h x≤2*C*(volume.real (ball a (256*R)))⁻¹*
+          ((∫y in ball a (256*R),f y)+(∫y in ball a (256*R),k y))) →
+      ∀(L δ : ℝ),0<L → 0≤δ → δ≤1 →
+        volume {x | ENNReal.ofReal (A*L)<dyadicBallMaximal (fun y=>ENNReal.ofReal (f y)) x ∧
+          dyadicBallMaximal (fun y=>ENNReal.ofReal (k y)) x≤ENNReal.ofReal (δ*L)}≤
+        ENNReal.ofReal (D*δ)*volume {x | ENNReal.ofReal L<dyadicBallMaximal (fun y=>ENNReal.ofReal (f y)) x} := by
+  obtain ⟨A,D,hA,hD,_hAEq,_hDEq,H⟩ :=
+    exists_real_density_goodLambda_constants_explicit n hn C hC
+  exact ⟨A,D,hA,hD,H⟩
+
+theorem effective_real_density_goodLambda_constants
+    (n : ℕ) (hn : 0<n) (c : ℕ) (hc : 0<(c : ℝ)) :
+    let A : ℝ := densityGoodLambdaAmplitude n c
+    let D : ℝ := densityGoodLambdaTailFactor n
+    ∀(f k : Domain n → ℝ),
+      Integrable f volume → Integrable k volume → (∀x,0≤f x) → (∀x,0≤k x) →
+      (∀(a : Domain n) (R : ℝ),0<R → ∃g h : Domain n → ℝ,
+        Integrable g volume ∧ Integrable h volume ∧ (∀x,0≤g x) ∧ (∀x,0≤h x) ∧
+        (∀ᵐx∂volume,f x≤2*g x+2*h x) ∧
+        (∫x,g x)≤∫x in ball a (256*R),k x ∧
+        ∀ᵐx∂volume.restrict (ball a R),h x≤2*(c : ℝ)*(volume.real (ball a (256*R)))⁻¹*
+          ((∫y in ball a (256*R),f y)+(∫y in ball a (256*R),k y))) →
+      ∀(L δ : ℝ),0<L → 0≤δ → δ≤1 →
+        volume {x | ENNReal.ofReal (A*L)<dyadicBallMaximal (fun y=>ENNReal.ofReal (f y)) x ∧
+          dyadicBallMaximal (fun y=>ENNReal.ofReal (k y)) x≤ENNReal.ofReal (δ*L)}≤
+        ENNReal.ofReal (D*δ)*volume {x | ENNReal.ofReal L<dyadicBallMaximal (fun y=>ENNReal.ofReal (f y)) x} := by
+  obtain ⟨A,D,_hA,_hD,hAEq,hDEq,H⟩ :=
+    exists_real_density_goodLambda_constants_explicit n hn (c : ℝ) hc
+  rw [hAEq,hDEq,← densityGoodLambdaAmplitude_cast] at H
+  exact H
 
 end StationaryHarmonicMaps.Analysis
 

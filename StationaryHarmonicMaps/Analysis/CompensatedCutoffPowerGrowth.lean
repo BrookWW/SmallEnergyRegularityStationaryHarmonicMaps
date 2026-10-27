@@ -3,6 +3,7 @@ module
 public import StationaryHarmonicMaps.Analysis.CappedEnvelopeImprovement
 public import StationaryHarmonicMaps.Analysis.GeometricIteration
 public import StationaryHarmonicMaps.Analysis.GeometricRpowIteration
+public import StationaryHarmonicMaps.Analysis.EffectiveHolderConstants
 
 /-!
 # Actual improved all-center power growth from the original cutoff system
@@ -165,6 +166,239 @@ theorem exists_compact_target_cutoff_power_growth
       calc
         J=(J*r₀^(-β))*r₀^β := by rw [mul_assoc,hZero,mul_one]
         _≤C*r^β := mul_le_mul hJC hPower (Real.rpow_nonneg hr₀.le _) hC.le
+    calc
+      _=r^((n : ℝ)-p)*Φ a r := by change _=r^((n : ℝ)-p)*(r^(p-(n : ℝ))*_);rw [←mul_assoc,hCancel,one_mul]
+      _≤r^((n : ℝ)-p)*(J*η^p) := mul_le_mul_of_nonneg_left hInitial (Real.rpow_nonneg hr.le _)
+      _≤r^((n : ℝ)-p)*((C*r^β)*η^p) := mul_le_mul_of_nonneg_left
+        (mul_le_mul_of_nonneg_right hJr hηp) (Real.rpow_nonneg hr.le _)
+      _=C*η^p*r^((n : ℝ)-p+β) := by rw [Real.rpow_add hr];ring
+
+@[expose] def effectiveCutoffPowerAmplitude (n q B L : ℕ) : ℚ :=
+  512*effectiveCappedEnvelopeImprovementConstant n q B L
+
+@[expose] def effectiveCutoffPowerScale (n q B L : ℕ) : ℚ :=
+  rationalEnvelopeScale (effectiveCutoffPowerAmplitude n q B L)
+
+@[expose] def effectiveCutoffPowerSmallness (n q B L : ℕ) : ℚ :=
+  rationalEnvelopeSmallness n (effectiveCutoffPowerAmplitude n q B L)
+
+@[expose] def effectiveCutoffPowerGrowthConstant (n q A B L : ℕ) : ℚ :=
+  1+rationalRecurrenceMajorant (effectiveCutoffPowerScale n q B L/16)
+    (effectiveCappedEnvelopeImprovementConstant n q B L/effectiveCutoffPowerScale n q B L^n)
+    (16*(effectiveCutoffCappedEnvelopeConstant n A B : ℚ))+
+      16*(effectiveCutoffLpEnvelopeConstant n A B : ℚ)
+
+theorem effectiveCutoffPowerAmplitude_pos (n q B L : ℕ) :
+    0 < effectiveCutoffPowerAmplitude n q B L := by
+  unfold effectiveCutoffPowerAmplitude
+  exact mul_pos (by norm_num) (effectiveCappedEnvelopeImprovementConstant_pos n q B L)
+
+theorem effectiveCutoffPowerScale_pos (n q B L : ℕ) :
+    0 < effectiveCutoffPowerScale n q B L := by
+  have H := effectiveCutoffPowerAmplitude_pos n q B L
+  unfold effectiveCutoffPowerScale rationalEnvelopeScale
+  positivity
+
+theorem effectiveCutoffPowerSmallness_pos (n q B L : ℕ) :
+    0 < effectiveCutoffPowerSmallness n q B L := by
+  have hScale := effectiveCutoffPowerScale_pos n q B L
+  have hAmplitude := effectiveCutoffPowerAmplitude_pos n q B L
+  change 0 < effectiveCutoffPowerScale n q B L^n/(4*(1+effectiveCutoffPowerAmplitude n q B L))
+  positivity
+
+theorem effectiveCutoffPowerSmallness_le_one (n q B L : ℕ) :
+    effectiveCutoffPowerSmallness n q B L ≤ 1 := by
+  have hAmplitude : (0 : ℝ) ≤ (effectiveCutoffPowerAmplitude n q B L : ℝ) := by
+    exact_mod_cast (effectiveCutoffPowerAmplitude_pos n q B L).le
+  have H := (effectiveEnvelopeSmallness_bounds n (effectiveCutoffPowerAmplitude n q B L) hAmplitude).2
+  rw [← rationalEnvelopeSmallness_cast] at H
+  exact_mod_cast H
+
+theorem effectiveCutoffPowerGrowthConstant_pos (n q A B L : ℕ) :
+    0 < effectiveCutoffPowerGrowthConstant n q A B L := by
+  have hScale := effectiveCutoffPowerScale_pos n q B L
+  have hD := effectiveCappedEnvelopeImprovementConstant_pos n q B L
+  unfold effectiveCutoffPowerGrowthConstant rationalRecurrenceMajorant
+  positivity
+
+theorem exists_compact_target_cutoff_power_growth_effective
+    (n : ℕ) (hn : 2≤n) (p : ℝ) (hpOne : 1<p) (hpTwo : p<2)
+    (hpConj : (n : ℝ)<p/(p-1)) (q : ℕ)
+    (E : (Ambient q →L[ℝ] Ambient q) →L[ℝ] Ambient (q*q))
+    (R : Ambient (q*q) →L[ℝ] (Ambient q →L[ℝ] Ambient q))
+    (hRE : ∀T,R (E T)=T) (hER : ∀z,E (R z)=z)
+    (hE : ∀T : Ambient q →L[ℝ] Ambient q,‖E T‖^2=∑j : Fin q,‖T (EuclideanSpace.single j 1)‖^2)
+    (A B L : ℕ) (hConjugate : p/(p-1)=((2*n+1 : ℕ) : ℝ)) :
+    ∃ε C : ℝ,0<ε ∧ ε≤1 ∧ 0<C ∧
+      ε=(effectiveCutoffPowerSmallness n q B L:ℝ) ∧
+      C=(effectiveCutoffPowerGrowthConstant n q A B L:ℝ) ∧ ∀(N : CompactC2EmbeddedTarget q)
+      (u : Domain n → Ambient q) (Du : Domain n → Gradient n q) (η : ℝ),
+      MemW12 (ballDomain (0 : Domain n) 1) u Du →
+      (∀ᵐx∂volume.restrict (ball (0 : Domain n) 1),u x∈N.carrierSet) → 0≤η → η≤ε →
+      criticalGradientMorreySquare Du (ball (0 : Domain n) 1)≤ENNReal.ofReal (η^2) →
+      ∀(P : Domain n → Ambient (q*q)) (DP : Domain n → Gradient n (q*q)),
+        MemW12 (ballDomain (0 : Domain n) 1) P DP →
+        (∀ᵐx∂volume.restrict (ball (0 : Domain n) 1),star (R (P x))*R (P x)=1) →
+        criticalGradientMorreySquare DP (ball (0 : Domain n) 1)≤ENNReal.ofReal (η^2) →
+        ∀Ω : Domain n → Fin n → (Ambient q →L[ℝ] Ambient q),
+          (∀i,MemLp (fun x=>Ω x i) 2 (volume.restrict (ball (0 : Domain n) 1))) →
+          HolderToCK.WeakPoissonOn (ballDomain (0 : Domain n) 1) Du (fun x=>-(∑i : Fin n,Ω x i (Du x i))) →
+          let Z := fun x i=>star (R (P x))*R (DP x i)+star (R (P x))*Ω x i*R (P x)
+          HolderToCK.WeakPoissonOn (ballDomain (0 : Domain n) 1) (fun x i=>E (Z x i)) (fun _=>0) →
+          criticalGradientMorreySquare (fun x i=>E (Z x i)) (ball (0 : Domain n) 1)≤ENNReal.ofReal (η^2) →
+          ∀χ : Domain n → ℝ,ContDiff ℝ ∞ χ → HasCompactSupport χ →
+            tsupport χ⊆closedBall (0 : Domain n) (3/4 : ℝ) →
+            (∀x,|χ x|≤A) → (∀(x : Domain n) (i : Fin n),|fderiv ℝ χ x (EuclideanSpace.single i 1)|≤B) →
+            (∀x,|Laplacian.laplacian χ x|≤L) →
+            let c := ⨍y in ball (0 : Domain n) 1,u y
+            let v := fun x=>χ x • (u x-c)
+            let Dv := fun x i=>χ x • Du x i+fderiv ℝ χ x (EuclideanSpace.single i 1) • (u x-c)
+            let Φ := fun (x : Domain n) (r : ℝ)=>r^(p-(n : ℝ))*∫y in ball x r,(Real.sqrt (hsNormSq (Dv y)))^p
+            let Ψ := fun t : ℝ=>sSup {z : ℝ | ∃x r,0<r ∧ r≤t ∧ z=Φ x r}
+            MemW12 (⟨univ,isOpen_univ⟩ : OpenDomain n) v Dv ∧
+            (∀t : ℝ,0<t → t≤1/16 → Ψ t≤C*η^p*t^(p*(1-(1/2 : ℝ)))) ∧
+            ∀(a : Domain n) (r : ℝ),0<r →
+              IntegrableOn (fun x=>(Real.sqrt (hsNormSq (Dv x)))^p) (ball a r) volume ∧
+              (∫x in ball a r,(Real.sqrt (hsNormSq (Dv x)))^p)≤
+                C*η^p*r^((n : ℝ)-p+p*(1-(1/2 : ℝ))) := by
+  have hp : 0<p := zero_lt_one.trans hpOne
+  let β : ℝ := p*(1-(1/2 : ℝ))
+  have hβEq : β=p/2 := by dsimp only [β]; ring
+  have hβ : 0<β := by rw [hβEq]; positivity
+  have hβOne : β≤1 := by rw [hβEq]; linarith only [hpTwo]
+  let D : ℝ := effectiveCappedEnvelopeImprovementConstant n q B L
+  have hD : 0<D := by
+    dsimp only [D]
+    exact_mod_cast effectiveCappedEnvelopeImprovementConstant_pos n q B L
+  have hDF : D=(effectiveCappedEnvelopeImprovementConstant n q B L : ℝ) := rfl
+  have HImprove := effective_compact_target_capped_envelope_improvement
+    n hn p hpOne hpTwo hpConj q E R hRE hER hE A B L (Nat.cast_nonneg A) hConjugate
+  obtain ⟨M,hM,hMF,HEnvelope⟩ := exists_cutoff_capped_envelope_effective n hn p hpOne.le hpTwo.le A B
+  obtain ⟨J,hJ,hJF,HInitial⟩ := exists_cutoff_lp_envelope_bound_effective n hn p hp hpTwo.le A B
+  let U : ℝ := (16 : ℝ)^β
+  have hU : 0<U := Real.rpow_pos_of_pos (by norm_num) _
+  have hUle : U≤16 := by
+    simpa only [U,Real.rpow_one] using Real.rpow_le_rpow_of_exponent_le
+      (by norm_num : (1 : ℝ)≤16) hβOne
+  let G : ℝ := 512*D
+  have hG : 0<G := mul_pos (by norm_num) hD
+  let θ : ℝ := effectiveEnvelopeScale G
+  obtain ⟨hθ,hθHalf⟩ := effectiveEnvelopeScale_bounds G hG.le
+  let ε : ℝ := effectiveEnvelopeSmallness n G
+  obtain ⟨hε,hεOne⟩ := effectiveEnvelopeSmallness_bounds n G hG.le
+  let σ : ℝ := θ/16
+  have hσ : 0<σ := div_pos hθ (by norm_num)
+  have hσOne : σ<1 := by dsimp only [σ]; linarith only [hθHalf]
+  have hσPow : σ^β=θ^β/U := Real.div_rpow hθ.le (by norm_num : (0 : ℝ)≤16) β
+  let ρ : ℝ := σ^β/2
+  have hσβ : 0<σ^β := Real.rpow_pos_of_pos hσ _
+  have hAbsorb (η : ℝ) (hη : 0≤η) (hηle : η≤ε) :
+      D*(η^p*θ^(p-(n : ℝ))+θ^p)≤ρ := by
+    have Hsum : G*(η^p*θ^(p-(n : ℝ))+θ^p)≤θ^β := by
+      rw [hβEq]
+      exact effective_envelope_combined_absorption_helper n G p η hG.le hpOne.le hη hηle
+    have hCoeff : 2*U*D≤G := by dsimp only [G]; nlinarith only [hUle,hD]
+    have Hsum' : (2*U*D)*(η^p*θ^(p-(n : ℝ))+θ^p)≤θ^β :=
+      (mul_le_mul_of_nonneg_right hCoeff (by positivity)).trans Hsum
+    have Hraw : D*(η^p*θ^(p-(n : ℝ))+θ^p)≤θ^β/(2*U) :=
+      (le_div_iff₀ (mul_pos (by norm_num) hU)).mpr (by nlinarith only [Hsum'])
+    exact Hraw.trans_eq (by dsimp only [ρ];rw [hσPow];field_simp)
+  let r₀ : ℝ := 1/16
+  have hr₀ : 0<r₀ := by norm_num [r₀]
+  have hr₀Pow : r₀≤r₀^β := Real.self_le_rpow_of_le_one hr₀.le (by norm_num [r₀]) hβOne
+  let A₀ : ℝ := D/θ^n
+  have hA₀ : 0<A₀ := div_pos hD (pow_pos hθ n)
+  have hAraw : D*θ^(p-(n : ℝ))≤A₀ := by
+    have H := Real.rpow_le_rpow_of_exponent_ge hθ (show θ≤1 by linarith only [hθHalf])
+      (show -(n : ℝ)≤p-(n : ℝ) by linarith only [hp])
+    have Heq : θ^(-(n : ℝ))=(θ^n)⁻¹ := by rw [Real.rpow_neg hθ.le,Real.rpow_natCast]
+    rw [Heq] at H
+    exact (mul_le_mul_of_nonneg_left H hD.le).trans_eq (by dsimp only [A₀];rw [div_eq_mul_inv])
+  let B₀ : ℝ := 16*M
+  have hB₀ : 0<B₀ := mul_pos (by norm_num) hM
+  have hMbase : M≤B₀*r₀^β := by
+    calc
+      M=B₀*r₀ := by dsimp only [B₀,r₀];ring
+      _≤_ := mul_le_mul_of_nonneg_left hr₀Pow hB₀.le
+  let Cs : ℝ := (B₀+2*A₀/σ)/σ
+  have hCs : 0<Cs := by dsimp only [Cs]; positivity
+  let C : ℝ := 1+Cs+16*J
+  have hC : 0<C := by dsimp only [C]; positivity
+  have hCsC : Cs≤C := by dsimp only [C]; linarith only [hJ]
+  have hJC : 16*J≤C := by dsimp only [C]; linarith only [hCs]
+  have hθFormula : θ=(effectiveCutoffPowerScale n q B L:ℝ) := by
+    dsimp only [θ,effectiveCutoffPowerScale,effectiveCutoffPowerAmplitude]
+    rw [rationalEnvelopeScale_cast]
+    simp only [Rat.cast_mul,Rat.cast_ofNat]
+    dsimp only [G]
+  refine ⟨ε,C,hε,hεOne,hC,?_,?_,?_⟩
+  · dsimp only [ε,effectiveCutoffPowerSmallness,effectiveCutoffPowerAmplitude]
+    rw [rationalEnvelopeSmallness_cast]
+    simp only [Rat.cast_mul,Rat.cast_ofNat]
+    dsimp only [G]
+  · dsimp only [C,Cs,B₀,A₀,σ,effectiveCutoffPowerGrowthConstant,rationalRecurrenceMajorant]
+    simp only [Rat.cast_add,Rat.cast_one,Rat.cast_mul,Rat.cast_div,Rat.cast_pow,Rat.cast_ofNat,Rat.cast_natCast]
+    rw [hDF,hMF,hJF,hθFormula]
+  intro N u Du η hu hTarget hη hηle hCritical P DP hP hOrth hDPCritical Ω hΩ hEq Z hDiv hZCritical
+    χ hχ hcχ hsχ hχA hDχ hLap c v Dv Φ Ψ
+  have hηOne : η≤1 := hηle.trans hεOne
+  obtain ⟨hV,HImproveData⟩ := HImprove N u Du η hu hTarget hη hηOne hCritical P DP hP hOrth hDPCritical
+    Ω hΩ hEq hDiv hZCritical χ hχ hcχ hsχ hχA hDχ hLap
+  obtain ⟨_hVEnv,Henv⟩ := HEnvelope q u Du η hu hη hCritical χ hχ hcχ hsχ hχA hDχ
+  obtain ⟨_hVInitial,Hinit⟩ := HInitial q u Du η hu hη hCritical χ hχ hcχ hsχ hχA hDχ
+  have hηp : 0≤η^p := Real.rpow_nonneg hη _
+  have hMono (r s : ℝ) (hr : 0<r) (hrs : r≤s) (hs : s≤r₀) : Ψ r≤Ψ s :=
+    (Henv s (hr.trans_le hrs) hs).2.2.2.1 r hr hrs
+  have hBase : Ψ r₀≤(B₀*η^p)*r₀^β := by
+    have H := (Henv r₀ hr₀ le_rfl).2.1
+    exact H.trans (by nlinarith only [mul_le_mul_of_nonneg_right hMbase hηp])
+  have hStep (s : ℝ) (hs : 0<s) (hsCap : s≤r₀) :
+      Ψ (σ*s)≤ρ*Ψ s+(A₀*η^p)*s^β := by
+    have hCap : s/8≤1/128 := by dsimp only [r₀] at hsCap;linarith only [hsCap]
+    have H := HImproveData (s/8) θ (div_pos hs (by norm_num)) hCap hθ hθHalf
+    have hArg : θ*(s/8)/2=σ*s := by dsimp only [σ];ring
+    have hOuter : 8*(s/8)=s := by ring
+    rw [hArg,hOuter,← hβEq] at H
+    have hPsi : 0≤Ψ s := (Henv s hs hsCap).1
+    have hErrorScale : (s/8)^β≤s^β := Real.rpow_le_rpow (by positivity)
+      (by linarith only [hs]) hβ.le
+    have hE : D*η^p*θ^(p-(n : ℝ))*(s/8)^β≤(A₀*η^p)*s^β := by
+      calc
+        _≤D*η^p*θ^(p-(n : ℝ))*s^β := mul_le_mul_of_nonneg_left hErrorScale (by positivity)
+        _≤(A₀*η^p)*s^β := by
+          have HA := mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right hAraw hηp)
+            (Real.rpow_nonneg hs.le β)
+          nlinarith only [HA]
+    exact H.trans (add_le_add (mul_le_mul_of_nonneg_right (hAbsorb η hη hηle) hPsi) hE)
+  have hSmallGrowth : ∀s : ℝ,0<s → s≤r₀ → Ψ s≤Cs*η^p*s^β := by
+    have H := effective_half_contraction_growth_helper Ψ hβ.le hβOne hσ hσOne
+      (mul_nonneg hA₀.le hηp) (mul_nonneg hB₀.le hηp) hr₀ hMono hBase hStep
+    intro s hs hsCap
+    exact (H s hs hsCap).trans_eq (by dsimp only [Cs];ring)
+  have hGrowth : ∀s : ℝ,0<s → s≤r₀ → Ψ s≤C*η^p*s^β := by
+    intro s hs hsCap
+    exact (hSmallGrowth s hs hsCap).trans (mul_le_mul_of_nonneg_right
+      (mul_le_mul_of_nonneg_right hCsC hηp) (Real.rpow_nonneg hs.le _))
+  refine ⟨hV,hGrowth,?_⟩
+  intro a r hr
+  obtain ⟨hI,hInitial⟩ := Hinit a r hr
+  refine ⟨hI,?_⟩
+  have hCancel : r^((n : ℝ)-p)*r^(p-(n : ℝ))=1 := by
+    rw [←Real.rpow_add hr]
+    rw [show (n : ℝ)-p+(p-(n : ℝ))=0 by ring,Real.rpow_zero]
+  by_cases hSmallRadius : r≤r₀
+  · have hTerm : Φ a r≤Ψ r := (Henv r hr hSmallRadius).2.2.1 a r hr le_rfl
+    calc
+      _=r^((n : ℝ)-p)*Φ a r := by change _=r^((n : ℝ)-p)*(r^(p-(n : ℝ))*_);rw [←mul_assoc,hCancel,one_mul]
+      _≤r^((n : ℝ)-p)*(C*η^p*r^β) := mul_le_mul_of_nonneg_left
+        (hTerm.trans (hGrowth r hr hSmallRadius)) (Real.rpow_nonneg hr.le _)
+      _=C*η^p*r^((n : ℝ)-p+β) := by rw [Real.rpow_add hr];ring
+  · have hR : r₀≤r := (not_le.mp hSmallRadius).le
+    have hPower : r₀^β≤r^β := Real.rpow_le_rpow hr₀.le hR hβ.le
+    have hJr : J≤C*r^β := by
+      calc
+        J=(16*J)*r₀ := by dsimp only [r₀];ring
+        _≤C*r^β := mul_le_mul hJC (hr₀Pow.trans hPower) hr₀.le hC.le
     calc
       _=r^((n : ℝ)-p)*Φ a r := by change _=r^((n : ℝ)-p)*(r^(p-(n : ℝ))*_);rw [←mul_assoc,hCancel,one_mul]
       _≤r^((n : ℝ)-p)*(J*η^p) := mul_le_mul_of_nonneg_left hInitial (Real.rpow_nonneg hr.le _)

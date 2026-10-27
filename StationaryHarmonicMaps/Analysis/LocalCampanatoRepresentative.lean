@@ -79,10 +79,16 @@ theorem local_ballAverage_limit_holder_near {n q : ℕ}
     _ ≤ _ := hbound
     _ = _ := by dsimp only [d]; ring
 
-/-- Local all-center mean oscillation supplies the unique actual half-ball representative. -/
-theorem existsUnique_local_representative_of_meanOscillation (n : ℕ) (α : ℝ)
+/-- Explicit coefficient for the local mean-oscillation representative estimate. -/
+@[expose] noncomputable def localCampanatoConstant (n : ℕ) (α : ℝ) : ℝ :=
+  1 + |(2 : ℝ)^n / (1 - (1/2 : ℝ)^α)| +
+    16 * (2 * (2 : ℝ)^n * ((2 : ℝ)^α / (1 - (1/2 : ℝ)^α) + (4 : ℝ)^α))
+
+/-- Local all-center mean oscillation supplies the unique actual half-ball
+representative with the displayed coefficient. -/
+theorem existsUnique_local_representative_of_meanOscillation_explicit (n : ℕ) (α : ℝ)
     (hα : 0 < α) :
-    ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (f : Domain n → Ambient q)
+    ∃ C : ℝ, 0 < C ∧ C = localCampanatoConstant n α ∧ ∀ (q : ℕ) (f : Domain n → Ambient q)
       (a : Domain n) (R K : ℝ), 0 < R → 0 ≤ K →
       IntegrableOn f (Metric.ball a R) volume →
       (∀ (x : Domain n), x ∈ Metric.ball a (3 * R / 4) →
@@ -107,7 +113,7 @@ theorem existsUnique_local_representative_of_meanOscillation (n : ℕ) (α : ℝ
   have hC : 0 < C := by dsimp only [C]; positivity
   have hTC : T ≤ C := by dsimp only [C]; linarith [le_abs_self T]
   have hHC : 16 * H ≤ C := by dsimp only [C]; linarith [abs_nonneg T]
-  refine ⟨C, hC, ?_⟩
+  refine ⟨C, hC, rfl, ?_⟩
   intro q f a R K hR hK hf hosc
   classical
   have hex (x : Metric.ball a (R / 2)) :=
@@ -146,6 +152,114 @@ theorem existsUnique_local_representative_of_meanOscillation (n : ℕ) (α : ℝ
         (mul_le_mul_of_nonneg_right hHC hK) (Real.rpow_nonneg dist_nonneg _)
   · intro v hv
     exact hv.1.unique hrep
+
+theorem existsUnique_local_representative_of_meanOscillation (n : ℕ) (α : ℝ)
+    (hα : 0 < α) :
+    ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (f : Domain n → Ambient q)
+      (a : Domain n) (R K : ℝ), 0 < R → 0 ≤ K →
+      IntegrableOn f (Metric.ball a R) volume →
+      (∀ (x : Domain n), x ∈ Metric.ball a (3 * R / 4) →
+        ∀ r : ℝ, 0 < r → r ≤ R / 4 →
+          (⨍ y in Metric.ball x r, ‖f y - (⨍ z in Metric.ball x r, f z)‖) ≤ K * r ^ α) →
+      ∃! w : Metric.ball a (R / 2) → Ambient q,
+        IsContinuousRepresentative (ballDomain a (R / 2)) f w ∧
+        (∀ x : Metric.ball a (R / 2),
+          Tendsto (fun r : ℝ => ⨍ y in Metric.ball (x : Domain n) r, f y)
+          (𝓝[>] (0 : ℝ)) (𝓝 (w x))) ∧
+        (∀ (x : Metric.ball a (R / 2)) (r : ℝ), 0 < r → r ≤ R / 4 →
+          ‖(⨍ y in Metric.ball (x : Domain n) r, f y) - w x‖ ≤ C * K * r ^ α) ∧
+        (∀ x y : Metric.ball a (R / 2),
+          ‖w x - w y‖ ≤ C * K * (dist (x : Domain n) (y : Domain n)) ^ α) := by
+  obtain ⟨C, hC, _hFormula, H⟩ := existsUnique_local_representative_of_meanOscillation_explicit n α hα
+  exact ⟨C, hC, H⟩
+
+namespace Analysis
+
+theorem localCampanatoConstant_le_of_half_le (n : ℕ) (α : ℝ)
+    (hαHalf : (1 / 2 : ℝ) ≤ α) (hαOne : α ≤ 1) :
+    localCampanatoConstant n α ≤ (512 : ℝ) * 2 ^ n := by
+  let A : ℝ := 2 ^ n
+  let v : ℝ := (1 / 2 : ℝ) ^ α
+  let u : ℝ := (2 : ℝ) ^ α
+  let T : ℝ := A / (1 - v)
+  let H : ℝ := 2 * A * (u / (1 - v) + (4 : ℝ) ^ α)
+  have hA : 1 ≤ A := one_le_pow₀ (by norm_num : (1 : ℝ) ≤ 2)
+  have hAp : 0 ≤ A := zero_le_one.trans hA
+  have hroot : (1 / 2 : ℝ) ^ (1 / 2 : ℝ) ≤ (3 / 4 : ℝ) := by
+    have hsq : ((1 / 2 : ℝ) ^ (1 / 2 : ℝ)) ^ 2 = (1 / 2 : ℝ) := by
+      rw [← Real.sqrt_eq_rpow, Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 1 / 2)]
+    have hnonneg := Real.rpow_nonneg (by norm_num : (0 : ℝ) ≤ 1 / 2) (1 / 2 : ℝ)
+    nlinarith only [hsq, hnonneg]
+  have hv : v ≤ (3 / 4 : ℝ) :=
+    (Real.rpow_le_rpow_of_exponent_ge (by norm_num : (0 : ℝ) < 1 / 2)
+      (by norm_num : (1 / 2 : ℝ) ≤ 1) hαHalf).trans hroot
+  have hu : u ≤ 2 := by
+    simpa only [u, Real.rpow_one] using
+      Real.rpow_le_rpow_of_exponent_le (by norm_num : (1 : ℝ) ≤ 2) hαOne
+  have hfour : (4 : ℝ)^α ≤ 4 := by
+    simpa only [Real.rpow_one] using
+      Real.rpow_le_rpow_of_exponent_le (by norm_num : (1 : ℝ) ≤ 4) hαOne
+  have hd : 0 < 1 - v := by linarith only [hv]
+  have hfrac : u / (1 - v) ≤ 8 :=
+    (div_le_iff₀ hd).mpr (by linarith only [hu, hv])
+  have hT : T ≤ 4 * A := by
+    apply (div_le_iff₀ hd).mpr
+    have Hmul := mul_le_mul_of_nonneg_left (show (1 / 4 : ℝ) ≤ 1 - v by linarith only [hv]) hAp
+    nlinarith only [Hmul]
+  have hH : H ≤ 24 * A := by
+    dsimp only [H]
+    have Hmul := mul_le_mul_of_nonneg_left
+      (show u / (1 - v) + (4 : ℝ)^α ≤ 12 by linarith only [hfrac, hfour])
+      (show 0 ≤ 2 * A by positivity)
+    nlinarith only [Hmul]
+  have hT0 : 0 ≤ T := div_nonneg hAp hd.le
+  change 1 + |T| + 16 * H ≤ 512 * A
+  rw [abs_of_nonneg hT0]
+  nlinarith only [hT, hH, hA]
+
+theorem localCampanatoConstant_half_le (n : ℕ) :
+    localCampanatoConstant n (1 / 2) ≤ (512 : ℝ) * 2 ^ n := by
+  let A : ℝ := 2 ^ n
+  let v : ℝ := (1 / 2 : ℝ) ^ (1 / 2 : ℝ)
+  let u : ℝ := (2 : ℝ) ^ (1 / 2 : ℝ)
+  let T : ℝ := A / (1 - v)
+  let H : ℝ := 2 * A * (u / (1 - v) + (4 : ℝ) ^ (1 / 2 : ℝ))
+  have hA : 1 ≤ A := one_le_pow₀ (by norm_num : (1 : ℝ) ≤ 2)
+  have hAp : 0 ≤ A := zero_le_one.trans hA
+  have hvSq : v ^ 2 = (1 / 2 : ℝ) := by
+    dsimp only [v]
+    rw [← Real.sqrt_eq_rpow, Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 1 / 2)]
+  have hv : v ≤ (3 / 4 : ℝ) := by
+    have hv0 : 0 ≤ v := Real.rpow_nonneg (by norm_num) _
+    nlinarith only [hvSq, hv0]
+  have huSq : u ^ 2 = (2 : ℝ) := by
+    dsimp only [u]
+    rw [← Real.sqrt_eq_rpow, Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2)]
+  have hu : u ≤ (3 / 2 : ℝ) := by
+    have hu0 : 0 ≤ u := Real.rpow_nonneg (by norm_num) _
+    nlinarith only [huSq, hu0]
+  have hfour : (4 : ℝ) ^ (1 / 2 : ℝ) = 2 := by
+    rw [← Real.sqrt_eq_rpow]
+    rw [show (4 : ℝ) = (2 : ℝ) ^ 2 by norm_num, Real.sqrt_sq (by norm_num : (0 : ℝ) ≤ 2)]
+  have hd : 0 < 1 - v := by linarith only [hv]
+  have hfrac : u / (1 - v) ≤ 6 :=
+    (div_le_iff₀ hd).mpr (by linarith only [hu, hv])
+  have hT : T ≤ 4 * A := by
+    apply (div_le_iff₀ hd).mpr
+    have Hmul := mul_le_mul_of_nonneg_left (show (1 / 4 : ℝ) ≤ 1 - v by linarith only [hv]) hAp
+    nlinarith only [Hmul]
+  have hH : H ≤ 16 * A := by
+    dsimp only [H]
+    rw [hfour]
+    have Hmul := mul_le_mul_of_nonneg_left
+      (show u / (1 - v) + 2 ≤ 8 by linarith only [hfrac]) (show 0 ≤ 2 * A by positivity)
+    nlinarith only [Hmul]
+  have hT0 : 0 ≤ T := div_nonneg hAp hd.le
+  change 1 + |T| + 16 * H ≤ 512 * A
+  rw [abs_of_nonneg hT0]
+  nlinarith only [hT, hH, hA]
+
+end Analysis
 
 end StationaryHarmonicMaps
 

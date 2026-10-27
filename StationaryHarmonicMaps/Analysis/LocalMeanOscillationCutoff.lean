@@ -13,16 +13,19 @@ the original outer-ball integral. Small balls use the actual damped mean
 comparison and the original cutoff derivative bound.
 -/
 
-public section
+@[expose] public section
 
 open HarmonicMaps MeasureTheory Filter Set Metric
 open scoped ContDiff
 
 namespace StationaryHarmonicMaps.Analysis
 
+def localMeanOscillationCutoffConstant (n : ℕ) (D : ℝ) : ℝ :=
+  2*((32:ℝ)^n+1+D*(2*(2:ℝ)^n+2*(4:ℝ)^n))
+
 /-- Actual local scalar oscillation and a genuinely supported differentiable cutoff produce global all-ball oscillation of the same original centered product. -/
-theorem exists_local_mean_oscillation_cutoff_bound (n : ℕ) (D : ℝ) (hD : 0≤D) :
-    ∃ C : ℝ,0<C ∧ ∀ (a : Domain n) (t : ℝ),0<t →
+theorem exists_local_mean_oscillation_cutoff_bound_explicit (n : ℕ) (D : ℝ) (hD : 0≤D) :
+    ∃ C : ℝ,0<C ∧ C=localMeanOscillationCutoffConstant n D ∧ ∀ (a : Domain n) (t : ℝ),0<t →
       ∀ (f : Domain n → ℝ) (B : ℝ),0≤B →
         (∀ (x : Domain n) (r : ℝ),0<r → IntegrableOn f (Metric.ball x r) volume) →
         (∀ (x : Domain n) (r : ℝ),0<r → r≤8*t →
@@ -36,7 +39,7 @@ theorem exists_local_mean_oscillation_cutoff_bound (n : ℕ) (D : ℝ) (hD : 0�
   let C : ℝ := 2*((32 : ℝ)^n+1+D*H)
   have hH : 0≤H := by dsimp only [H];positivity
   have hC : 0<C := by dsimp only [C];positivity
-  refine ⟨C,hC,?_⟩
+  refine ⟨C,hC,rfl,?_⟩
   intro a t ht f B hB hf hOsc χ hχ hSupport hBound hDerivative β x r hr
   let m := ⨍ z in Metric.ball a (8*t),f z
   let μ := volume.restrict (Metric.ball x r)
@@ -185,6 +188,20 @@ theorem exists_local_mean_oscillation_cutoff_bound (n : ℕ) (D : ℝ) (hD : 0�
         rw [hInt,smul_zero]
       rw [hOscZero]
       exact mul_nonneg hC.le hB
+
+theorem exists_local_mean_oscillation_cutoff_bound (n : ℕ) (D : ℝ) (hD : 0≤D) :
+    ∃ C : ℝ,0<C ∧ ∀ (a : Domain n) (t : ℝ),0<t →
+      ∀ (f : Domain n → ℝ) (B : ℝ),0≤B →
+        (∀ (x : Domain n) (r : ℝ),0<r → IntegrableOn f (Metric.ball x r) volume) →
+        (∀ (x : Domain n) (r : ℝ),0<r → r≤8*t →
+          (⨍ y in Metric.ball x r,|f y-(⨍ z in Metric.ball x r,f z)|)≤B) →
+        ∀ (χ : Domain n → ℝ),ContDiff ℝ 1 χ → Function.support χ⊆Metric.ball a t →
+          (∀ y,|χ y|≤1) → (∀ y,‖fderiv ℝ χ y‖≤D/t) →
+          let β := fun y=>χ y*(f y-(⨍ z in Metric.ball a (8*t),f z))
+          ∀ (x : Domain n) (r : ℝ),0<r → IntegrableOn β (Metric.ball x r) volume ∧
+            (⨍ y in Metric.ball x r,|β y-(⨍ z in Metric.ball x r,β z)|)≤C*B := by
+  obtain ⟨C,hC,_hCEq,H⟩ := exists_local_mean_oscillation_cutoff_bound_explicit n D hD
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

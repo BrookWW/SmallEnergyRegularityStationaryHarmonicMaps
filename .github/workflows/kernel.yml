@@ -82,6 +82,9 @@ jobs:
       - name: Check public theorem consumers
         run: python3 scripts/check_consumers.py
 
+      - name: Recompute exact effective constants
+        run: python3 scripts/check_effective_constants.py
+
       - name: Check fixed dependency files
         run: git diff --exit-code -- lean-toolchain lakefile.toml lake-manifest.json
 

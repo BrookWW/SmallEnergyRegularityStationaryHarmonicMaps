@@ -21,8 +21,12 @@ open scoped ContDiff Topology ENNReal
 namespace StationaryHarmonicMaps.Analysis
 
 /-- The original L1 function, actual nested Whitney cutoffs and original high good point produce the true high average and compensation-coefficient bounds. -/
-theorem exists_whitney_compensation_coefficient_bound (n : ℕ) (B : ℝ) (hB : 0<B) :
-    ∃ C : ℝ,0<C ∧ ∀ (f : Domain n → ℝ),Integrable f volume →
+
+@[expose] noncomputable def whitneyCompensationConstant (n : ℕ) (B : ℝ) : ℝ :=
+  2 * whitneyMassNormalizedKernelMajorant n (4 * B)
+
+theorem exists_whitney_compensation_coefficient_bound_explicit (n : ℕ) (B : ℝ) (hB : 0<B) :
+    ∃ C : ℝ,0<C ∧ C = whitneyCompensationConstant n B ∧ ∀ (f : Domain n → ℝ),Integrable f volume →
       let J := fun a => ⨆ s : PositiveRadius, ⨆ κ : Domain n → ℝ,
         ⨆ (_ : ContDiff ℝ ∞ κ), ⨆ (_ : HasCompactSupport κ),
         ⨆ (_ : tsupport κ⊆Metric.ball a s.val),
@@ -49,10 +53,12 @@ theorem exists_whitney_compensation_coefficient_bound (n : ℕ) (B : ℝ) (hB : 
               0<m ∧ |c|≤C*L ∧
                 (∀ x,‖fderiv ℝ (fun z => θlo z*θhi z) x‖≤4*B/rhi) ∧
                 Integrable (fun x => θlo x*(θhi x*(f x-c))) volume ∧ |d|≤C*L := by
-  obtain ⟨D,hD,Hkernel⟩ := exists_whitney_mass_normalized_kernel_bound n (4*B) (by positivity)
+  obtain ⟨D,hD,hDFormula,Hkernel⟩ := exists_whitney_mass_normalized_kernel_bound_majorant n (4*B) (by positivity)
   let C : ℝ := 2*D
   have hC : 0<C := by dsimp only [C];positivity
-  refine ⟨C,hC,?_⟩
+  refine ⟨C,hC,?_,?_⟩
+  · dsimp only [C, whitneyCompensationConstant]
+    rw [hDFormula]
   intro f hf J Slo Shi hNested hComp a b rlo rhi hrhi y L hL hDist hGood
     θlo θhi hLo hcLo hHi hcHi hsLo hsHi hLoBound hHiBound hDLo hDHi hMass m c d
   let κ := fun x => θlo x*θhi x
@@ -122,6 +128,37 @@ theorem exists_whitney_compensation_coefficient_bound (n : ℕ) (B : ℝ) (hB : 
     _ ≤ D*L+|c| := add_le_add hκRaw (mul_le_of_le_one_right (abs_nonneg c) hRatio)
     _ ≤ D*L+D*L := add_le_add le_rfl hcD
     _ = _ := by dsimp only [C];ring
+
+theorem exists_whitney_compensation_coefficient_bound (n : ℕ) (B : ℝ) (hB : 0<B) :
+    ∃ C : ℝ,0<C ∧ ∀ (f : Domain n → ℝ),Integrable f volume →
+      let J := fun a => ⨆ s : PositiveRadius, ⨆ κ : Domain n → ℝ,
+        ⨆ (_ : ContDiff ℝ ∞ κ), ⨆ (_ : HasCompactSupport κ),
+        ⨆ (_ : tsupport κ⊆Metric.ball a s.val),
+        ⨆ (_ : ∀ x∈Metric.ball a s.val,∀ i : Fin n,
+          |fderiv ℝ κ x (EuclideanSpace.single i 1)|≤s.val^(-(n : ℝ)-1)),
+          ENNReal.ofReal |∫ x,κ x*f x|
+      ∀ (Slo Shi : Set (Domain n)),Shi⊆Slo → Sloᶜ.Nonempty →
+        ∀ (a b : Domain n),
+          let rlo := Metric.infDist a Sloᶜ/20
+          let rhi := Metric.infDist b Shiᶜ/20
+          0<rhi → ∀ (y : Domain n) (L : ℝ),0≤L → dist y b≤20*rhi →
+            J y≤ENNReal.ofReal (2*L) →
+            ∀ (θlo θhi : Domain n → ℝ),
+              ContDiff ℝ ∞ θlo → HasCompactSupport θlo →
+              ContDiff ℝ ∞ θhi → HasCompactSupport θhi →
+              tsupport θlo⊆Metric.ball a (10*rlo) →
+              tsupport θhi⊆Metric.ball b (10*rhi) →
+              (∀ x,0≤θlo x ∧ θlo x≤1) → (∀ x,0≤θhi x ∧ θhi x≤1) →
+              (∀ x,‖fderiv ℝ θlo x‖≤B/rlo) → (∀ x,‖fderiv ℝ θhi x‖≤B/rhi) →
+              volume.real (Metric.ball b (5*rhi))/(60 : ℝ)^n≤∫ x,θhi x →
+              let m := ∫ x,θhi x
+              let c := (∫ x,θhi x*f x)/m
+              let d := (∫ x,θlo x*(θhi x*(f x-c)))/m
+              0<m ∧ |c|≤C*L ∧
+                (∀ x,‖fderiv ℝ (fun z => θlo z*θhi z) x‖≤4*B/rhi) ∧
+                Integrable (fun x => θlo x*(θhi x*(f x-c))) volume ∧ |d|≤C*L := by
+  obtain ⟨C,hC,_hFormula,H⟩ := exists_whitney_compensation_coefficient_bound_explicit n B hB
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

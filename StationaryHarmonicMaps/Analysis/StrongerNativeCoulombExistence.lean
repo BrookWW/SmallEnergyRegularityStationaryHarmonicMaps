@@ -24,6 +24,39 @@ open scoped Topology ENNReal
 noncomputable section
 namespace StationaryHarmonicMaps.Analysis
 
+@[expose] def effectiveScalarCoulombSmallness (n q : ℕ) : ℚ :=
+  EffectiveCoulomb.scalarPathAmplitude (effectiveCoulombAbsorptionAmplitude n q)
+    (effectiveSkewNeumannAmplitude n q) (effectiveCoulombTwoExponentConstant n)
+
+@[expose] def effectiveStrongerCoulombGradientConstant (n : ℕ) : ℚ :=
+  2 * effectiveCoulombTwoExponentConstant n
+
+@[expose] def effectiveCoulombFrameSmallness (n q : ℕ) : ℚ :=
+  EffectiveCoulomb.criticalAmplitude n (effectiveScalarCoulombSmallness n q)
+
+@[expose] def effectiveCoulombFrameGradientConstant (n _q : ℕ) : ℚ :=
+  EffectiveCoulomb.criticalBound n (effectiveStrongerCoulombGradientConstant n)
+
+theorem effectiveScalarCoulombSmallness_pos (n : ℕ) (hn : 2 ≤ n) (q : ℕ) :
+    0 < effectiveScalarCoulombSmallness n q :=
+  EffectiveCoulomb.scalarPathAmplitude_pos (effectiveCoulombAbsorptionAmplitude_pos n hn q)
+    (effectiveSkewNeumannAmplitude_pos n (by omega) q) (effectiveCoulombTwoExponentConstant_pos n (by omega)).le
+
+theorem effectiveStrongerCoulombGradientConstant_pos (n : ℕ) (hn : 2 ≤ n) :
+    0 < effectiveStrongerCoulombGradientConstant n := by
+  have H := effectiveCoulombTwoExponentConstant_pos n (by omega)
+  unfold effectiveStrongerCoulombGradientConstant
+  positivity
+
+theorem effectiveCoulombFrameSmallness_pos (n : ℕ) (hn : 2 ≤ n) (q : ℕ) :
+    0 < effectiveCoulombFrameSmallness n q :=
+  EffectiveCoulomb.criticalAmplitude_pos n (effectiveScalarCoulombSmallness_pos n hn q)
+
+theorem effectiveCoulombFrameGradientConstant_pos (n : ℕ) (hn : 2 ≤ n) (q : ℕ) :
+    0 < effectiveCoulombFrameGradientConstant n q :=
+  EffectiveCoulomb.criticalBound_pos n (effectiveStrongerCoulombGradientConstant_pos n hn)
+
+
 private theorem scalar_interval_covered_of_closed_local
     (S : Set ℝ) (hClosed : IsClosed S) (hZero : (0:ℝ)∈S)
     (hLocal : ∀τ∈Icc (0:ℝ) 1,τ∈S →
@@ -628,6 +661,310 @@ theorem exists_small_stronger_native_coulomb_frame
   · intro ψ Dψ hψ
     refine ⟨integrable_column_pairing (volume.restrict (ball (0:Domain n) 1)) Z Dψ hZLp hψ.2.2,?_⟩
     simpa only [one_smul] using hNaturalOne ψ Dψ hψ
+
+private theorem effective_scalar_path_frame_improvement
+    (n : ℕ) (hn : 2≤n)  (q : ℕ)
+    (e : Ambient (q*q)≃L[ℝ](Ambient q→L[ℝ]Ambient q))
+    (hE : ∀T : Ambient q→L[ℝ]Ambient q,
+      ‖e.symm T‖^2=∑j : Fin q,‖T (EuclideanSpace.single j 1)‖^2) :
+    ∀(A : Domain n→Fin n→(Ambient q→L[ℝ]Ambient q))
+        (_hA : ∀i,MemLp (fun x=>A x i) 2 (volume.restrict (ball (0:Domain n) 1)))
+        (_hAskew : ∀i,∀ᵐx∂volume.restrict (ball (0:Domain n) 1),star (A x i)= -(A x i))
+        (η KA : ℝ),
+        criticalGradientMorreySquare (fun x i=>e.symm (A x i)) (ball (0:Domain n) 1)≤ENNReal.ofReal (η^2) →
+        (∀a∈ball (0:Domain n) 1,∀r : ℝ,0<r →
+          (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (fun i=>e.symm (A x i)))≤KA*r^((n:ℝ)-2+(1 : ℝ))) →
+        ∀τ∈Icc (0:ℝ) 1,
+        ∀(p : Domain n→Ambient (q*q)) (Dp : Domain n→Gradient n (q*q)) (J : ℝ),
+          MemW12 (ballDomain (0:Domain n) 1) p Dp →
+          (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),star (e (p x))*e (p x)=1) →
+          (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),(e (p x)).det=1) →
+          criticalGradientMorreySquare Dp (ball (0:Domain n) 1)≤ENNReal.ofReal ((effectiveCoulombAbsorptionAmplitude n q : ℝ)^2) →
+          (∀a∈ball (0:Domain n) 1,∀r : ℝ,0<r →
+            (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (Dp x))≤J*r^((n:ℝ)-2+(1 : ℝ))) →
+          (∀(ψ : Domain n→Ambient (q*q)) (Dψ : Domain n→Gradient n (q*q)),
+            MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+            (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ
+              (e.symm (star (e (p x))*e (Dp x i)+star (e (p x))*(τ • A x i)*e (p x))) (Dψ x i))=0) →
+          τ∈bounded_scalar_path_set e A ((effectiveCoulombTwoExponentConstant n : ℝ)*η^2) ((effectiveCoulombTwoExponentConstant n : ℝ)*η^2) ((n:ℝ)-2+(1 : ℝ)) ((effectiveCoulombTwoExponentConstant n : ℝ)*KA) ((effectiveCoulombTwoExponentConstant n : ℝ)*KA) := by
+  let δ : ℝ := effectiveCoulombAbsorptionAmplitude n q
+  let C : ℝ := effectiveCoulombTwoExponentConstant n
+  have hC : 0 < C := by
+    change 0 < (effectiveCoulombTwoExponentConstant n : ℝ)
+    exact_mod_cast effectiveCoulombTwoExponentConstant_pos n (by omega)
+  have H := effective_coulomb_critical_and_stronger_boundary_absorption n hn q
+    e.symm.toContinuousLinearMap e.toContinuousLinearMap e.apply_symm_apply e.symm_apply_apply hE
+  have hExponent : (n : ℝ) - 2 + 1 = (n : ℝ) - 1 := by ring
+  simp only [← hExponent] at H
+  intro A hA hAskew η KA hCritical hGrowth τ hτ p Dp J hp hOrth hDet hSmall hDGrowth hNatural
+  have hKA : 0≤KA := original_growth_constant_nonneg ((n:ℝ)-2+(1 : ℝ)) KA (fun x i=>e.symm (A x i)) hGrowth
+  have hPath := skew_connection_scalar_critical_homotopy.{0,0} e.symm.toContinuousLinearMap
+    (ball (0:Domain n) 1) A hA hAskew (η^2) (sq_nonneg η) hCritical
+  have hScalar := hPath.1 τ
+  have hSCrit := hPath.2.1 τ hτ
+  have hSGrowth := scalar_path_original_power_growth e.symm.toContinuousLinearMap A
+    ((n:ℝ)-2+(1 : ℝ)) KA hKA hGrowth τ hτ
+  have hImproved := H p Dp (fun x i=>τ • A x i) J (η^2) KA hp hOrth hScalar.1 hScalar.2.1
+    hSmall hDGrowth (sq_nonneg η) hKA hSCrit hSGrowth hNatural
+  let Z := fun x i=>e.symm (star (e (p x))*e (Dp x i)+star (e (p x))*(τ • A x i)*e (p x))
+  have hSum : criticalGradientMorreySquare Dp (ball (0:Domain n) 1)+
+      criticalGradientMorreySquare Z (ball (0:Domain n) 1)≤ENNReal.ofReal (C*η^2) := hImproved.1
+  have hDC : criticalGradientMorreySquare Dp (ball (0:Domain n) 1)≤ENNReal.ofReal (C*η^2) :=
+    (le_add_of_nonneg_right (zero_le : (0:ℝ≥0∞)≤criticalGradientMorreySquare Z (ball (0:Domain n) 1))).trans hSum
+  have hZC : criticalGradientMorreySquare Z (ball (0:Domain n) 1)≤ENNReal.ofReal (C*η^2) :=
+    (le_add_of_nonneg_left (zero_le : (0:ℝ≥0∞)≤criticalGradientMorreySquare Dp (ball (0:Domain n) 1))).trans hSum
+  change τ∈Icc (0:ℝ) 1 ∧ _
+  exact ⟨hτ,p,Dp,hp,hOrth,hDet,hDC,(fun a ha r hr=>(hImproved.2 a ha r hr).1),
+    hZC,(fun a ha r hr=>(hImproved.2 a ha r hr).2),hNatural⟩
+
+private theorem effective_original_scalar_baseline_flux
+    (n : ℕ) (hn : 2≤n)
+    (q : ℕ) (e : Ambient (q*q)≃L[ℝ](Ambient q→L[ℝ]Ambient q))
+    (hE : ∀T : Ambient q→L[ℝ]Ambient q,‖e.symm T‖^2=∑j : Fin q,‖T (EuclideanSpace.single j 1)‖^2) :
+    let ν : ℝ := (n:ℝ)-2+(1 : ℝ)
+    let S := NativeMorreySobolevSpace n (q*q) ν
+    let M := MorreyCoefficientSpace n (q*q) ν
+    let V := SkewMeanZeroNativeMorreySpace n q ν e
+    letI : NormedAddCommGroup V := Submodule.normedAddCommGroup (skewMeanZeroNativeMorreySubmodule n q ν e)
+    letI : SeminormedAddCommGroup V :=
+      (Submodule.normedAddCommGroup (skewMeanZeroNativeMorreySubmodule n q ν e)).toSeminormedAddCommGroup
+    letI : NormedSpace ℝ V := Submodule.normedSpace (skewMeanZeroNativeMorreySubmodule n q ν e)
+    let value : S→Domain n→Ambient (q*q) := fun H=>nativeMorreyMapClass (n:=n) (q:=q*q) ν H
+    let field : M→Domain n→Gradient n (q*q) := fun F x i=>WithLp.toLp 2
+      (fun j : Fin (q*q)=>morreyCoefficientRecover (n:=n) (q:=q*q) ν F x (finProdFinEquiv (i,j)))
+    let D : S→L[ℝ]M := nativeMorreyGradientClass (n:=n) (q:=q*q) ν
+    let Exp : S→S := matrixNativeMorreyExp n hn (1 : ℝ) (by norm_num) (by norm_num) q
+      e.symm.toContinuousLinearMap e.toContinuousLinearMap e.apply_symm_apply e.symm_apply_apply
+    ∀(p : Domain n→Ambient (q*q)) (Dp : Domain n→Gradient n (q*q))
+        (hp : MemW12 (ballDomain (0:Domain n) 1) p Dp)
+        (hOrth : ∀ᵐx∂volume.restrict (ball (0:Domain n) 1),star (e (p x))*e (p x)=1)
+        (hDet : ∀ᵐx∂volume.restrict (ball (0:Domain n) 1),(e (p x)).det=1)
+        (A : Domain n→Fin n→(Ambient q→L[ℝ]Ambient q))
+        (_hA : ∀i,MemLp (fun x=>A x i) 2 (volume.restrict (ball (0:Domain n) 1)))
+        (_hAskew : ∀i,∀ᵐx∂volume.restrict (ball (0:Domain n) 1),star (A x i)= -(A x i)) (τ : ℝ),
+      let Zr := fun x i=>e.symm (star (e (p x))*e (Dp x i)+star (e (p x))*(τ • A x i)*e (p x))
+      let Yr := fun x i=>e.symm (star (e (p x))*A x i*e (p x))
+      ∀KA KD KZ : ℝ,
+        (∀a∈ball (0:Domain n) 1,∀r : ℝ,0<r →
+          (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (fun i=>e.symm (A x i)))≤KA*r^ν) →
+        (∀a∈ball (0:Domain n) 1,∀r : ℝ,0<r →
+          (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (Dp x))≤KD*r^ν) →
+        (∀a∈ball (0:Domain n) 1,∀r : ℝ,0<r →
+          (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (Zr x))≤KZ*r^ν) →
+      ∀η : ℝ,0≤η → η≤(effectiveSkewNeumannAmplitude n q : ℝ) →
+        criticalGradientMorreySquare Zr (ball (0:Domain n) 1)≤ENNReal.ofReal (η^2) →
+        (∀(ψ : Domain n→Ambient (q*q)) (Dψ : Domain n→Gradient n (q*q)),
+          MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+          (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (Zr x i) (Dψ x i))=0) →
+      ∃(P : S) (Z Y : M),
+        nativeMorreyMapClass (n:=n) (q:=q*q) ν P=hp.2.1.toLp p ∧
+        nativeMorreyHSClass (n:=n) (q:=q*q) ν P=hsUnitBallL2Class Dp hp.2.2 ∧
+        (field Z=ᵐ[volume.restrict (ball (0:Domain n) 1)]Zr) ∧
+        (field Y=ᵐ[volume.restrict (ball (0:Domain n) 1)]Yr) ∧
+      ∃Φ : S×ℝ→M,
+        (∀p : S×ℝ,∀ᵐx∂volume.restrict (ball (0:Domain n) 1),
+          field (Φ p) x=fun i=>e.symm
+            (e (value (Exp (-p.1)) x)*e (field (D (Exp p.1)) x i)+
+              (e (value (Exp (-p.1)) x)*(e (field Z x i)+p.2 • e (field Y x i)))*
+                e (value (Exp p.1) x))) ∧
+        (∀p : S×ℝ,AnalyticAt ℝ Φ p) ∧
+        (∀t : ℝ,Φ (0,t)=Z+t • Y) ∧
+        ∀U : Set (ℝ×V),U∈𝓝 (0 : ℝ×V) →
+          ∀ᶠt in 𝓝 (0 : ℝ),∃u : V,(t,u)∈U ∧
+            nativeNeumannMorreyResponse n hn ν
+              (by
+                have hnR : (2:ℝ)≤n := by exact_mod_cast hn
+                dsimp only [ν]
+                linarith)
+              (by dsimp only [ν];linarith) (q*q) (Φ (u.val.val,t))=0 ∧
+            ∀(ψ : Domain n→Ambient (q*q)) (Dψ : Domain n→Gradient n (q*q)),
+              MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+              IntegrableOn (fun x=>∑i : Fin n,inner ℝ (field (Φ (u.val.val,t)) x i) (Dψ x i))
+                (ball (0:Domain n) 1) volume ∧
+              (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (field (Φ (u.val.val,t)) x i) (Dψ x i))=0 := by
+  have hγ : 0 < (1 : ℝ) := by norm_num
+  have hγTwo : (1 : ℝ) < 2 := by norm_num
+  let ν : ℝ := (n:ℝ)-2+(1 : ℝ)
+  let S := NativeMorreySobolevSpace n (q*q) ν
+  let M := MorreyCoefficientSpace n (q*q) ν
+  let V := SkewMeanZeroNativeMorreySpace n q ν e
+  letI : NormedAddCommGroup V := Submodule.normedAddCommGroup (skewMeanZeroNativeMorreySubmodule n q ν e)
+  letI : SeminormedAddCommGroup V :=
+    (Submodule.normedAddCommGroup (skewMeanZeroNativeMorreySubmodule n q ν e)).toSeminormedAddCommGroup
+  letI : NormedSpace ℝ V := Submodule.normedSpace (skewMeanZeroNativeMorreySubmodule n q ν e)
+  let field : M→Domain n→Gradient n (q*q) := fun F x i=>WithLp.toLp 2
+    (fun j : Fin (q*q)=>morreyCoefficientRecover (n:=n) (q:=q*q) ν F x (finProdFinEquiv (i,j)))
+  have hLocal := effective_small_native_coulomb_perturbations n hn q e hE
+  change ∀ (p : Domain n → Ambient (q*q)) (Dp : Domain n → Gradient n (q*q))
+    (hp : MemW12 (ballDomain (0 : Domain n) 1) p Dp), _
+  intro p Dp hp hOrth hDet A hA hAskew τ Zr Yr KA KD KZ hGA hGD hGZ η hη hSmall hCrit hNatural
+  have hData := exists_scalar_coulomb_native_perturbation_data n hn (1 : ℝ) hγ hγTwo q e hE
+    p Dp hp hOrth hDet A hA hAskew τ KA KD KZ hGA hGD hGZ
+  let P := hData.choose
+  let Z := hData.choose_spec.choose
+  let Y := hData.choose_spec.choose_spec.choose
+  have hChar := hData.choose_spec.choose_spec.choose_spec.choose_spec.choose_spec
+  have hPMap : nativeMorreyMapClass (n:=n) (q:=q*q) ν P=hp.2.1.toLp p := hChar.1
+  have hPGrad : nativeMorreyHSClass (n:=n) (q:=q*q) ν P=hsUnitBallL2Class Dp hp.2.2 := hChar.2.1
+  have hZAE : field Z=ᵐ[volume.restrict (ball (0:Domain n) 1)]Zr := hChar.2.2.2.2.2.2.1
+  have hYAE : field Y=ᵐ[volume.restrict (ball (0:Domain n) 1)]Yr := hChar.2.2.2.2.2.2.2.1
+  have hZSk : ∀ᵐx∂volume.restrict (ball (0:Domain n) 1),∀i : Fin n,
+      star (e (field Z x i))= -(e (field Z x i)) := hChar.2.2.2.2.2.2.2.2.2.2.1
+  have hYSk : ∀ᵐx∂volume.restrict (ball (0:Domain n) 1),∀i : Fin n,
+      star (e (field Y x i))= -(e (field Y x i)) := hChar.2.2.2.2.2.2.2.2.2.2.2.1
+  have hCritCanonical : criticalGradientMorreySquare (field Z) (ball (0:Domain n) 1)≤ENNReal.ofReal (η^2) :=
+    (critical_field_congr_ae (ball (0:Domain n) 1) (field Z) Zr hZAE).le.trans hCrit
+  have hNaturalCanonical := original_natural_tests_of_ae (field Z) Zr hZAE hNatural
+  have hPhiData := hLocal Z Y η hNaturalCanonical hη hSmall hCritCanonical hZSk hYSk
+  exact ⟨P,Z,Y,hPMap,hPGrad,hZAE,hYAE,hPhiData⟩
+
+private theorem effective_uniform_scalar_path_coverage
+    (n : ℕ) (hn : 2≤n)  (q : ℕ)
+    (e : Ambient (q*q)≃L[ℝ](Ambient q→L[ℝ]Ambient q))
+    (hE : ∀T : Ambient q→L[ℝ]Ambient q,
+      ‖e.symm T‖^2=∑j : Fin q,‖T (EuclideanSpace.single j 1)‖^2) :
+    ∀(A : Domain n→Fin n→(Ambient q→L[ℝ]Ambient q)) (η KA : ℝ),
+        (∀i,MemLp (fun x=>A x i) 2 (volume.restrict (ball (0:Domain n) 1))) →
+        (∀i,∀ᵐx∂volume.restrict (ball (0:Domain n) 1),star (A x i)= -(A x i)) →
+        0≤η → η≤(effectiveScalarCoulombSmallness n q : ℝ) →
+        criticalGradientMorreySquare (fun x i=>e.symm (A x i)) (ball (0:Domain n) 1)≤ENNReal.ofReal (η^2) →
+        (∀a∈ball (0:Domain n) 1,∀r : ℝ,0<r →
+          (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (fun i=>e.symm (A x i)))≤KA*r^((n:ℝ)-2+(1 : ℝ))) →
+        ∀τ∈Icc (0:ℝ) 1,
+          τ∈bounded_scalar_path_set e A ((effectiveCoulombTwoExponentConstant n : ℝ)*η^2) ((effectiveCoulombTwoExponentConstant n : ℝ)*η^2) ((n:ℝ)-2+(1 : ℝ)) ((effectiveCoulombTwoExponentConstant n : ℝ)*KA) ((effectiveCoulombTwoExponentConstant n : ℝ)*KA) := by
+  have hγ : 0 < (1 : ℝ) := by norm_num
+  have hγTwo : (1 : ℝ) < 2 := by norm_num
+  let δ : ℝ := effectiveCoulombAbsorptionAmplitude n q
+  let C : ℝ := effectiveCoulombTwoExponentConstant n
+  have hδ : 0 < δ := by
+    change 0 < (effectiveCoulombAbsorptionAmplitude n q : ℝ)
+    exact_mod_cast effectiveCoulombAbsorptionAmplitude_pos n hn q
+  have hC : 0 < C := by
+    change 0 < (effectiveCoulombTwoExponentConstant n : ℝ)
+    exact_mod_cast effectiveCoulombTwoExponentConstant_pos n (by omega)
+  have hImprove := effective_scalar_path_frame_improvement n hn q e hE
+  have hBase := effective_original_scalar_baseline_flux n hn q e hE
+  have hThreshold (η : ℝ) (hη : 0 ≤ η) (hSmall : η ≤ (effectiveScalarCoulombSmallness n q : ℝ)) :=
+    EffectiveCoulomb.scalarPathAmplitude_controls_native_threshold
+      (effectiveCoulombAbsorptionAmplitude_pos n hn q)
+      (effectiveSkewNeumannAmplitude_pos n (by omega) q)
+      (effectiveCoulombTwoExponentConstant_pos n (by omega)) hη hSmall
+  intro A η KA hA hAskew hη hSmall hCritical hGrowth
+  let ν : ℝ := (n:ℝ)-2+(1 : ℝ)
+  let T := bounded_scalar_path_set e A (C*η^2) (C*η^2) ν (C*KA) (C*KA)
+  have hKA : 0≤KA := original_growth_constant_nonneg ν KA (fun x i=>e.symm (A x i)) hGrowth
+  have hM : 0≤C*η^2 := mul_nonneg hC.le (sq_nonneg η)
+  have hK : 0≤C*KA := mul_nonneg hC.le hKA
+  have hClosed : IsClosed T := bounded_scalar_path_set_closed e hE A hA hAskew
+    (η^2) (C*η^2) (C*η^2) ν (C*KA) (C*KA) (sq_nonneg η) hM hM hK hK hCritical
+  have hZero : (0:ℝ)∈T := bounded_scalar_path_set_zero e A (C*η^2) (C*η^2) ν (C*KA) (C*KA) hK hK
+  apply scalar_interval_covered_of_closed_local T hClosed hZero
+  intro τ _hτIcc hτ
+  obtain ⟨_hIcc,p,Dp,hp,hOrth,hDet,hDCrit,hDGrow,hZCrit,hZGrow,hNatural⟩ := hτ
+  have hBounds := hThreshold η hη hSmall
+  have hZSmall := hBounds.2.2.2.2 _ hZCrit
+  have hFluxData := hBase p Dp hp hOrth hDet A hA hAskew τ KA (C*KA) (C*KA)
+    hGrowth hDGrow hZGrow ((1+C)*η) hBounds.1 hBounds.2.1 hZSmall hNatural
+  obtain ⟨P,Z,Y,hPMap,_hPGrad,hZAE,hYAE,Φ,hFormula,hAnalytic,hBaseEq,hSolutions⟩ := hFluxData
+  let V := SkewMeanZeroNativeMorreySpace n q ν e
+  let field : MorreyCoefficientSpace n (q*q) ν→Domain n→Gradient n (q*q) := fun F x i=>WithLp.toLp 2
+    (fun j : Fin (q*q)=>morreyCoefficientRecover (n:=n) (q:=q*q) ν F x (finProdFinEquiv (i,j)))
+  have hSolNat : ∀U : Set (ℝ×V),U∈𝓝 (0:ℝ×V) →
+      ∀ᶠt in 𝓝 (0:ℝ),∃u : V,(t,u)∈U ∧
+        ∀(ψ : Domain n→Ambient (q*q)) (Dψ : Domain n→Gradient n (q*q)),
+          MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+          (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (field (Φ (u.val.val,t)) x i) (Dψ x i))=0 := by
+    intro U hU
+    filter_upwards [hSolutions U hU] with t ht
+    obtain ⟨u,hu,_hResponse,hTests⟩ := ht
+    exact ⟨u,hu,fun ψ Dψ hψ=>(hTests ψ Dψ hψ).2⟩
+  have hPhi0 : Φ (0,0)=Z := by
+    simpa only [zero_smul,add_zero] using hBaseEq 0
+  have hPSO := hOrth.and hDet
+  exact scalar_path_local_from_flux n hn (1 : ℝ) hγ hγTwo q e p Dp hp P hPMap hPSO A τ δ C η KA
+    hδ hC hBounds.2.2.1 Z Y
+    (hZAE.mono fun x hx i=>congrFun hx i) (hYAE.mono fun x hx i=>congrFun hx i)
+    Φ hFormula hAnalytic hPhi0 hDCrit hSolNat (hImprove A hA hAskew η KA hCritical hGrowth)
+
+
+/-- Original small critical skew connections with finite stronger growth
+have an actual native SO natural Coulomb frame with uniform bounds. -/
+theorem effective_small_stronger_native_coulomb_frame
+    (n : ℕ) (hn : 2≤n)  (q : ℕ)
+    (e : Ambient (q*q)≃L[ℝ](Ambient q→L[ℝ]Ambient q))
+    (hE : ∀T : Ambient q→L[ℝ]Ambient q,
+      ‖e.symm T‖^2=∑j : Fin q,‖T (EuclideanSpace.single j 1)‖^2) :
+    ∀(A : Domain n→Fin n→(Ambient q→L[ℝ]Ambient q)) (η KA : ℝ),
+        (∀i,MemLp (fun x=>A x i) 2 (volume.restrict (ball (0:Domain n) 1))) →
+        (∀i,∀ᵐx∂volume.restrict (ball (0:Domain n) 1),star (A x i)= -(A x i)) →
+        0≤η → η≤(effectiveScalarCoulombSmallness n q : ℝ) →
+        criticalGradientMorreySquare (fun x i=>e.symm (A x i)) (ball (0:Domain n) 1)≤ENNReal.ofReal (η^2) →
+        (∀a∈ball (0:Domain n) 1,∀r : ℝ,0<r →
+          (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (fun i=>e.symm (A x i)))≤KA*r^((n:ℝ)-2+(1 : ℝ))) →
+        ∃(p : Domain n→Ambient (q*q)) (Dp : Domain n→Gradient n (q*q)),
+          MemW12 (ballDomain (0:Domain n) 1) p Dp ∧
+          (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),star (e (p x))*e (p x)=1) ∧
+          (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),(e (p x)).det=1) ∧
+          let Z := fun x i=>e.symm (star (e (p x))*e (Dp x i)+star (e (p x))*A x i*e (p x))
+          (∀i,MemLp (fun x=>Z x i) 2 (volume.restrict (ball (0:Domain n) 1))) ∧
+          (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),∀i,star (e (Z x i))= -(e (Z x i))) ∧
+          (criticalGradientMorreySquare Dp (ball (0:Domain n) 1)+
+            criticalGradientMorreySquare Z (ball (0:Domain n) 1)≤ENNReal.ofReal ((effectiveStrongerCoulombGradientConstant n : ℝ)*η^2)) ∧
+          (∀a∈ball (0:Domain n) 1,∀r : ℝ,0<r →
+            ((∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (Dp x))≤(effectiveStrongerCoulombGradientConstant n : ℝ)*KA*r^((n:ℝ)-2+(1 : ℝ))) ∧
+            ((∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (Z x))≤(effectiveStrongerCoulombGradientConstant n : ℝ)*KA*r^((n:ℝ)-2+(1 : ℝ)))) ∧
+          ∀(ψ : Domain n→Ambient (q*q)) (Dψ : Domain n→Gradient n (q*q)),
+            MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+            IntegrableOn (fun x=>∑i : Fin n,inner ℝ (Z x i) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+            (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (Z x i) (Dψ x i))=0
+ := by
+  let C : ℝ := effectiveCoulombTwoExponentConstant n
+  have hC : 0 < C := by
+    change 0 < (effectiveCoulombTwoExponentConstant n : ℝ)
+    exact_mod_cast effectiveCoulombTwoExponentConstant_pos n (by omega)
+  have H := effective_uniform_scalar_path_coverage n hn q e hE
+  have hEq : (effectiveStrongerCoulombGradientConstant n : ℝ) = 2 * C := by
+    simp only [effectiveStrongerCoulombGradientConstant, Rat.cast_mul, Rat.cast_ofNat, C]
+  rw [hEq]
+  intro A η KA hA hAskew hη hSmall hCritical hGrowth
+  have hCoverage := H A η KA hA hAskew hη hSmall hCritical hGrowth
+  have hOne := hCoverage 1 (by norm_num)
+  obtain ⟨_hIcc,p,Dp,hp,hOrth,hDet,hDCrit,hDGrow,hZCritOne,hZGrowOne,hNaturalOne⟩ := hOne
+  let Z := fun x i=>e.symm (star (e (p x))*e (Dp x i)+star (e (p x))*A x i*e (p x))
+  have hZCrit : criticalGradientMorreySquare Z (ball (0:Domain n) 1)≤ENNReal.ofReal (C*η^2) := by
+    simpa only [one_smul] using hZCritOne
+  have hKA : 0≤KA := original_growth_constant_nonneg ((n:ℝ)-2+(1 : ℝ)) KA (fun x i=>e.symm (A x i)) hGrowth
+  have hM : 0≤C*η^2 := mul_nonneg hC.le (sq_nonneg η)
+  have hSum : criticalGradientMorreySquare Dp (ball (0:Domain n) 1)+
+      criticalGradientMorreySquare Z (ball (0:Domain n) 1)≤ENNReal.ofReal ((2*C)*η^2) := by
+    calc
+      _≤ENNReal.ofReal (C*η^2)+ENNReal.ofReal (C*η^2) := add_le_add hDCrit hZCrit
+      _=ENNReal.ofReal ((2*C)*η^2) := by
+        rw [←ENNReal.ofReal_add hM hM]
+        congr 1
+        ring
+  have hRaw := frame_connection_memLp_and_skew e.symm.toContinuousLinearMap e.toContinuousLinearMap
+    e.symm_apply_apply hE p Dp hp hOrth A hA hAskew
+  have hZLp : ∀i,MemLp (fun x=>Z x i) 2 (volume.restrict (ball (0:Domain n) 1)) := hRaw.2.1
+  have hZSkew : ∀ᵐx∂volume.restrict (ball (0:Domain n) 1),∀i,star (e (Z x i))= -(e (Z x i)) := by
+    filter_upwards [hRaw.2.2] with x hx
+    intro i
+    have hPoint : e (Z x i)=star (e (p x))*e (Dp x i)+star (e (p x))*A x i*e (p x) :=
+      e.apply_symm_apply _
+    rw [hPoint]
+    exact hx i
+  have hCoeff (r : ℝ) (hr : 0<r) : C*KA*r^((n:ℝ)-2+(1 : ℝ))≤(2*C)*KA*r^((n:ℝ)-2+(1 : ℝ)) :=
+    mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right (by linarith only [hC] : C≤2*C) hKA)
+      (Real.rpow_nonneg hr.le _)
+  refine ⟨p,Dp,hp,hOrth,hDet,hZLp,hZSkew,hSum,?_,?_⟩
+  · intro a ha r hr
+    have hZGrow : (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (Z x))≤C*KA*r^((n:ℝ)-2+(1 : ℝ)) := by
+      simpa only [one_smul] using hZGrowOne a ha r hr
+    exact ⟨(hDGrow a ha r hr).trans (hCoeff r hr),hZGrow.trans (hCoeff r hr)⟩
+  · intro ψ Dψ hψ
+    refine ⟨integrable_column_pairing (volume.restrict (ball (0:Domain n) 1)) Z Dψ hZLp hψ.2.2,?_⟩
+    simpa only [one_smul] using hNaturalOne ψ Dψ hψ
+
 
 end StationaryHarmonicMaps.Analysis
 end

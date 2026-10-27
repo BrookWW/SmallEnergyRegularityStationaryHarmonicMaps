@@ -50,9 +50,9 @@ private theorem dyadic_lp_energy_level_ratio (n m : ℕ) (p : ℝ) (hp : 0<p)
 
 /-- Critical Lp growth of the actual native gradient gives a genuine
 geometric outer-measure tail for the same original centered map. -/
-theorem exists_distribution_tail_of_criticalLp_growth (n : ℕ)
+theorem exists_distribution_tail_of_criticalLp_growth_explicit (n : ℕ)
     (p : ℝ) (hpOne : 1≤p) (hpTwo : p≤2) :
-    ∃C : ℝ,0<C ∧ ∀ (q : ℕ) (u : Domain n → Ambient q)
+    ∃C : ℝ,0<C ∧ C = (criticalLpPointwiseTailMajorant n : ℝ) ∧ ∀ (q : ℕ) (u : Domain n → Ambient q)
       (Du : Domain n → Gradient n q) (η : ℝ),
       MemW12 (ballDomain (0 : Domain n) 1) u Du → 0<η →
       (∀a∈ball (0 : Domain n) 1,∀r : ℝ,0<r →
@@ -62,8 +62,8 @@ theorem exists_distribution_tail_of_criticalLp_growth (n : ℕ)
         ENNReal.ofReal ((5 : ℝ)^n*((1/2 : ℝ)^p)^m) := by
   classical
   have hp : 0<p := zero_lt_one.trans_le hpOne
-  obtain ⟨C,hC,Hpoint⟩ := exists_pointwise_bound_of_criticalLp_growth n p hpOne hpTwo
-  refine ⟨C,hC,?_⟩
+  obtain ⟨C,hC,hCFormula,Hpoint⟩ := exists_pointwise_bound_of_criticalLp_growth_explicit n p hpOne hpTwo
+  refine ⟨C,hC,hCFormula,?_⟩
   intro q u Du η hu hη hGrowth m
   let B := ball (0 : Domain n) 1
   let μ := volume.restrict B
@@ -128,6 +128,19 @@ theorem exists_distribution_tail_of_criticalLp_growth (n : ℕ)
     _≤ENNReal.ofReal ((5 : ℝ)^n/L)*ENNReal.ofReal (η^p) := mul_le_mul_right hTotal _
     _=ENNReal.ofReal (((5 : ℝ)^n/L)*η^p) := (ENNReal.ofReal_mul (by positivity)).symm
     _≤_ := ENNReal.ofReal_le_ofReal (dyadic_lp_energy_level_ratio n m p hp hη)
+
+theorem exists_distribution_tail_of_criticalLp_growth (n : ℕ)
+    (p : ℝ) (hpOne : 1≤p) (hpTwo : p≤2) :
+    ∃C : ℝ,0<C ∧ ∀ (q : ℕ) (u : Domain n → Ambient q)
+      (Du : Domain n → Gradient n q) (η : ℝ),
+      MemW12 (ballDomain (0 : Domain n) 1) u Du → 0<η →
+      (∀a∈ball (0 : Domain n) 1,∀r : ℝ,0<r →
+        (∫y in ball a r∩ball (0 : Domain n) 1,(Real.sqrt (hsNormSq (Du y)))^p)≤η^p*r^((n : ℝ)-p)) →
+      ∀m : ℕ,volume {x | x∈ball (0 : Domain n) (7/8 : ℝ) ∧
+        C*η*((m : ℝ)+1)<‖u x-(⨍y in ball (0 : Domain n) 1,u y)‖}≤
+        ENNReal.ofReal ((5 : ℝ)^n*((1/2 : ℝ)^p)^m) := by
+  obtain ⟨C,hC,_hFormula,H⟩ := exists_distribution_tail_of_criticalLp_growth_explicit n p hpOne hpTwo
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

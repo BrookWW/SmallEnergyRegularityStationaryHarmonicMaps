@@ -131,9 +131,13 @@ theorem lintegral_norm_pow_le_of_geometric_tail {X E : Type*} [MeasurableSpace X
     _ ≤ _ := ENNReal.ofReal_le_ofReal hreal
 
 /-- One constant depending only on the integer exponent and decay ratio controls every actual tail datum. -/
-theorem geometric_tail_integer_moment (k : ℕ) (hk : 1 ≤ k) (ρ : ℝ)
+
+@[expose] noncomputable def shiftedGeometricMomentConstant (k : ℕ) (ρ : ℝ) : ℝ :=
+  1 + ∑' m : ℕ, ((m : ℝ) + 2)^k * ρ^m
+
+theorem geometric_tail_integer_moment_explicit (k : ℕ) (hk : 1 ≤ k) (ρ : ℝ)
     (hρ : 0 < ρ) (hρOne : ρ < 1) :
-    ∃ C : ℝ, 0 < C ∧ ∀ {X E : Type*} [MeasurableSpace X] [NormedAddCommGroup E]
+    ∃ C : ℝ, 0 < C ∧ C = shiftedGeometricMomentConstant k ρ ∧ ∀ {X E : Type*} [MeasurableSpace X] [NormedAddCommGroup E]
       (μ : Measure X) [IsFiniteMeasure μ] (f : X → E),
       AEStronglyMeasurable f μ → ∀ {a M : ℝ}, 0 < a → 0 ≤ M →
       (∀ m : ℕ, μ {x | a * ((m : ℝ) + 1) < ‖f x‖} ≤ ENNReal.ofReal (M * ρ ^ m)) →
@@ -141,7 +145,7 @@ theorem geometric_tail_integer_moment (k : ℕ) (hk : 1 ≤ k) (ρ : ℝ)
         (∫ x, ‖f x‖ ^ k ∂μ) ≤ C * a ^ k * (μ.real univ + M) := by
   let W : ℝ := ∑' m : ℕ, ((m : ℝ) + 2) ^ k * ρ ^ m
   have hW : 0 ≤ W := tsum_nonneg (fun m => by positivity)
-  refine ⟨1 + W, by positivity, ?_⟩
+  refine ⟨1 + W, by positivity, rfl, ?_⟩
   intro X E _ _ μ _ f hf a M ha hM htail
   let g := hf.mk f
   have hfg : f =ᵐ[μ] g := hf.ae_eq_mk
@@ -174,6 +178,18 @@ theorem geometric_tail_integer_moment (k : ℕ) (hk : 1 ≤ k) (ρ : ℝ)
     _ ≤ (ENNReal.ofReal ((1 + W) * a ^ k * (μ.real univ + M))).toReal :=
       ENNReal.toReal_mono ENNReal.ofReal_ne_top hlin
     _ = _ := ENNReal.toReal_ofReal (by positivity)
+
+theorem geometric_tail_integer_moment (k : ℕ) (hk : 1 ≤ k) (ρ : ℝ)
+    (hρ : 0 < ρ) (hρOne : ρ < 1) :
+    ∃ C : ℝ, 0 < C ∧ ∀ {X E : Type*} [MeasurableSpace X] [NormedAddCommGroup E]
+      (μ : Measure X) [IsFiniteMeasure μ] (f : X → E),
+      AEStronglyMeasurable f μ → ∀ {a M : ℝ}, 0 < a → 0 ≤ M →
+      (∀ m : ℕ, μ {x | a * ((m : ℝ) + 1) < ‖f x‖} ≤ ENNReal.ofReal (M * ρ ^ m)) →
+      MemLp f (k : ℝ≥0∞) μ ∧ Integrable (fun x => ‖f x‖ ^ k) μ ∧
+        (∫ x, ‖f x‖ ^ k ∂μ) ≤ C * a ^ k * (μ.real univ + M) := by
+  obtain ⟨C, hC, _hFormula, H⟩ :=
+    geometric_tail_integer_moment_explicit k hk ρ hρ hρOne
+  exact ⟨C, hC, H⟩
 
 end StationaryHarmonicMaps.Analysis
 

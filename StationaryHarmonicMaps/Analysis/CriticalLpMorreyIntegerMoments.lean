@@ -1,7 +1,8 @@
 module
 
 public import StationaryHarmonicMaps.Analysis.CriticalLpMorreyDistribution
-public import StationaryHarmonicMaps.Analysis.GeometricTailLp
+public import StationaryHarmonicMaps.Analysis.EffectiveGeometricMoments
+public import StationaryHarmonicMaps.Analysis.EffectiveEuclideanVolume
 public import StationaryHarmonicMaps.Analysis.CriticalLpMorreyDyadicMeans
 
 /-!
@@ -21,9 +22,13 @@ namespace StationaryHarmonicMaps.Analysis
 
 /-- Actual critical Lp gradient growth gives every positive integer
 interior value moment, with the same amplitude and target-uniform constant. -/
-theorem exists_integer_moment_bound_of_criticalLp_growth (n : ℕ)
+
+@[expose] def criticalLpIntegerMomentMajorant (n k : ℕ) : ℕ :=
+  geometricMomentMajorant k * criticalLpPointwiseTailMajorant n^k * (2^n + 5^n)
+
+theorem exists_integer_moment_bound_of_criticalLp_growth_explicit (n : ℕ)
     (p : ℝ) (hpOne : 1≤p) (hpTwo : p≤2) (k : ℕ) (hk : 1 ≤ k) :
-    ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (u : Domain n → Ambient q)
+    ∃ C : ℝ, 0 < C ∧ C = (criticalLpIntegerMomentMajorant n k : ℝ) ∧ ∀ (q : ℕ) (u : Domain n → Ambient q)
       (Du : Domain n → Gradient n q) (η : ℝ),
       MemW12 (ballDomain (0 : Domain n) 1) u Du → 0 ≤ η →
       (∀a∈Metric.ball (0 : Domain n) 1,∀r : ℝ,0<r →
@@ -39,15 +44,31 @@ theorem exists_integer_moment_bound_of_criticalLp_growth (n : ℕ)
   let ρ := (1/2 : ℝ)^p
   have hρ : 0<ρ := Real.rpow_pos_of_pos (by norm_num) _
   have hρOne : ρ<1 := Real.rpow_lt_one (by norm_num) (by norm_num) hp
-  obtain ⟨D,hD,htail⟩ := exists_distribution_tail_of_criticalLp_growth n p hpOne hpTwo
-  obtain ⟨K,hK,hmoment⟩ := geometric_tail_integer_moment k hk ρ hρ hρOne
+  obtain ⟨D,hD,hDFormula,htail⟩ := exists_distribution_tail_of_criticalLp_growth_explicit n p hpOne hpTwo
+  have hρHalf : ρ ≤ (1/2 : ℝ) := Real.rpow_le_self_of_le_one (by norm_num) (by norm_num) hpOne
+  let K : ℝ := geometricMomentMajorant k
+  have hK : 0 < K := by dsimp only [K, geometricMomentMajorant]; positivity
   let V : ℝ := volume.real (Metric.ball (0 : Domain n) (7 / 8 : ℝ))
   let M : ℝ := (5 : ℝ) ^ n
-  let C : ℝ := K * D ^ k * (V + M)
+  let C : ℝ := criticalLpIntegerMomentMajorant n k
   have hV : 0 ≤ V := ENNReal.toReal_nonneg
   have hM : 0 < M := by dsimp only [M]; positivity
-  have hC : 0 < C := mul_pos (mul_pos hK (pow_pos hD k)) (add_pos_of_nonneg_of_pos hV hM)
-  refine ⟨C, hC, ?_⟩
+  have hCexpr : C = K * D^k * ((2 : ℝ)^n + M) := by
+    rw [hDFormula]
+    simp only [C, K, M, criticalLpIntegerMomentMajorant,
+      Nat.cast_mul, Nat.cast_add, Nat.cast_pow, Nat.cast_ofNat]
+  have hVUpper : V ≤ (2 : ℝ)^n := by
+    have hsub : Metric.ball (0 : Domain n) (7/8 : ℝ) ⊆ Metric.ball (0 : Domain n) 1 :=
+      Metric.ball_subset_ball (by norm_num)
+    have H := ENNReal.toReal_mono measure_ball_ne_top (measure_mono hsub (μ := volume))
+    exact H.trans (euclidean_unit_ball_volume_upper_bound n)
+  have hCBound : K * D^k * (V+M) ≤ C := by
+    rw [hCexpr]
+    exact mul_le_mul_of_nonneg_left (add_le_add hVUpper le_rfl) (by positivity)
+  have hC : 0 < C := by
+    rw [hCexpr]
+    exact mul_pos (mul_pos hK (pow_pos hD k)) (by positivity)
+  refine ⟨C, hC, rfl, ?_⟩
   intro q u Du η hu hη hcritical
   let μ := volume.restrict (Metric.ball (0 : Domain n) (7 / 8 : ℝ))
   letI : IsFiniteMeasure μ := isFiniteMeasure_restrict.mpr measure_ball_ne_top
@@ -102,11 +123,33 @@ theorem exists_integer_moment_bound_of_criticalLp_growth (n : ℕ)
         exact and_comm
       rw [hset]
       exact htail q u Du η hu hηpos hcritical m
-    obtain ⟨hm, hi, hb⟩ := hmoment μ f hf (mul_pos hD hηpos) hM.le htailμ
+    obtain ⟨hm, hi, hb⟩ := geometric_tail_integer_moment_effective k hk ρ hρ hρHalf
+      μ f hf (mul_pos hD hηpos) hM.le htailμ
     have hmass : μ.real univ = V := by
       rw [measureReal_restrict_apply_univ]
     refine ⟨hm, hi, ?_⟩
-    exact hb.trans_eq (by rw [hmass, mul_pow]; dsimp only [C]; ring)
+    calc
+      _ ≤ K * (D*η)^k * (μ.real univ+M) := hb
+      _ = (K*D^k*(V+M))*η^k := by rw [hmass,mul_pow]; ring
+      _ ≤ C*η^k := mul_le_mul_of_nonneg_right hCBound (pow_nonneg hη k)
+
+
+theorem exists_integer_moment_bound_of_criticalLp_growth (n : ℕ)
+    (p : ℝ) (hpOne : 1≤p) (hpTwo : p≤2) (k : ℕ) (hk : 1 ≤ k) :
+    ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (u : Domain n → Ambient q)
+      (Du : Domain n → Gradient n q) (η : ℝ),
+      MemW12 (ballDomain (0 : Domain n) 1) u Du → 0 ≤ η →
+      (∀a∈Metric.ball (0 : Domain n) 1,∀r : ℝ,0<r →
+        (∫y in Metric.ball a r∩Metric.ball (0 : Domain n) 1,(Real.sqrt (hsNormSq (Du y)))^p)≤
+          η^p*r^((n : ℝ)-p)) →
+      MemLp (fun x => u x - (⨍ y in Metric.ball (0 : Domain n) 1, u y)) (k : ℝ≥0∞)
+        (volume.restrict (Metric.ball (0 : Domain n) (7 / 8 : ℝ))) ∧
+      IntegrableOn (fun x => ‖u x - (⨍ y in Metric.ball (0 : Domain n) 1, u y)‖ ^ k)
+        (Metric.ball (0 : Domain n) (7 / 8 : ℝ)) volume ∧
+      (∫ x in Metric.ball (0 : Domain n) (7 / 8 : ℝ),
+        ‖u x - (⨍ y in Metric.ball (0 : Domain n) 1, u y)‖ ^ k) ≤ C * η ^ k := by
+  obtain ⟨C,hC,_hFormula,H⟩ := exists_integer_moment_bound_of_criticalLp_growth_explicit n p hpOne hpTwo k hk
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

@@ -23,8 +23,8 @@ open scoped ContDiff Topology ENNReal
 namespace StationaryHarmonicMaps.Analysis
 
 /-- Original ball-solenoidal L2 and genuine W0 data produce the same scalar zero-extension's actual measurable Hardy grand supremum and its bilinear L1 bound. -/
-theorem exists_local_divcurl_measurable_grand_kernel_bound (n : ℕ) (hn : 2≤n) :
-    ∃ K : ℝ,0<K ∧ ∀ (q : ℕ) (a : Domain n) (r : ℝ),0<r →
+theorem exists_local_divcurl_measurable_grand_kernel_bound_explicit (n : ℕ) (hn : 2≤n) :
+    ∃ K : ℝ,0<K ∧ K=(divcurlGrandKernelMajorant n:ℝ) ∧ ∀ (q : ℕ) (a : Domain n) (r : ℝ),0<r →
       ∀ (Z : Domain n → Gradient n q),
         (∀ i,MemLp (fun x => Z x i) 2 (volume.restrict (Metric.ball a r))) →
         HolderToCK.WeakPoissonOn (ballDomain a r) Z (fun _ => (0 : Ambient q)) →
@@ -48,8 +48,8 @@ theorem exists_local_divcurl_measurable_grand_kernel_bound (n : ℕ) (hn : 2≤n
             (∫ b,(J b).toReal)≤K*Real.sqrt 2*
               Real.sqrt (∫ x in Metric.ball a r,hsNormSq (Z x))*
               Real.sqrt (∫ x in Metric.ball a r,hsNormSq (Dw x)) := by
-  obtain ⟨K,hK,H⟩ := exists_divcurl_measurable_grand_kernel_bound n hn
-  refine ⟨K,hK,?_⟩
+  obtain ⟨K,hK,hKEq,H⟩ := exists_divcurl_measurable_grand_kernel_bound_explicit n hn
+  refine ⟨K,hK,hKEq,?_⟩
   intro q a r hr Z hZ hdiv w Dw hw f J
   let B := Metric.ball a r
   let v : Domain n → Ambient q := B.indicator w
@@ -125,6 +125,34 @@ theorem exists_local_divcurl_measurable_grand_kernel_bound (n : ℕ) (hn : 2≤n
   · exact HH
   · exact mul_nonneg (mul_nonneg (mul_nonneg hK.le (Real.sqrt_nonneg _)) (Real.sqrt_nonneg _))
       (Real.sqrt_nonneg _)
+
+theorem exists_local_divcurl_measurable_grand_kernel_bound (n : ℕ) (hn : 2≤n) :
+    ∃ K : ℝ,0<K ∧ ∀ (q : ℕ) (a : Domain n) (r : ℝ),0<r →
+      ∀ (Z : Domain n → Gradient n q),
+        (∀ i,MemLp (fun x => Z x i) 2 (volume.restrict (Metric.ball a r))) →
+        HolderToCK.WeakPoissonOn (ballDomain a r) Z (fun _ => (0 : Ambient q)) →
+        ∀ (w : Domain n → Ambient q) (Dw : Domain n → Gradient n q),
+          HasZeroBoundaryValues (ballDomain a r) w Dw →
+          let f := (Metric.ball a r).indicator
+            (fun x => ∑ i : Fin n,inner ℝ (Z x i) (Dw x i))
+          let J := fun b => ⨆ s : PositiveRadius, ⨆ κ : Domain n → ℝ,
+            ⨆ (_ : ContDiff ℝ ∞ κ), ⨆ (_ : HasCompactSupport κ),
+            ⨆ (_ : tsupport κ⊆Metric.ball b s.val),
+            ⨆ (_ : ∀ x∈Metric.ball b s.val,∀ i : Fin n,
+              |fderiv ℝ κ x (EuclideanSpace.single i 1)|≤s.val^(-(n : ℝ)-1)),
+              ENNReal.ofReal |∫ x,κ x*f x|
+          Integrable f volume ∧ (∫ x,f x)=0 ∧
+            LowerSemicontinuous J ∧ Measurable J ∧
+            (∫⁻ b,J b)≤ENNReal.ofReal (K*Real.sqrt 2*
+              Real.sqrt (∫ x in Metric.ball a r,hsNormSq (Z x))*
+              Real.sqrt (∫ x in Metric.ball a r,hsNormSq (Dw x))) ∧
+            (∫⁻ b,J b)<(∞ : ℝ≥0∞) ∧ (∀ᵐ b ∂volume,J b≠(∞ : ℝ≥0∞)) ∧
+            Integrable (fun b => (J b).toReal) volume ∧
+            (∫ b,(J b).toReal)≤K*Real.sqrt 2*
+              Real.sqrt (∫ x in Metric.ball a r,hsNormSq (Z x))*
+              Real.sqrt (∫ x in Metric.ball a r,hsNormSq (Dw x)) := by
+  obtain ⟨K,hK,_hKEq,H⟩ := exists_local_divcurl_measurable_grand_kernel_bound_explicit n hn
+  exact ⟨K,hK,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

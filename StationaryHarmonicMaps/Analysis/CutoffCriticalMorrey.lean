@@ -74,10 +74,35 @@ private theorem cutoff_columns_indicator_interior {n q : ℕ}
       fderiv_of_notMem_tsupport (𝕜 := ℝ) hnot, zero_apply, zero_smul, zero_smul, zero_add]
     rfl
 
+@[expose] noncomputable def cutoffCriticalConstant (n : ℕ) (A B : ℝ) : ℝ :=
+  1 + 2 * A ^ 2 * (2 : ℝ) ^ (n - 2) +
+    2 * (n : ℝ) * B ^ 2 * (effectiveAllRadiusValueConstant n : ℝ)
+
+@[expose] def effectiveCutoffCriticalConstant (n A B : ℕ) : ℕ :=
+  1 + 2 * A ^ 2 * 2 ^ (n - 2) + 2 * n * B ^ 2 * effectiveAllRadiusValueConstant n
+
+theorem cutoffCriticalConstant_pos (n : ℕ) (A B : ℝ) :
+    0 < cutoffCriticalConstant n A B := by
+  have H := effectiveAllRadiusValueConstant_pos n
+  unfold cutoffCriticalConstant
+  positivity
+
+theorem effectiveCutoffCriticalConstant_pos (n A B : ℕ) :
+    0 < (effectiveCutoffCriticalConstant n A B : ℝ) := by
+  simp only [effectiveCutoffCriticalConstant, Nat.cast_add, Nat.cast_one, Nat.cast_mul,
+    Nat.cast_pow, Nat.cast_ofNat]
+  positivity
+
+theorem cutoffCriticalConstant_natCast (n A B : ℕ) :
+    cutoffCriticalConstant n (A : ℝ) (B : ℝ) =
+      (effectiveCutoffCriticalConstant n A B : ℝ) := by
+  simp only [cutoffCriticalConstant, effectiveCutoffCriticalConstant,
+    Nat.cast_add, Nat.cast_one, Nat.cast_mul, Nat.cast_pow, Nat.cast_ofNat]
+
 /-- The actual full-space cutoff has a uniform bound on the complete critical L2 supremum. -/
-theorem exists_cutoff_criticalMorrey_bound (n : ℕ) (hn : 2 ≤ n)
+theorem cutoff_criticalMorrey_bound (n : ℕ) (hn : 2 ≤ n)
     (A B : ℝ) (_hA : 0 ≤ A) (_hB : 0 ≤ B) :
-    ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (u : Domain n → Ambient q)
+    ∀ (q : ℕ) (u : Domain n → Ambient q)
       (Du : Domain n → Gradient n q) (η : ℝ),
       MemW12 (ballDomain (0 : Domain n) 1) u Du → 0 ≤ η →
       criticalGradientMorreySquare Du (Metric.ball (0 : Domain n) 1) ≤
@@ -90,14 +115,23 @@ theorem exists_cutoff_criticalMorrey_bound (n : ℕ) (hn : 2 ≤ n)
       let v := fun x => χ x • (u x - c)
       let Dv := fun x i => χ x • Du x i + fderiv ℝ χ x (EuclideanSpace.single i 1) • (u x - c)
       MemW12 (⟨univ, isOpen_univ⟩ : OpenDomain n) v Dv ∧
-      criticalGradientMorreySquare Dv univ ≤ ENNReal.ofReal (C * η ^ 2) := by
-  obtain ⟨V, hV, hvalue⟩ := exists_all_radius_value_growth_of_criticalMorrey n hn
+      criticalGradientMorreySquare Dv univ ≤ ENNReal.ofReal (cutoffCriticalConstant n A B * η ^ 2) := by
+  let V : ℝ := effectiveAllRadiusValueConstant n
+  have hV : 0 < V := effectiveAllRadiusValueConstant_pos n
+  have hvalue := effective_all_radius_value_growth_of_criticalMorrey n hn
   let K : ℝ := 2 * A ^ 2 * (2 : ℝ) ^ ((n : ℝ) - 2) + 2 * (n : ℝ) * B ^ 2 * V
   let C : ℝ := 1 + K
   have hK : 0 ≤ K := by dsimp only [K]; positivity
   have hC : 0 < C := by dsimp only [C]; positivity
   have hKC : K ≤ C := by dsimp only [C]; linarith
-  refine ⟨C, hC, ?_⟩
+  have hpow : (2 : ℝ) ^ ((n : ℝ) - 2) = (2 : ℝ) ^ (n - 2) := by
+    rw [show (n : ℝ) - 2 = ((n - 2 : ℕ) : ℝ) by
+      rw [Nat.cast_sub hn]; norm_num, Real.rpow_natCast]
+  have heq : cutoffCriticalConstant n A B = C := by
+    dsimp only [cutoffCriticalConstant, C, K, V]
+    rw [hpow]
+    ring
+  rw [heq]
   intro q u Du η hu hη hcritical χ hχ hcχ hsχ hχA hDχB
   dsimp only
   let c := ⨍ y in Metric.ball (0 : Domain n) 1, u y
@@ -163,6 +197,46 @@ theorem exists_cutoff_criticalMorrey_bound (n : ℕ) (hn : 2 ≤ n)
       calc
         _ = C * η ^ 2 * (r.val ^ ((n : ℝ) - 2) * r.val ^ (2 - (n : ℤ))) := by ring
         _ = _ := by rw [hcancel, mul_one]
+
+/-- The actual full-space cutoff has a uniform bound on the complete critical L2 supremum. -/
+theorem effective_cutoff_criticalMorrey_bound (n : ℕ) (hn : 2 ≤ n)
+    (A B : ℕ) :
+    ∀ (q : ℕ) (u : Domain n → Ambient q)
+      (Du : Domain n → Gradient n q) (η : ℝ),
+      MemW12 (ballDomain (0 : Domain n) 1) u Du → 0 ≤ η →
+      criticalGradientMorreySquare Du (Metric.ball (0 : Domain n) 1) ≤
+        ENNReal.ofReal (η ^ 2) →
+      ∀ (χ : Domain n → ℝ), ContDiff ℝ ∞ χ → HasCompactSupport χ →
+      tsupport χ ⊆ Metric.closedBall (0 : Domain n) (3 / 4 : ℝ) →
+      (∀ x, |χ x| ≤ (A : ℝ)) →
+      (∀ (x : Domain n) (i : Fin n), |fderiv ℝ χ x (EuclideanSpace.single i 1)| ≤ (B : ℝ)) →
+      let c := ⨍ y in Metric.ball (0 : Domain n) 1, u y
+      let v := fun x => χ x • (u x - c)
+      let Dv := fun x i => χ x • Du x i + fderiv ℝ χ x (EuclideanSpace.single i 1) • (u x - c)
+      MemW12 (⟨univ, isOpen_univ⟩ : OpenDomain n) v Dv ∧
+      criticalGradientMorreySquare Dv univ ≤ ENNReal.ofReal ((effectiveCutoffCriticalConstant n A B : ℝ) * η ^ 2) := by
+  simpa only [cutoffCriticalConstant_natCast] using
+    cutoff_criticalMorrey_bound n hn (A : ℝ) (B : ℝ) (Nat.cast_nonneg A) (Nat.cast_nonneg B)
+
+/-- The actual full-space cutoff has a uniform bound on the complete critical L2 supremum. -/
+theorem exists_cutoff_criticalMorrey_bound (n : ℕ) (hn : 2 ≤ n)
+    (A B : ℝ) (_hA : 0 ≤ A) (_hB : 0 ≤ B) :
+    ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (u : Domain n → Ambient q)
+      (Du : Domain n → Gradient n q) (η : ℝ),
+      MemW12 (ballDomain (0 : Domain n) 1) u Du → 0 ≤ η →
+      criticalGradientMorreySquare Du (Metric.ball (0 : Domain n) 1) ≤
+        ENNReal.ofReal (η ^ 2) →
+      ∀ (χ : Domain n → ℝ), ContDiff ℝ ∞ χ → HasCompactSupport χ →
+      tsupport χ ⊆ Metric.closedBall (0 : Domain n) (3 / 4 : ℝ) →
+      (∀ x, |χ x| ≤ A) →
+      (∀ (x : Domain n) (i : Fin n), |fderiv ℝ χ x (EuclideanSpace.single i 1)| ≤ B) →
+      let c := ⨍ y in Metric.ball (0 : Domain n) 1, u y
+      let v := fun x => χ x • (u x - c)
+      let Dv := fun x i => χ x • Du x i + fderiv ℝ χ x (EuclideanSpace.single i 1) • (u x - c)
+      MemW12 (⟨univ, isOpen_univ⟩ : OpenDomain n) v Dv ∧
+      criticalGradientMorreySquare Dv univ ≤ ENNReal.ofReal (C * η ^ 2) := by
+  exact ⟨cutoffCriticalConstant n A B, cutoffCriticalConstant_pos n A B,
+    cutoff_criticalMorrey_bound n hn A B _hA _hB⟩
 
 end StationaryHarmonicMaps.Analysis
 

@@ -27,9 +27,9 @@ private theorem norm_sq_half_rpow {E : Type*} [NormedAddCommGroup E]
   ring
 
 /-- Original native zero-boundary data produce a genuine conjugate-exponent native test, its actual integrable pairing, exact power pairing, and full-HS moment control. -/
-theorem exists_native_dirichlet_dual_test_unitBall (n : ℕ) (hn : 2≤n)
+theorem exists_native_dirichlet_dual_test_unitBall_explicit (n : ℕ) (hn : 2≤n)
     (p : ℝ) (hpOne : 1<p) (hpTwo : p<2) :
-    ∃C : ℝ,0<C ∧ ∀q : ℕ,
+    ∃C : ℝ,0<C ∧ C = dirichletLpMomentConstant n (p/(p-1)) ∧ ∀q : ℕ,
       let μ := volume.restrict (ball (0:Domain n) 1)
       let r := p/(p-1)
       ∀(u : Domain n → Ambient q) (Du : Domain n → Gradient n q),
@@ -48,8 +48,9 @@ theorem exists_native_dirichlet_dual_test_unitBall (n : ℕ) (hn : 2≤n)
   have hrTwo : 2<p/(p-1) := (lt_div_iff₀ hpm).mpr (by linarith only [hpTwo])
   have hrOne : 1<p/(p-1) := lt_trans (by norm_num) hrTwo
   have hr0 : 0<p/(p-1) := zero_lt_one.trans hrOne
-  obtain ⟨Cp,_Cm,hCp,_hCm,HT⟩ := exists_same_dirichlet_operator_all_lp_and_power_growth_unitBall n hn
-  refine ⟨Cp ⟨p/(p-1),hrOne⟩,hCp _,?_⟩
+  obtain ⟨Cp,_Cm,hCp,_hCm,hCpFormula,HT⟩ := exists_same_dirichlet_operator_all_lp_and_power_growth_unitBall_explicit n hn
+  refine ⟨Cp ⟨p/(p-1),hrOne⟩,hCp _,?_,?_⟩
+  · rw [hCpFormula]
   intro q μ r u Du hu
   letI : IsFiniteMeasure μ := isFiniteMeasure_restrict.mpr measure_ball_ne_top
   let E : Gradient n q → Ambient (n*q) := fun G=>WithLp.toLp 2
@@ -145,6 +146,25 @@ theorem exists_native_dirichlet_dual_test_unitBall (n : ℕ) (hn : 2≤n)
   · simp_rw [hOutput]
     rw [hYMoment] at hBound
     exact hBound.trans_eq (by rw [integral_congr_ae hInputAE])
+
+theorem exists_native_dirichlet_dual_test_unitBall (n : ℕ) (hn : 2≤n)
+    (p : ℝ) (hpOne : 1<p) (hpTwo : p<2) :
+    ∃C : ℝ,0<C ∧ ∀q : ℕ,
+      let μ := volume.restrict (ball (0:Domain n) 1)
+      let r := p/(p-1)
+      ∀(u : Domain n → Ambient q) (Du : Domain n → Gradient n q),
+        HasZeroBoundaryValues (ballDomain (0:Domain n) 1) u Du →
+        ∃(φ : Domain n → Ambient q) (Dφ : Domain n → Gradient n q),
+          HasZeroBoundaryValues (ballDomain (0:Domain n) 1) φ Dφ ∧
+          MemLp (fun x=>WithLp.toLp 2 (fun k : Fin (n*q)=>
+            Dφ x (finProdFinEquiv.symm k).1 (finProdFinEquiv.symm k).2)) (ENNReal.ofReal r) μ ∧
+          Integrable (fun x=>∑i : Fin n,inner ℝ (Du x i) (Dφ x i)) μ ∧
+          Integrable (fun x=>(hsNormSq (Du x))^(p/2)) μ ∧
+          Integrable (fun x=>(hsNormSq (Dφ x))^(r/2)) μ ∧
+          (∫x,∑i : Fin n,inner ℝ (Du x i) (Dφ x i) ∂μ)=∫x,(hsNormSq (Du x))^(p/2) ∂μ ∧
+          (∫x,(hsNormSq (Dφ x))^(r/2) ∂μ)≤C*(∫x,(hsNormSq (Du x))^(p/2) ∂μ) := by
+  obtain ⟨C,hC,_hFormula,H⟩ := exists_native_dirichlet_dual_test_unitBall_explicit n hn p hpOne hpTwo
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

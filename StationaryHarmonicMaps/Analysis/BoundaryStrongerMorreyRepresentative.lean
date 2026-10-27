@@ -3,6 +3,7 @@ module
 
 public import StationaryHarmonicMaps.Analysis.BoundaryEvenPowerGrowth
 public import StationaryHarmonicMaps.Analysis.LocalLpMorreyRepresentative
+public import StationaryHarmonicMaps.Analysis.GlobalCriticalMeanOscillation
 public import Mathlib.Topology.MetricSpace.Holder
 public import Mathlib.Topology.UniformSpace.UniformEmbedding
 import StationaryHarmonicMaps.Analysis.CriticalMorreyMeanOscillation
@@ -24,12 +25,59 @@ open scoped Topology ENNReal
 
 namespace StationaryHarmonicMaps.Analysis
 
+@[expose] noncomputable def boundaryStrongerMorreyConstant (n : ℕ) (γ : ℝ) : ℝ :=
+  1 + localCampanatoConstant n (γ / 2) *
+    (((2 : ℝ) ^ (n + 1) * Real.sqrt (n : ℝ)) *
+      (volume.real (ball (0 : Domain n) 1)) ^ (-(1 / (2 : ℝ)))) *
+    Real.sqrt ((2 : ℝ) ^ ((n : ℝ) - 2 + γ) * (1 + (2 : ℝ) ^ (2 * n)))
+
+@[expose] def effectiveBoundaryStrongerConstant (n : ℕ) : ℕ :=
+  1 + (512 * 2 ^ n) * effectiveGlobalCriticalMeanOscillationConstant n *
+    (1 + 2 ^ (n - 1) * (1 + 2 ^ (2 * n)))
+
+theorem effectiveBoundaryStrongerConstant_pos (n : ℕ) :
+    0 < (effectiveBoundaryStrongerConstant n : ℝ) := by
+  simp only [effectiveBoundaryStrongerConstant, Nat.cast_add, Nat.cast_one, Nat.cast_mul,
+    Nat.cast_pow, Nat.cast_ofNat]
+  positivity
+
+theorem boundaryStrongerMorreyConstant_one_le (n : ℕ) (hn : 1 ≤ n) :
+    boundaryStrongerMorreyConstant n 1 ≤ (effectiveBoundaryStrongerConstant n : ℝ) := by
+  let D : ℝ := ((2 : ℝ) ^ (n + 1) * Real.sqrt (n : ℝ)) *
+    (volume.real (ball (0 : Domain n) 1)) ^ (-(1 / (2 : ℝ)))
+  let A : ℝ := (2 : ℝ) ^ (n - 1) * (1 + (2 : ℝ) ^ (2 * n))
+  have hD : 0 ≤ D := by dsimp only [D]; positivity
+  have hDle : D ≤ (effectiveGlobalCriticalMeanOscillationConstant n : ℝ) := by
+    have H := globalCriticalMeanOscillationConstant_le_effective n
+    dsimp only [globalCriticalMeanOscillationConstant] at H
+    change _ ≤ (effectiveGlobalCriticalMeanOscillationConstant n : ℝ)
+    linarith only [H]
+  have hA : 0 ≤ A := by dsimp only [A]; positivity
+  have hroot : Real.sqrt A ≤ 1 + A := by
+    have H := Real.sq_sqrt hA
+    have Hn := Real.sqrt_nonneg A
+    nlinarith only [H, Hn, hA, sq_nonneg A]
+  have H := mul_le_mul
+    (mul_le_mul (localCampanatoConstant_half_le n) hDle hD
+      (show 0 ≤ (512 : ℝ) * 2 ^ n by positivity))
+    hroot (Real.sqrt_nonneg A)
+    (show 0 ≤ ((512 : ℝ) * 2 ^ n) * (effectiveGlobalCriticalMeanOscillationConstant n : ℝ) by positivity)
+  have heq : (n : ℝ) - 2 + 1 = ((n - 1 : ℕ) : ℝ) := by
+    rw [Nat.cast_sub hn]; norm_num; ring
+  dsimp only [boundaryStrongerMorreyConstant]
+  norm_num only [one_div, div_self (by norm_num : (2 : ℝ) ≠ 0)] at *
+  rw [heq, Real.rpow_natCast]
+  simp only [effectiveBoundaryStrongerConstant, Nat.cast_add, Nat.cast_one, Nat.cast_mul,
+    Nat.cast_pow, Nat.cast_ofNat]
+  dsimp only [A, D] at H
+  linarith only [H]
+
 /-- Original stronger all-ball derivative growth gives the unique
 continuous representative on the whole open unit ball and a uniform
 Holder estimate for every pair, including pairs approaching the sphere. -/
-theorem existsUnique_boundary_holder_representative_of_stronger_morrey
+theorem existsUnique_boundary_holder_representative_of_stronger_morrey_explicit
     (n : ℕ) (hn : 2≤n) (γ : ℝ) (hγ : 0<γ) (_hγTwo : γ<2) :
-    ∃C : ℝ,0<C ∧ ∀(q : ℕ) (u : Domain n → Ambient q) (Du : Domain n → Gradient n q)
+    ∃C : ℝ,0<C ∧ C = boundaryStrongerMorreyConstant n γ ∧ ∀(q : ℕ) (u : Domain n → Ambient q) (Du : Domain n → Gradient n q)
       (K : ℝ),MemW12 (ballDomain (0:Domain n) 1) u Du → 0≤K →
       (∀a∈ball (0:Domain n) 1,∀r : ℝ,0<r →
         (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (Du x))≤K*r^((n:ℝ)-2+γ)) →
@@ -38,7 +86,7 @@ theorem existsUnique_boundary_holder_representative_of_stronger_morrey
         ∀x y : ball (0:Domain n) 1,
           ‖w x-w y‖≤C*Real.sqrt K*(dist (x:Domain n) (y:Domain n))^(γ/2) := by
   have hα : 0<γ/2 := half_pos hγ
-  obtain ⟨C₀,hC₀,Hcamp⟩ := existsUnique_local_representative_of_meanOscillation n (γ/2) hα
+  obtain ⟨C₀,hC₀,hC₀eq,Hcamp⟩ := existsUnique_local_representative_of_meanOscillation_explicit n (γ/2) hα
   let ν := (n:ℝ)-2+γ
   let A := (2:ℝ)^ν*(1+(2:ℝ)^(2*n))
   let D := ((2:ℝ)^(n+1)*Real.sqrt (n:ℝ))*(volume.real (ball (0:Domain n) 1))^(-(1/(2:ℝ)))
@@ -46,7 +94,9 @@ theorem existsUnique_boundary_holder_representative_of_stronger_morrey
   have hD : 0≤D := by dsimp only [D];positivity
   let C := 1+C₀*D*Real.sqrt A
   have hC : 0<C := by dsimp only [C];positivity
-  refine ⟨C,hC,?_⟩
+  refine ⟨C,hC,?_,?_⟩
+  · dsimp only [C, D, A, ν, boundaryStrongerMorreyConstant]
+    rw [hC₀eq]
   intro q u Du K hu hK hGrowth
   let I := EuclideanGeometry.inversion (0:Domain n) 1
   let U := fun x=>if ‖x‖≤1 then u x else u (I x)
@@ -115,6 +165,53 @@ theorem existsUnique_boundary_holder_representative_of_stronger_morrey
   refine ⟨w,⟨hRep,hBound⟩,?_⟩
   intro z hz
   exact hz.1.unique hRep
+
+/-- Original stronger all-ball derivative growth gives the unique
+continuous representative on the whole open unit ball and a uniform
+Holder estimate for every pair, including pairs approaching the sphere. -/
+theorem existsUnique_boundary_holder_representative_of_stronger_morrey
+    (n : ℕ) (hn : 2≤n) (γ : ℝ) (hγ : 0<γ) (_hγTwo : γ<2) :
+    ∃C : ℝ,0<C ∧ ∀(q : ℕ) (u : Domain n → Ambient q) (Du : Domain n → Gradient n q)
+      (K : ℝ),MemW12 (ballDomain (0:Domain n) 1) u Du → 0≤K →
+      (∀a∈ball (0:Domain n) 1,∀r : ℝ,0<r →
+        (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (Du x))≤K*r^((n:ℝ)-2+γ)) →
+      ∃! w : ball (0:Domain n) 1 → Ambient q,
+        IsContinuousRepresentative (ballDomain (0:Domain n) 1) u w ∧
+        ∀x y : ball (0:Domain n) 1,
+          ‖w x-w y‖≤C*Real.sqrt K*(dist (x:Domain n) (y:Domain n))^(γ/2) := by
+  obtain ⟨C,hC,_hEq,H⟩ := existsUnique_boundary_holder_representative_of_stronger_morrey_explicit
+    n hn γ hγ _hγTwo
+  exact ⟨C,hC,H⟩
+
+/-- Original stronger all-ball derivative growth gives the unique
+continuous representative on the whole open unit ball and a uniform
+Holder estimate for every pair, including pairs approaching the sphere. -/
+theorem effective_boundary_holder_representative_of_stronger_morrey
+    (n : ℕ) (hn : 2≤n) :
+    ∀(q : ℕ) (u : Domain n → Ambient q) (Du : Domain n → Gradient n q)
+      (K : ℝ),MemW12 (ballDomain (0:Domain n) 1) u Du → 0≤K →
+      (∀a∈ball (0:Domain n) 1,∀r : ℝ,0<r →
+        (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (Du x))≤K*r^((n:ℝ)-1)) →
+      ∃! w : ball (0:Domain n) 1 → Ambient q,
+        IsContinuousRepresentative (ballDomain (0:Domain n) 1) u w ∧
+        ∀x y : ball (0:Domain n) 1,
+          ‖w x-w y‖≤(effectiveBoundaryStrongerConstant n : ℝ)*Real.sqrt K*(dist (x:Domain n) (y:Domain n))^(1/2 : ℝ) := by
+  obtain ⟨C,hC,hCeq,Hrep⟩ := existsUnique_boundary_holder_representative_of_stronger_morrey_explicit
+    n hn 1 (by norm_num) (by norm_num)
+  have hCle : C ≤ (effectiveBoundaryStrongerConstant n : ℝ) :=
+    hCeq.le.trans (boundaryStrongerMorreyConstant_one_le n (by omega))
+  intro q u Du K hu hK hGrowth
+  have hGrowth' : ∀ a ∈ ball (0 : Domain n) 1, ∀ r : ℝ, 0 < r →
+      (∫ x in ball a r ∩ ball (0 : Domain n) 1, hsNormSq (Du x)) ≤
+        K * r ^ ((n : ℝ) - 2 + 1) := by
+    simpa only [show (n : ℝ) - 2 + 1 = (n : ℝ) - 1 by ring] using hGrowth
+  obtain ⟨w,hw,_hUnique⟩ := Hrep q u Du K hu hK hGrowth'
+  refine ⟨w,⟨hw.1,?_⟩,?_⟩
+  · intro x y
+    exact (hw.2 x y).trans (mul_le_mul_of_nonneg_right
+      (mul_le_mul_of_nonneg_right hCle (Real.sqrt_nonneg K)) (Real.rpow_nonneg dist_nonneg _))
+  · intro z hz
+    exact hz.1.unique hw.1
 
 /-- A genuine Holder function on the open unit ball has a unique continuous
 extension to the closed ball, with the same Holder constant. -/
@@ -187,6 +284,42 @@ theorem existsUnique_closedBall_holder_representative_of_stronger_morrey
   obtain ⟨w,hw,_hwUnique⟩ := Hopen q u Du K hu hK hGrowth
   obtain ⟨W,hW,hWUnique⟩ := existsUnique_closedBall_extension_of_holder_unitBall w (γ/2)
     (C*Real.sqrt K) (half_pos hγ) (mul_nonneg hC.le (Real.sqrt_nonneg K)) hw.2
+  have hAE : ∀ᵐx∂volume.restrict (ball (0:Domain n) 1),∀hx : x∈ball (0:Domain n) 1,
+      W ⟨x,ball_subset_closedBall hx⟩=u x := by
+    filter_upwards [hw.1.2] with x hx
+    intro hxBall
+    exact (hW.2.1 ⟨x,hxBall⟩).trans (hx hxBall)
+  refine ⟨W,⟨hW.1,hAE,hW.2.2⟩,?_⟩
+  intro z hz
+  have hzRep : IsContinuousRepresentative (ballDomain (0:Domain n) 1) u
+      (fun x=>z ⟨x,ball_subset_closedBall x.2⟩) :=
+    ⟨hz.1.comp (continuous_subtype_val.subtype_mk _),hz.2.1⟩
+  have hEq := hzRep.unique hw.1
+  exact hWUnique z ⟨hz.1,fun x=>congrFun hEq x,hz.2.2⟩
+
+/-- Original stronger native derivative growth constructs the unique
+continuous representative on the closed unit ball. Its values inside the
+ball agree with the original map almost everywhere, and the same uniform
+Holder estimate holds for every pair of boundary or interior points. -/
+theorem effective_closedBall_holder_representative_of_stronger_morrey
+    (n : ℕ) (hn : 2≤n) :
+    ∀(q : ℕ) (u : Domain n → Ambient q) (Du : Domain n → Gradient n q)
+      (K : ℝ),MemW12 (ballDomain (0:Domain n) 1) u Du → 0≤K →
+      (∀a∈ball (0:Domain n) 1,∀r : ℝ,0<r →
+        (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (Du x))≤K*r^((n:ℝ)-1)) →
+      ∃! W : closedBall (0:Domain n) 1 → Ambient q,
+        Continuous W ∧
+        (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),∀hx : x∈ball (0:Domain n) 1,
+          W ⟨x,ball_subset_closedBall hx⟩=u x) ∧
+        ∀x y : closedBall (0:Domain n) 1,
+          ‖W x-W y‖≤(effectiveBoundaryStrongerConstant n : ℝ)*Real.sqrt K*(dist (x:Domain n) (y:Domain n))^(1/2 : ℝ) := by
+  let C : ℝ := effectiveBoundaryStrongerConstant n
+  have hC : 0 < C := effectiveBoundaryStrongerConstant_pos n
+  have Hopen := effective_boundary_holder_representative_of_stronger_morrey n hn
+  intro q u Du K hu hK hGrowth
+  obtain ⟨w,hw,_hwUnique⟩ := Hopen q u Du K hu hK hGrowth
+  obtain ⟨W,hW,hWUnique⟩ := existsUnique_closedBall_extension_of_holder_unitBall w (1/2)
+    (C*Real.sqrt K) (by norm_num) (mul_nonneg hC.le (Real.sqrt_nonneg K)) hw.2
   have hAE : ∀ᵐx∂volume.restrict (ball (0:Domain n) 1),∀hx : x∈ball (0:Domain n) 1,
       W ⟨x,ball_subset_closedBall hx⟩=u x := by
     filter_upwards [hw.1.2] with x hx

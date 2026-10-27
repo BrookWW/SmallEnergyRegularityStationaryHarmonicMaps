@@ -1,6 +1,6 @@
 module
 
-public import StationaryHarmonicMaps.Analysis.NeumannBoundaryHarmonicGradient
+public import StationaryHarmonicMaps.Analysis.EffectiveNeumannBoundary
 public import StationaryHarmonicMaps.Analysis.NeumannOperatorOffSupport
 public import Mathlib.Analysis.Normed.Module.Normalize
 
@@ -61,9 +61,20 @@ private theorem normalized_boundary_center_of_small_query {n : ℕ}
   rw [hDist]
   exact abs_le.mpr ⟨by linarith,by linarith⟩
 
+@[expose] def effectiveNeumannOffSupportConstant (n : ℕ) : ℕ :=
+  max (64 ^ n) (EffectiveCoulomb.neumannBoundaryBound n * 16 ^ n)
+
+theorem effectiveNeumannOffSupportConstant_pos (n : ℕ) :
+    0 < (effectiveNeumannOffSupportConstant n : ℝ) := by
+  have H : (0 : ℝ) < (64 : ℝ) ^ n := by positivity
+  exact H.trans_le (by
+    simp only [effectiveNeumannOffSupportConstant, Nat.cast_max, Nat.cast_pow,
+      Nat.cast_mul, Nat.cast_ofNat]
+    exact le_max_left _ _)
+
 /-- For each dimension at least two, one genuine contractive self-adjoint Neumann L2 operator has the same-response essential off-support bound on every center and positive radius, with a dimension-only constant chosen before the target dimension and all original data. -/
-theorem exists_same_neumann_operator_all_ball_offSupport_bounds (n : ℕ) (hn : 2≤n) :
-    ∃C : ℝ,0<C ∧ ∀q : ℕ,
+theorem effective_same_neumann_operator_all_ball_offSupport_bounds (n : ℕ) (hn : 2≤n) :
+    ∀q : ℕ,
       let μ := volume.restrict (ball (0:Domain n) 1)
       let E : Gradient n q → Ambient (n*q) := fun A=>WithLp.toLp 2
         (fun k=>A (finProdFinEquiv.symm k).1 (finProdFinEquiv.symm k).2)
@@ -88,11 +99,17 @@ theorem exists_same_neumann_operator_all_ball_offSupport_bounds (n : ℕ) (hn : 
             ∀(a : Domain n) (r : ℝ),0<r →
               F =ᵐ[volume.restrict (ball (0:Domain n) 1∩ball a (256*r))] (fun _=>(0:Gradient n q)) →
               ∀ᵐx∂volume.restrict (ball a r),hsNormSq (Q₀ x)≤
-                C*(volume.real (ball a (256*r)))⁻¹*(∫y in ball a (256*r),hsNormSq (Q₀ y)) := by
-  obtain ⟨K,hK,Hboundary⟩ := exists_neumann_boundary_offSupport_gradient_bounds n hn
+                (effectiveNeumannOffSupportConstant n : ℝ)*(volume.real (ball a (256*r)))⁻¹*(∫y in ball a (256*r),hsNormSq (Q₀ y)) := by
+  let K : ℝ := EffectiveCoulomb.neumannBoundaryBound n
+  have hK : 0 < K := by
+    change 0 < (EffectiveCoulomb.neumannBoundaryBound n : ℝ)
+    exact_mod_cast EffectiveCoulomb.neumannBoundaryBound_pos n
   let C := max ((64:ℝ)^n) (K*(16:ℝ)^n)
   have hC : 0<C := (pow_pos (by norm_num : (0:ℝ)<64) n).trans_le (le_max_left _ _)
-  refine ⟨C,hC,?_⟩
+  have heq : (effectiveNeumannOffSupportConstant n : ℝ) = C := by
+    simp only [effectiveNeumannOffSupportConstant, Nat.cast_max, Nat.cast_pow,
+      Nat.cast_mul, Nat.cast_ofNat, C, K]
+  rw [heq]
   intro q μ E
   obtain ⟨T,hNorm,hSelf,hIdem,Hresponse⟩ := exists_neumann_L2_operator_interior_offSupport_bounds_unitBall (q:=q) hn
   refine ⟨T,hNorm,hSelf,hIdem,?_⟩
@@ -201,7 +218,9 @@ theorem exists_same_neumann_operator_all_ball_offSupport_bounds (n : ℕ) (hn : 
           fun x hx=>⟨hx.1,hOuterBig hx.2⟩
         have hFBoundary : F =ᵐ[volume.restrict (ball (0:Domain n) 1∩ball b (32*r))] (fun _=>(0:Gradient n q)) :=
           ae_restrict_of_ae_restrict_of_subset hBoundaryCap hZero
-        obtain ⟨hBound,_hTop,_hAll⟩ := Hboundary q b hb (32*r) (by positivity) (by linarith) f Q F hf hF (fun ψ Dψ hψ=>(hNat ψ Dψ hψ).2.2) hFBoundary
+        have hBound := EffectiveCoulomb.native_neumann_boundary_gradient_le n hn q b hb
+          (32*r) (by positivity) (by linarith) f Q F hf hF
+          (fun ψ Dψ hψ=>(hNat ψ Dψ hψ).2.2) hFBoundary
         have hHalf : (32*r)/2=16*r := by ring
         change ∀ᵐx∂volume.restrict (ball b ((32*r)/2)),hsNormSq (Q₀ x)≤
           K*(volume.real (ball b ((32*r)/2)))⁻¹*(∫y in ball b (32*r),hsNormSq (Q₀ y)) at hBound
@@ -227,6 +246,37 @@ theorem exists_same_neumann_operator_all_ball_offSupport_bounds (n : ℕ) (hn : 
       simp only [Q₀,indicator_of_notMem hOut,hsNormSq,norm_zero,zero_pow (by decide : (2:ℕ)≠0),Finset.sum_const_zero]
     rw [hHS0]
     exact hM0
+
+/-- For each dimension at least two, one genuine contractive self-adjoint Neumann L2 operator has the same-response essential off-support bound on every center and positive radius, with a dimension-only constant chosen before the target dimension and all original data. -/
+theorem exists_same_neumann_operator_all_ball_offSupport_bounds (n : ℕ) (hn : 2≤n) :
+    ∃C : ℝ,0<C ∧ ∀q : ℕ,
+      let μ := volume.restrict (ball (0:Domain n) 1)
+      let E : Gradient n q → Ambient (n*q) := fun A=>WithLp.toLp 2
+        (fun k=>A (finProdFinEquiv.symm k).1 (finProdFinEquiv.symm k).2)
+      ∃T : Lp (Ambient (n*q)) 2 μ →L[ℝ] Lp (Ambient (n*q)) 2 μ,
+        ‖T‖≤1 ∧ IsSelfAdjoint T ∧ (∀Z,T (T Z)=T Z) ∧
+        ∀(F : Domain n → Gradient n q) (hF : ∀i,MemLp (fun x=>F x i) 2 μ),
+          let A := (memLp_hs_flatten F hF).toLp (fun x=>E (F x))
+          let Q := fun (x : Domain n) (i : Fin n)=>WithLp.toLp 2
+            (fun j : Fin q=>(T A) x (finProdFinEquiv (i,j)))
+          let Q₀ := fun x i=>(ball (0:Domain n) 1).indicator (fun y=>Q y i) x
+          ∃f : Domain n → Ambient q,MemW12 (ballDomain (0:Domain n) 1) f Q ∧
+            (∫x,hsNormSq (Q x) ∂μ)≤∫x,hsNormSq (F x) ∂μ ∧
+            (∀ (ψ : Domain n → Ambient q) (Dψ : Domain n → Gradient n q),
+              MemW12 (ballDomain (0 : Domain n) 1) ψ Dψ →
+              Integrable (fun x=>∑i : Fin n,inner ℝ (Q x i) (Dψ x i)) μ ∧
+              Integrable (fun x=>∑i : Fin n,inner ℝ (F x i) (Dψ x i)) μ ∧
+              (∫x,∑i : Fin n,inner ℝ (Q x i) (Dψ x i) ∂μ)=
+                ∫x,∑i : Fin n,inner ℝ (F x i) (Dψ x i) ∂μ) ∧
+            HolderToCK.WeakPoissonOn (ballDomain (0:Domain n) 1)
+              (fun x i=>Q x i-F x i) (fun _=>(0:Ambient q)) ∧
+            (∀i,MemLp (fun x=>Q₀ x i) 2 volume) ∧
+            ∀(a : Domain n) (r : ℝ),0<r →
+              F =ᵐ[volume.restrict (ball (0:Domain n) 1∩ball a (256*r))] (fun _=>(0:Gradient n q)) →
+              ∀ᵐx∂volume.restrict (ball a r),hsNormSq (Q₀ x)≤
+                C*(volume.real (ball a (256*r)))⁻¹*(∫y in ball a (256*r),hsNormSq (Q₀ y)) := by
+  exact ⟨(effectiveNeumannOffSupportConstant n : ℝ), effectiveNeumannOffSupportConstant_pos n,
+    effective_same_neumann_operator_all_ball_offSupport_bounds n hn⟩
 
 end StationaryHarmonicMaps.Analysis
 

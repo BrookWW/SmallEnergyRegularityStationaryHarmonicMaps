@@ -70,10 +70,15 @@ theorem exists_divcurl_sobolev_holder_exponents (n : ℕ) (hn : 2 ≤ n) :
     field_simp [hn0.ne',hnPlus.ne']
   exact ⟨p,s,rfl,by exact_mod_cast hp1,by exact_mod_cast hp2,by exact_mod_cast hs0,hRel,hHolder,hScale⟩
 
+/-- The literal lower-power coefficient after cancellation of the ball scale. -/
+@[expose] noncomputable def divcurlScaledAverageConstant (n : ℕ) (p : ℝ≥0) : ℝ :=
+  divcurlLowerExponentConstant n p * ((2:ℝ)^n)^(1/(p:ℝ)) *
+    (volume.real (Metric.ball (0:Domain n) 1))^(2/(p:ℝ))
+
 /-- Original rough data have the scale-correct kernel estimate in literal lower-power ball averages. -/
-theorem exists_divcurl_scaled_average_kernel_bound (n : ℕ) (hn : 2 ≤ n) :
+theorem exists_divcurl_scaled_average_kernel_bound_explicit (n : ℕ) (hn : 2 ≤ n) :
     ∃ p : ℝ≥0, (p : ℝ)=2*(n : ℝ)/((n : ℝ)+1) ∧ 1 < p ∧ p < 2 ∧
-      ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (a : Domain n) (r : ℝ), 0 < r →
+      ∃ C : ℝ, C=divcurlScaledAverageConstant n p ∧ 0 < C ∧ ∀ (q : ℕ) (a : Domain n) (r : ℝ), 0 < r →
         ∀ (Z : Domain n → Gradient n q),
           (∀ i,MemLp (fun x => Z x i) 2 (volume.restrict (Metric.ball a (2*r)))) →
           HolderToCK.WeakPoissonOn (ballDomain a (2*r)) Z (fun _ => (0 : Ambient q)) →
@@ -89,7 +94,7 @@ theorem exists_divcurl_scaled_average_kernel_bound (n : ℕ) (hn : 2 ≤ n) :
               C*B*(⨍ x in Metric.ball a r,(Real.sqrt (hsNormSq (Z x)))^(p : ℝ))^(1/(p : ℝ))*
                 (⨍ x in Metric.ball a (2*r),(Real.sqrt (hsNormSq (Dw x)))^(p : ℝ))^(1/(p : ℝ)) := by
   obtain ⟨p,s,hpFormula,hp1,hp2,hs0,hRel,hHolder,hScale⟩ := exists_divcurl_sobolev_holder_exponents n hn
-  obtain ⟨K,hK,Hkernel⟩ := exists_divcurl_lower_exponent_kernel_bound n (by omega)
+  obtain ⟨K,hKEq,hK,Hkernel⟩ := exists_divcurl_lower_exponent_kernel_bound_explicit n (by omega)
     p s hp1.le hp2.le hs0 hRel hHolder
   let V : ℝ := volume.real (Metric.ball (0 : Domain n) 1)
   have hV : 0 < V := ENNReal.toReal_pos
@@ -97,7 +102,10 @@ theorem exists_divcurl_scaled_average_kernel_bound (n : ℕ) (hn : 2 ≤ n) :
   let D : ℝ := ((2 : ℝ)^n)^(1/(p : ℝ))*V^(2/(p : ℝ))
   let C : ℝ := K*D
   have hD : 0 < D := by dsimp only [D]; positivity
-  refine ⟨p,hpFormula,hp1,hp2,C,mul_pos hK hD,?_⟩
+  refine ⟨p,hpFormula,hp1,hp2,C,?_,mul_pos hK hD,?_⟩
+  · dsimp only [C,D,divcurlScaledAverageConstant]
+    rw [hKEq]
+    ring
   intro q a r hr Z hZ hdiv w Dw hw κ hκ hcκ hsκ B hB hDκ
   have hB' : 0 ≤ B*r^(-(n : ℝ)-1) := mul_nonneg hB (Real.rpow_nonneg hr.le _)
   obtain ⟨hI,hBound⟩ := Hkernel q a r hr Z hZ hdiv w Dw hw κ hκ hcκ hsκ
@@ -168,6 +176,26 @@ theorem exists_divcurl_scaled_average_kernel_bound (n : ℕ) (hn : 2 ≤ n) :
           (⨍ x in Metric.ball a (2*r),(Real.sqrt (hsNormSq (Dw x)))^(p : ℝ))^(1/(p : ℝ)) := by ring
       _ = _ := by rw [hVolumeScale]; dsimp only [C]; ring
   exact hBound.trans_eq hEq
+
+theorem exists_divcurl_scaled_average_kernel_bound (n : ℕ) (hn : 2 ≤ n) :
+    ∃ p : ℝ≥0, (p : ℝ)=2*(n : ℝ)/((n : ℝ)+1) ∧ 1 < p ∧ p < 2 ∧
+      ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (a : Domain n) (r : ℝ), 0 < r →
+        ∀ (Z : Domain n → Gradient n q),
+          (∀ i,MemLp (fun x => Z x i) 2 (volume.restrict (Metric.ball a (2*r)))) →
+          HolderToCK.WeakPoissonOn (ballDomain a (2*r)) Z (fun _ => (0 : Ambient q)) →
+          ∀ (w : Domain n → Ambient q) (Dw : Domain n → Gradient n q),
+            MemW12 (ballDomain a (2*r)) w Dw →
+            ∀ (κ : Domain n → ℝ), ContDiff ℝ ∞ κ → HasCompactSupport κ →
+            tsupport κ ⊆ Metric.ball a r → ∀ B : ℝ, 0 ≤ B →
+            (∀ x ∈ Metric.ball a r,∀ i : Fin n,
+              |fderiv ℝ κ x (EuclideanSpace.single i 1)| ≤ B*r^(-(n : ℝ)-1)) →
+            IntegrableOn (fun x => κ x*∑ i : Fin n,inner ℝ (Z x i) (Dw x i))
+              (Metric.ball a r) volume ∧
+            |∫ x in Metric.ball a r,κ x*∑ i : Fin n,inner ℝ (Z x i) (Dw x i)| ≤
+              C*B*(⨍ x in Metric.ball a r,(Real.sqrt (hsNormSq (Z x)))^(p : ℝ))^(1/(p : ℝ))*
+                (⨍ x in Metric.ball a (2*r),(Real.sqrt (hsNormSq (Dw x)))^(p : ℝ))^(1/(p : ℝ)) := by
+  obtain ⟨p,hpF,hp1,hp2,C,_hEq,hC,H⟩ := exists_divcurl_scaled_average_kernel_bound_explicit n hn
+  exact ⟨p,hpF,hp1,hp2,C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

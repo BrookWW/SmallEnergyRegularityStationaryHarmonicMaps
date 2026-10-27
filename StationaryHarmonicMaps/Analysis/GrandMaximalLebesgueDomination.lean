@@ -19,8 +19,8 @@ open scoped ContDiff Topology ENNReal
 namespace StationaryHarmonicMaps.Analysis
 
 /-- Original integrable scalar fields have their actual values bounded almost everywhere by the same literal smooth grand maximal field. -/
-theorem exists_ae_value_le_smooth_grand_kernel (n : ℕ) :
-    ∃ C : ℝ, 0<C ∧ ∀ (f : Domain n → ℝ), Integrable f volume →
+theorem exists_ae_value_le_smooth_grand_kernel_explicit (n : ℕ) :
+    ∃ C : ℝ, 0<C ∧ C = grandGoodPointCutoffMajorant n ∧ ∀ (f : Domain n → ℝ), Integrable f volume →
       let J := fun a => ⨆ r : PositiveRadius, ⨆ κ : Domain n → ℝ,
         ⨆ (_ : ContDiff ℝ ∞ κ), ⨆ (_ : HasCompactSupport κ),
         ⨆ (_ : tsupport κ⊆Metric.ball a r.val),
@@ -28,8 +28,8 @@ theorem exists_ae_value_le_smooth_grand_kernel (n : ℕ) :
           |fderiv ℝ κ x (EuclideanSpace.single i 1)|≤r.val^(-(n : ℝ)-1)),
           ENNReal.ofReal |∫ x,κ x*f x|
       ∀ᵐ a ∂volume, ENNReal.ofReal |f a|≤ENNReal.ofReal C*J a := by
-  obtain ⟨C,hC,Hcut⟩ := exists_grand_good_point_cutoff_piece n
-  refine ⟨C,hC,?_⟩
+  obtain ⟨C,hC,hFormula,Hcut⟩ := exists_grand_good_point_cutoff_piece_majorant n
+  refine ⟨C,hC,hFormula,?_⟩
   intro f hf J
   have hLeb := IsUnifLocDoublingMeasure.ae_tendsto_average_norm_sub volume hf.locallyIntegrable 1
   filter_upwards [hLeb] with a ha
@@ -75,6 +75,18 @@ theorem exists_ae_value_le_smooth_grand_kernel (n : ℕ) :
     calc
       _ ≤ ENNReal.ofReal (C*L) := ENNReal.ofReal_le_ofReal hValue
       _ = _ := by rw [ENNReal.ofReal_mul hC.le,ENNReal.ofReal_toReal hTop]
+
+theorem exists_ae_value_le_smooth_grand_kernel (n : ℕ) :
+    ∃ C : ℝ, 0<C ∧ ∀ (f : Domain n → ℝ), Integrable f volume →
+      let J := fun a => ⨆ r : PositiveRadius, ⨆ κ : Domain n → ℝ,
+        ⨆ (_ : ContDiff ℝ ∞ κ), ⨆ (_ : HasCompactSupport κ),
+        ⨆ (_ : tsupport κ⊆Metric.ball a r.val),
+        ⨆ (_ : ∀ x∈Metric.ball a r.val,∀ i : Fin n,
+          |fderiv ℝ κ x (EuclideanSpace.single i 1)|≤r.val^(-(n : ℝ)-1)),
+          ENNReal.ofReal |∫ x,κ x*f x|
+      ∀ᵐ a ∂volume, ENNReal.ofReal |f a|≤ENNReal.ofReal C*J a := by
+  obtain ⟨C, hC, _hFormula, H⟩ := exists_ae_value_le_smooth_grand_kernel_explicit n
+  exact ⟨C, hC, H⟩
 
 end StationaryHarmonicMaps.Analysis
 

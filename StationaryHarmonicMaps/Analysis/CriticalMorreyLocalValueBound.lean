@@ -2,6 +2,8 @@ module
 
 public import StationaryHarmonicMaps.Analysis.CriticalMorreyIntegerMoments
 public import StationaryHarmonicMaps.Analysis.LpPowerComparison
+public import StationaryHarmonicMaps.Analysis.EffectiveElementaryPowers
+public import StationaryHarmonicMaps.Analysis.EffectiveEuclideanVolume
 import HolderToCK.Foundation.BallVolume
 
 /-!
@@ -12,7 +14,7 @@ Forward Hölder comparison and the actual local ball volume give the value
 growth with an arbitrary prescribed positive loss in the radius exponent.
 -/
 
-public section
+@[expose] public section
 
 open HarmonicMaps MeasureTheory Set
 open scoped ENNReal
@@ -123,6 +125,96 @@ theorem exists_local_value_L2_bound_of_criticalMorrey (n : ℕ) (hn : 2 ≤ n)
         (Real.rpow_nonneg (by positivity) _)
     _ ≤ C * η ^ 2 * t ^ ((n : ℝ) - 2 * δ) :=
       local_value_moment_volume_scale hkpos hfrac.le hD.le hV.le hη ht htOne
+
+def effectiveHalfLocalValueConstant (n : ℕ) : ℕ :=
+  (1+2^n)*(1+effectiveIntegerMomentConstant n (2*n+3))
+
+theorem exists_local_value_L2_bound_of_criticalMorrey_half_effective (n : ℕ) (hn : 2 ≤ n)
+    :
+    ∃ C : ℝ, 0 < C ∧ C=(effectiveHalfLocalValueConstant n:ℝ) ∧ ∀ (q : ℕ) (u : Domain n → Ambient q)
+      (Du : Domain n → Gradient n q) (η : ℝ),
+      MemW12 (ballDomain (0 : Domain n) 1) u Du → 0 ≤ η →
+      criticalGradientMorreySquare Du (Metric.ball (0 : Domain n) 1) ≤ ENNReal.ofReal (η ^ 2) →
+      ∀ (x : Domain n) (t : ℝ), 0 < t → t ≤ 1 →
+      MemLp (fun y => u y - (⨍ z in Metric.ball (0 : Domain n) 1, u z)) 2
+        (volume.restrict (Metric.ball x t ∩ Metric.ball (0 : Domain n) (7 / 8 : ℝ))) ∧
+      IntegrableOn (fun y => ‖u y - (⨍ z in Metric.ball (0 : Domain n) 1, u z)‖ ^ 2)
+        (Metric.ball x t ∩ Metric.ball (0 : Domain n) (7 / 8 : ℝ)) volume ∧
+      (∫ y in Metric.ball x t ∩ Metric.ball (0 : Domain n) (7 / 8 : ℝ),
+        ‖u y - (⨍ z in Metric.ball (0 : Domain n) 1, u z)‖ ^ 2) ≤
+        C * η ^ 2 * t ^ ((n : ℝ) - 2 * (1/2:ℝ)) := by
+  let k : ℕ := 2*n+3
+  have hkTwo : (2:ℝ)<k := by dsimp only [k];push_cast;have H:=Nat.cast_nonneg (α:=ℝ) n;linarith only [H]
+  have hfrac : (n:ℝ)/(k:ℝ)<(1/2:ℝ) := by
+    apply (div_lt_iff₀ (by exact_mod_cast (show 0<k by dsimp only [k];omega) : 0<(k:ℝ))).mpr
+    dsimp only [k]
+    push_cast
+    linarith
+  have hkpos : 0 < (k : ℝ) := lt_trans (by norm_num) hkTwo
+  have hkNatTwo : 2 ≤ k := by exact_mod_cast hkTwo.le
+  let D : ℝ := (effectiveIntegerMomentConstant n k:ℝ)
+  have hD : 0<D := effectiveIntegerMomentConstant_pos n k
+  have hmoment := effective_integer_moment_bound_of_criticalMorrey n hn k (by dsimp only [k];omega)
+  let V : ℝ := volume.real (Metric.ball (0 : Domain n) 1)
+  have hV : 0 < V := HolderToCK.ball_volume_real_pos (0 : Domain n) (by norm_num)
+  have hβ : 0 < 1 - 2 / (k : ℝ) := sub_pos.mpr
+    ((div_lt_iff₀ hkpos).2 (by simpa only [one_mul] using hkTwo))
+  have hγ : 0 < 2 / (k : ℝ) := div_pos (by norm_num) hkpos
+  let C : ℝ := (effectiveHalfLocalValueConstant n:ℝ)
+  have hMajorant : V^(1-2/(k:ℝ))*D^(2/(k:ℝ))≤C := by
+    have hTwoK : 2/(k:ℝ)≤1 := (div_le_one hkpos).mpr hkTwo.le
+    have hVPow := rpow_le_one_add_self_of_unit_exponent V (1-2/(k:ℝ)) hV.le (by linarith only [hTwoK]) (by linarith only [hγ])
+    have hDPow := rpow_le_one_add_self_of_unit_exponent D (2/(k:ℝ)) hD.le hγ.le hTwoK
+    calc
+      _≤(1+V)*(1+D) := mul_le_mul hVPow hDPow (Real.rpow_nonneg hD.le _) (by positivity)
+      _≤(1+(2:ℝ)^n)*(1+D) := by gcongr;exact euclidean_unit_ball_volume_upper_bound n
+      _=C := by dsimp only [C,D,k,effectiveHalfLocalValueConstant];push_cast;rfl
+  have hC : 0<C := (mul_pos (Real.rpow_pos_of_pos hV _) (Real.rpow_pos_of_pos hD _)).trans_le hMajorant
+  refine ⟨C,hC,rfl,?_⟩
+  intro q u Du η hu hη hcritical x t ht htOne
+  let f (y : Domain n) := u y - (⨍ z in Metric.ball (0 : Domain n) 1, u z)
+  let S : Set (Domain n) := Metric.ball x t ∩ Metric.ball (0 : Domain n) (7 / 8 : ℝ)
+  let μ : Measure (Domain n) := volume.restrict S
+  have hSinner : S ⊆ Metric.ball (0 : Domain n) (7 / 8 : ℝ) := inter_subset_right
+  have hSball : S ⊆ Metric.ball x t := inter_subset_left
+  have hSfinite : volume S ≠ ⊤ :=
+    (lt_of_le_of_lt (measure_mono hSball) measure_ball_lt_top).ne
+  letI : IsFiniteMeasure μ := isFiniteMeasure_restrict.mpr hSfinite
+  obtain ⟨hm, hi, hb⟩ := hmoment q u Du η hu hη hcritical
+  have hmS : MemLp f (k : ℝ≥0∞) μ :=
+    hm.mono_measure (Measure.restrict_mono_set volume hSinner)
+  have htwo : MemLp f 2 μ := hmS.mono_exponent (by exact_mod_cast hkNatTwo)
+  have hI : (∫ y, ‖f y‖ ^ k ∂μ) ≤ D * η ^ k := by
+    exact (setIntegral_mono_set hi
+      (Filter.Eventually.of_forall fun y => pow_nonneg (norm_nonneg _) k)
+      (Filter.Eventually.of_forall fun y hy => hSinner hy)).trans hb
+  have hmass : μ.real univ ≤ V * t ^ n := by
+    change (volume.restrict S).real univ ≤ _
+    rw [measureReal_restrict_apply_univ]
+    calc
+      _ ≤ volume.real (Metric.ball x t) := ENNReal.toReal_mono measure_ball_ne_top
+        (measure_mono hSball)
+      _ = _ := by rw [HolderToCK.ball_volume_real x ht]; ring
+  have hmReal : MemLp f (ENNReal.ofReal (k : ℝ)) μ := by
+    simpa only [ENNReal.ofReal_natCast] using hmS
+  have hforward := integral_norm_rpow_le_of_exponent_le (μ := μ) f
+    (by norm_num : (0 : ℝ) < 2) hkTwo.le hmReal
+  have hforwardNat : (∫ y, ‖f y‖ ^ 2 ∂μ) ≤
+      (μ.real univ) ^ (1 - 2 / (k : ℝ)) * (∫ y, ‖f y‖ ^ k ∂μ) ^ (2 / (k : ℝ)) := by
+    simpa only [Real.rpow_two, Real.rpow_natCast] using hforward
+  have hIpos : 0 ≤ ∫ y, ‖f y‖ ^ k ∂μ := integral_nonneg fun y => pow_nonneg (norm_nonneg _) k
+  have hmasspow := Real.rpow_le_rpow ENNReal.toReal_nonneg hmass hβ.le
+  have hIpow := Real.rpow_le_rpow hIpos hI hγ.le
+  refine ⟨htwo, htwo.integrable_norm_pow (by decide : (2 : ℕ) ≠ 0), ?_⟩
+  calc
+    _ ≤ (μ.real univ) ^ (1 - 2 / (k : ℝ)) * (∫ y, ‖f y‖ ^ k ∂μ) ^ (2 / (k : ℝ)) :=
+      hforwardNat
+    _ ≤ (V * t ^ n) ^ (1 - 2 / (k : ℝ)) * (D * η ^ k) ^ (2 / (k : ℝ)) :=
+      mul_le_mul hmasspow hIpow (Real.rpow_nonneg hIpos _)
+        (Real.rpow_nonneg (by positivity) _)
+    _≤(V^(1-2/(k:ℝ))*D^(2/(k:ℝ)))*η^2*t^((n:ℝ)-2*(1/2:ℝ)) :=
+      local_value_moment_volume_scale hkpos hfrac.le hD.le hV.le hη ht htOne
+    _≤_ := by gcongr
 
 end StationaryHarmonicMaps.Analysis
 

@@ -42,8 +42,8 @@ private theorem decoded_zeroExtension_moment {n q : ℕ}
   rw [hPoint,lintegral_indicator measurableSet_ball]
 
 /-- One actual Dirichlet projection on L2 classes has all higher real norm-moment bounds and actual higher Lr membership for the same original input and output classes. -/
-theorem exists_dirichlet_class_all_high_moments_unitBall (n : ℕ) (hn : 2≤n) :
-    ∃ C : {r : ℝ //2<r} → ℝ,(∀r,0<C r) ∧ ∀q : ℕ,
+theorem exists_dirichlet_class_all_high_moments_unitBall_explicit (n : ℕ) (hn : 2≤n) :
+    ∃ C : {r : ℝ //2<r} → ℝ,(∀r,0<C r) ∧ C = (fun r => dirichletDensityMomentConstant n (r.val/2)) ∧ ∀q : ℕ,
       let μ := volume.restrict (ball (0:Domain n) 1)
       let D := fun (P : Domain n → Ambient (n*q)) x i=>WithLp.toLp 2
         (fun j : Fin q=>P x (finProdFinEquiv (i,j)))
@@ -57,9 +57,10 @@ theorem exists_dirichlet_class_all_high_moments_unitBall (n : ℕ) (hn : 2≤n) 
             MemLp (fun x=>(T W) x) (ENNReal.ofReal r.val) μ ∧
             (∫x,‖(T W) x‖^r.val ∂μ)≤C r*(∫x,‖W x‖^r.val ∂μ) := by
   classical
-  obtain ⟨C₀,hC₀,HT⟩ := exists_dirichlet_operator_all_high_moments_unitBall n hn
+  obtain ⟨C₀,hC₀,hC₀Formula,HT⟩ := exists_dirichlet_operator_all_high_moments_unitBall_explicit n hn
   let s := fun r : {r : ℝ //2<r}=>(⟨r.val/2,by linarith [r.property]⟩ : {s : ℝ //1<s})
-  refine ⟨(fun r=>C₀ (s r)),(fun r=>hC₀ (s r)),?_⟩
+  refine ⟨(fun r=>C₀ (s r)),(fun r=>hC₀ (s r)),?_,?_⟩
+  · rw [hC₀Formula]
   intro q μ D
   obtain ⟨T,hT,hSelf,hIdem,Hresponse⟩ := HT q
   refine ⟨T,hT,hSelf,hIdem,?_⟩
@@ -111,6 +112,23 @@ theorem exists_dirichlet_class_all_high_moments_unitBall (n : ℕ) (hn : 2≤n) 
     ← ENNReal.ofReal_mul (hC₀ (s r)).le] at hBound
   exact (ENNReal.ofReal_le_ofReal_iff (mul_nonneg (hC₀ (s r)).le
     (integral_nonneg fun x=>Real.rpow_nonneg (norm_nonneg (W x)) _))).mp hBound
+
+theorem exists_dirichlet_class_all_high_moments_unitBall (n : ℕ) (hn : 2≤n) :
+    ∃ C : {r : ℝ //2<r} → ℝ,(∀r,0<C r) ∧ ∀q : ℕ,
+      let μ := volume.restrict (ball (0:Domain n) 1)
+      let D := fun (P : Domain n → Ambient (n*q)) x i=>WithLp.toLp 2
+        (fun j : Fin q=>P x (finProdFinEquiv (i,j)))
+      ∃T : Lp (Ambient (n*q)) 2 μ →L[ℝ] Lp (Ambient (n*q)) 2 μ,
+        ‖T‖≤1 ∧ IsSelfAdjoint T ∧ (∀V,T (T V)=T V) ∧
+        ∀W : Lp (Ambient (n*q)) 2 μ,∃u : Domain n → Ambient q,
+          HasZeroBoundaryValues (ballDomain (0:Domain n) 1) u (D (T W)) ∧
+          HolderToCK.WeakPoissonOn (ballDomain (0:Domain n) 1)
+            (fun x i=>D (T W) x i-D W x i) (fun _=>0) ∧
+          ∀r : {r : ℝ //2<r},MemLp (fun x=>W x) (ENNReal.ofReal r.val) μ →
+            MemLp (fun x=>(T W) x) (ENNReal.ofReal r.val) μ ∧
+            (∫x,‖(T W) x‖^r.val ∂μ)≤C r*(∫x,‖W x‖^r.val ∂μ) := by
+  obtain ⟨C,hC,_hFormula,H⟩ := exists_dirichlet_class_all_high_moments_unitBall_explicit n hn
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

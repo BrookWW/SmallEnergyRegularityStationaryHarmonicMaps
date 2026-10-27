@@ -81,6 +81,31 @@
       "module": "StationaryHarmonicMaps.Frozen.SmallEnergySmoothRegularity",
       "theorem": "StationaryHarmonicMaps.stationary_small_energy_smooth_regularity",
       "type_sha256": "3f1df7a89e8cdc5b7a8747ef9ec6438b9fa86a2da48ae3f651843a43b29cd22f"
+    },
+    {
+      "module": "StationaryHarmonicMaps.Frozen.EffectiveSmallEnergyRegularity",
+      "theorem": "StationaryHarmonicMaps.stationary_small_energy_regularity_effective",
+      "type_sha256": "a677c04fddc209ff2e04957a908bc24ed413ad27dfe009c361df650627c62407"
+    },
+    {
+      "module": "StationaryHarmonicMaps.Frozen.EffectiveSmallEnergySmoothRegularity",
+      "theorem": "StationaryHarmonicMaps.stationary_small_energy_smooth_regularity_effective",
+      "type_sha256": "fc4d673ce153af6f09f3b75fae2ec9c2b273a59f4cdfa89b6d551cd089049536"
+    },
+    {
+      "module": "StationaryHarmonicMaps.Geometry.EffectiveNormalProjectionData",
+      "theorem": "StationaryHarmonicMaps.CompactC2EmbeddedTarget.exists_rational_normal_projection_derivative_bound",
+      "type_sha256": "7902df2de623c271cc6cf2a48c0f14866d55522e3c2bcb7e0355c1bd2a614e06"
+    },
+    {
+      "module": "StationaryHarmonicMaps.Analysis.EffectiveStationaryConstants",
+      "theorem": "StationaryHarmonicMaps.Analysis.effectiveStationaryEnergyThreshold_pos",
+      "type_sha256": "59bb5a9b8ab25a069a80e2e9ea5ec3ec2e3752ee3dbad3f0451a67d40ddb6631"
+    },
+    {
+      "module": "StationaryHarmonicMaps.Analysis.EffectiveStationaryConstants",
+      "theorem": "StationaryHarmonicMaps.Analysis.effectiveStationaryHolderConstant_pos",
+      "type_sha256": "0ed271aae104bfe08a278d7b6bc9d28bde4933f30462c069aa991e406c7d8d34"
     }
   ]
 }

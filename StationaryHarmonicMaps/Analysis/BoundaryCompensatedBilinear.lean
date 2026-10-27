@@ -35,11 +35,39 @@ theorem natural_solenoidal_comp_clm_unitBall {n k q : ℕ}
       fun i=>L.adjoint.lipschitz.comp_memLp (map_zero L.adjoint) (hw.2.2 i)⟩
   simpa only [ContinuousLinearMap.adjoint_inner_right] using hNatural _ _ hAdj
 
+@[expose] noncomputable def boundaryBilinearCoordinateFactor (m k q : ℕ)
+    (B : Ambient m →L[ℝ] Ambient k →L[ℝ] Ambient q) : ℝ :=
+  ∑ j : Fin m, ‖innerSL ℝ ((EuclideanSpace.basisFun (Fin m) ℝ) j)‖ *
+    ‖B ((EuclideanSpace.basisFun (Fin m) ℝ) j)‖
+
+@[expose] def effectiveBoundaryBilinearConstant (n m : ℕ) (b : ℚ) : ℚ :=
+  effectiveBoundaryScalarConstant n * (1+(m : ℚ)*b)
+
+theorem effectiveBoundaryBilinearConstant_pos (n : ℕ) (hn : 2≤n) (m : ℕ)
+    (b : ℚ) (hb : 0≤b) : 0<effectiveBoundaryBilinearConstant n m b := by
+  have H := effectiveBoundaryScalarConstant_pos n hn
+  unfold effectiveBoundaryBilinearConstant
+  positivity
+
+theorem boundaryBilinearCoordinateFactor_le (m k q : ℕ) (b : ℚ)
+    (B : Ambient m →L[ℝ] Ambient k →L[ℝ] Ambient q) (hB : ‖B‖≤(b : ℝ)) :
+    boundaryBilinearCoordinateFactor m k q B ≤ (m : ℝ)*(b : ℝ) := by
+  unfold boundaryBilinearCoordinateFactor
+  calc
+    _≤∑ _j : Fin m,(b : ℝ) := by
+      apply Finset.sum_le_sum
+      intro j _
+      rw [innerSL_apply_norm,(EuclideanSpace.basisFun (Fin m) ℝ).norm_eq_one,one_mul]
+      simpa only [(EuclideanSpace.basisFun (Fin m) ℝ).norm_eq_one,mul_one] using
+        B.le_of_opNorm_le hB ((EuclideanSpace.basisFun (Fin m) ℝ) j)
+    _=(m : ℝ)*(b : ℝ) := by simp only [Finset.sum_const,Finset.card_univ,Fintype.card_fin,nsmul_eq_mul]
+
 /-- Actual bilinear products satisfy the homogeneous compensated estimate
 for arbitrary native tests on the entire ball, including the boundary. -/
-theorem exists_boundary_bilinear_critical_native_divcurl_bound (n : ℕ) (hn : 2≤n)
+theorem exists_boundary_bilinear_critical_native_divcurl_bound_explicit (n : ℕ) (hn : 2≤n)
     (m k q : ℕ) (B : Ambient m →L[ℝ] Ambient k →L[ℝ] Ambient q) :
-    ∃ C : ℝ,0<C ∧ ∀ (u : Domain n → Ambient m) (Du : Domain n → Gradient n m)
+    ∃ C : ℝ,0<C ∧ C=(effectiveBoundaryScalarConstant n : ℝ)*
+      (1+boundaryBilinearCoordinateFactor m k q B) ∧ ∀ (u : Domain n → Ambient m) (Du : Domain n → Gradient n m)
       (η M : ℝ),MemW12 (ballDomain (0 : Domain n) 1) u Du → 0≤η →
       (∀ᵐx∂volume.restrict (ball (0 : Domain n) 1),‖u x‖≤M) →
       criticalGradientMorreySquare Du (ball (0 : Domain n) 1)≤ENNReal.ofReal (η^2) →
@@ -55,13 +83,15 @@ theorem exists_boundary_bilinear_critical_native_divcurl_bound (n : ℕ) (hn : 2
           |∫x in ball (0 : Domain n) 1,∑i : Fin n,inner ℝ (B (u x) (Z x i)) (Dw x i)|≤
             C*η*Real.sqrt (∫x in ball (0 : Domain n) 1,hsNormSq (Z x))*
               Real.sqrt (∫x in ball (0 : Domain n) 1,hsNormSq (Dw x)) := by
-  obtain ⟨D,hD,Hpair⟩ := exists_boundary_critical_native_divcurl_bound n hn
+  obtain ⟨D,hD,hDEq,Hpair⟩ := exists_boundary_critical_native_divcurl_bound_explicit n hn
   let e := EuclideanSpace.basisFun (Fin m) ℝ
   let L : Fin m → Ambient m →L[ℝ] ℝ := fun j=>innerSL ℝ (e j)
   let T : Fin m → Ambient k →L[ℝ] Ambient q := fun j=>B (e j)
   let S : ℝ := ∑j : Fin m,‖L j‖*‖T j‖
   have hS : 0≤S := Finset.sum_nonneg fun _ _=>mul_nonneg (norm_nonneg _) (norm_nonneg _)
-  refine ⟨D*(1+S),mul_pos hD (by linarith),?_⟩
+  refine ⟨D*(1+S),mul_pos hD (by linarith),?_,?_⟩
+  · rw [hDEq]
+    rfl
   intro u Du η M hu hη hBound hCritical Z hZ hNatural w Dw hw
   let μ := volume.restrict (ball (0 : Domain n) 1)
   let EZ := Real.sqrt (∫x,hsNormSq (Z x) ∂μ)
@@ -105,6 +135,64 @@ theorem exists_boundary_bilinear_critical_native_divcurl_bound (n : ℕ) (hn : 2
       intros
       ring
     _≤D*(1+S)*η*EZ*EW := by gcongr;linarith
+
+theorem exists_boundary_bilinear_critical_native_divcurl_bound (n : ℕ) (hn : 2≤n)
+    (m k q : ℕ) (B : Ambient m →L[ℝ] Ambient k →L[ℝ] Ambient q) :
+    ∃ C : ℝ,0<C ∧ ∀ (u : Domain n → Ambient m) (Du : Domain n → Gradient n m)
+      (η M : ℝ),MemW12 (ballDomain (0 : Domain n) 1) u Du → 0≤η →
+      (∀ᵐx∂volume.restrict (ball (0 : Domain n) 1),‖u x‖≤M) →
+      criticalGradientMorreySquare Du (ball (0 : Domain n) 1)≤ENNReal.ofReal (η^2) →
+      ∀ (Z : Domain n → Gradient n k),
+        (∀i,MemLp (fun x=>Z x i) 2 (volume.restrict (ball (0 : Domain n) 1))) →
+        (∀ (f : Domain n → Ambient k) (Df : Domain n → Gradient n k),
+          MemW12 (ballDomain (0 : Domain n) 1) f Df →
+          (∫x in ball (0 : Domain n) 1,∑i : Fin n,inner ℝ (Z x i) (Df x i))=0) →
+        ∀ (w : Domain n → Ambient q) (Dw : Domain n → Gradient n q),
+          MemW12 (ballDomain (0 : Domain n) 1) w Dw →
+          IntegrableOn (fun x=>∑i : Fin n,inner ℝ (B (u x) (Z x i)) (Dw x i))
+            (ball (0 : Domain n) 1) volume ∧
+          |∫x in ball (0 : Domain n) 1,∑i : Fin n,inner ℝ (B (u x) (Z x i)) (Dw x i)|≤
+            C*η*Real.sqrt (∫x in ball (0 : Domain n) 1,hsNormSq (Z x))*
+              Real.sqrt (∫x in ball (0 : Domain n) 1,hsNormSq (Dw x)) := by
+  obtain ⟨C,hC,_hCEq,H⟩ := exists_boundary_bilinear_critical_native_divcurl_bound_explicit n hn m k q B
+  exact ⟨C,hC,H⟩
+
+theorem effective_boundary_bilinear_critical_native_divcurl_bound (n : ℕ) (hn : 2≤n)
+    (m k q : ℕ) (b : ℚ) (_hb : 0≤b)
+    (B : Ambient m →L[ℝ] Ambient k →L[ℝ] Ambient q) (hB : ‖B‖≤(b : ℝ)) :
+    ∀ (u : Domain n → Ambient m) (Du : Domain n → Gradient n m)
+      (η M : ℝ),MemW12 (ballDomain (0 : Domain n) 1) u Du → 0≤η →
+      (∀ᵐx∂volume.restrict (ball (0 : Domain n) 1),‖u x‖≤M) →
+      criticalGradientMorreySquare Du (ball (0 : Domain n) 1)≤ENNReal.ofReal (η^2) →
+      ∀ (Z : Domain n → Gradient n k),
+        (∀i,MemLp (fun x=>Z x i) 2 (volume.restrict (ball (0 : Domain n) 1))) →
+        (∀ (f : Domain n → Ambient k) (Df : Domain n → Gradient n k),
+          MemW12 (ballDomain (0 : Domain n) 1) f Df →
+          (∫x in ball (0 : Domain n) 1,∑i : Fin n,inner ℝ (Z x i) (Df x i))=0) →
+        ∀ (w : Domain n → Ambient q) (Dw : Domain n → Gradient n q),
+          MemW12 (ballDomain (0 : Domain n) 1) w Dw →
+          IntegrableOn (fun x=>∑i : Fin n,inner ℝ (B (u x) (Z x i)) (Dw x i))
+            (ball (0 : Domain n) 1) volume ∧
+          |∫x in ball (0 : Domain n) 1,∑i : Fin n,inner ℝ (B (u x) (Z x i)) (Dw x i)|≤
+            (effectiveBoundaryBilinearConstant n m b : ℝ)*η*Real.sqrt (∫x in ball (0 : Domain n) 1,hsNormSq (Z x))*
+              Real.sqrt (∫x in ball (0 : Domain n) 1,hsNormSq (Dw x)) := by
+  obtain ⟨C,_hC,hCEq,H⟩ := exists_boundary_bilinear_critical_native_divcurl_bound_explicit n hn m k q B
+  have hScalar : 0≤(effectiveBoundaryScalarConstant n : ℝ) := by
+    exact_mod_cast (effectiveBoundaryScalarConstant_pos n hn).le
+  have hC : C≤(effectiveBoundaryBilinearConstant n m b : ℝ) := by
+    rw [hCEq]
+    have hFactor := boundaryBilinearCoordinateFactor_le m k q b B hB
+    have H := mul_le_mul_of_nonneg_left
+      (show 1+boundaryBilinearCoordinateFactor m k q B≤1+(m : ℝ)*(b : ℝ) by
+        linarith only [hFactor]) hScalar
+    refine H.trans_eq ?_
+    simp only [effectiveBoundaryBilinearConstant,Rat.cast_mul,Rat.cast_add,Rat.cast_one,Rat.cast_natCast]
+  intro u Du η M hu hη hBound hCritical Z hZ hNatural w Dw hw
+  obtain ⟨hI,hEstimate⟩ := H u Du η M hu hη hBound hCritical Z hZ hNatural w Dw hw
+  refine ⟨hI,hEstimate.trans ?_⟩
+  exact mul_le_mul_of_nonneg_right
+    (mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right hC hη) (Real.sqrt_nonneg _))
+    (Real.sqrt_nonneg _)
 
 end StationaryHarmonicMaps.Analysis
 

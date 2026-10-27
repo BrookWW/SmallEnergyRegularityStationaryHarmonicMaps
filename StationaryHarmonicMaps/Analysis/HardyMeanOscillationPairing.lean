@@ -2,6 +2,7 @@ module
 
 public import StationaryHarmonicMaps.Analysis.NormalizedGrandAtoms
 public import StationaryHarmonicMaps.Analysis.AtomicMeanOscillationLimit
+public import Mathlib.Data.Rat.Cast.Order
 
 /-!
 # Actual continuous Hardy pairing from the original grand integral
@@ -21,8 +22,33 @@ open scoped ContDiff Topology ENNReal
 namespace StationaryHarmonicMaps.Analysis
 
 /-- Original finite smooth grand data and original all-ball mean oscillation produce the unique actual continuous pairing, with no atomic-decomposition or duality premise. -/
-theorem existsUnique_continuous_pairing_of_finite_smooth_grand_kernel (n : ℕ) (hn : 0<n) :
-    ∃ C : ℝ,0<C ∧ ∀ (f : Domain n → ℝ),Integrable f volume →
+
+@[expose] noncomputable def hardyMeanOscillationPairingConstant (n : ℕ) : ℝ :=
+  2 * normalizedGrandAtomConstant n
+
+@[expose] def rationalHardyPairingConstant (n : ℕ) : ℚ :=
+  let B : ℚ := ((1 + 3 * (60 : ℚ)^n) * (2 : ℚ)^22) / 5
+  let mass : ℚ → ℚ := fun b => 2*b*(40 : ℚ)^(n+1)*(60 : ℚ)^n*((n : ℚ)+1)^n
+  let D := mass B
+  let A := max ((2 : ℚ)^22*(10 : ℚ)^(n+1)*((n : ℚ)+1)^n) D
+  2 * ((4*D + 2*mass (4*B) + 2*A) * (2*(70 : ℚ)^n))
+
+theorem rationalHardyPairingConstant_pos (n : ℕ) : 0 < rationalHardyPairingConstant n := by
+  dsimp only [rationalHardyPairingConstant]
+  positivity
+
+theorem rationalHardyPairingConstant_cast (n : ℕ) :
+    (rationalHardyPairingConstant n : ℝ) = hardyMeanOscillationPairingConstant n := by
+  simp only [rationalHardyPairingConstant, hardyMeanOscillationPairingConstant,
+    normalizedGrandAtomConstant, correctedGrandPieceConstant, grandDyadicCapConstant,
+    grandGoodPointCutoffMajorant, strongGrandPartitionKernelMajorant,
+    whitneyCompensationConstant, whitneyMassNormalizedKernelMajorant,
+    whitneyPartitionDerivativeConstant,
+    Rat.cast_mul, Rat.cast_add, Rat.cast_div, Rat.cast_pow, Rat.cast_max,
+    Rat.cast_ofNat, Rat.cast_natCast, Rat.cast_one]
+
+theorem existsUnique_continuous_pairing_of_finite_smooth_grand_kernel_explicit (n : ℕ) (hn : 0<n) :
+    ∃ C : ℝ,0<C ∧ C = hardyMeanOscillationPairingConstant n ∧ ∀ (f : Domain n → ℝ),Integrable f volume →
       let J := fun a => ⨆ s : PositiveRadius, ⨆ κ : Domain n → ℝ,
         ⨆ (_ : ContDiff ℝ ∞ κ), ⨆ (_ : HasCompactSupport κ),
         ⨆ (_ : tsupport κ⊆Metric.ball a s.val),
@@ -39,10 +65,12 @@ theorem existsUnique_continuous_pairing_of_finite_smooth_grand_kernel (n : ℕ) 
             |s|≤C*B*(∫⁻ x,J x).toReal ∧
             (Integrable (fun x=>f x*b x) volume → s=(∫ x,f x*b x)) := by
   classical
-  obtain ⟨D,hD,Hatom⟩ := exists_normalized_atoms_of_finite_grand_kernel n hn
+  obtain ⟨D,hD,hDFormula,Hatom⟩ := exists_normalized_atoms_of_finite_grand_kernel_explicit n hn
   let C := 2*D
   have hC : 0<C := mul_pos (by norm_num) hD
-  refine ⟨C,hC,?_⟩
+  refine ⟨C,hC,?_,?_⟩
+  · dsimp only [C, hardyMeanOscillationPairingConstant]
+    rw [hDFormula]
   intro f hf J hJ b B hb hB hBMO
   obtain ⟨U,hU,w,a,hAtoms,hw,hCost,_hAbs,hRecon⟩ := Hatom f hf hJ
   letI (j : ℤ) : Countable (U j) := (hU j).1.to_subtype
@@ -71,6 +99,26 @@ theorem existsUnique_continuous_pairing_of_finite_smooth_grand_kernel (n : ℕ) 
   refine ⟨s,⟨hAllI,hLimit,hBound,hAgree⟩,?_⟩
   intro t ht
   exact tendsto_nhds_unique ht.2.1 hLimit
+
+theorem existsUnique_continuous_pairing_of_finite_smooth_grand_kernel (n : ℕ) (hn : 0<n) :
+    ∃ C : ℝ,0<C ∧ ∀ (f : Domain n → ℝ),Integrable f volume →
+      let J := fun a => ⨆ s : PositiveRadius, ⨆ κ : Domain n → ℝ,
+        ⨆ (_ : ContDiff ℝ ∞ κ), ⨆ (_ : HasCompactSupport κ),
+        ⨆ (_ : tsupport κ⊆Metric.ball a s.val),
+        ⨆ (_ : ∀ x∈Metric.ball a s.val,∀ i : Fin n,
+          |fderiv ℝ κ x (EuclideanSpace.single i 1)|≤s.val^(-(n : ℝ)-1)),
+          ENNReal.ofReal |∫ x,κ x*f x|
+      (∫⁻ x,J x)<(∞ : ℝ≥0∞) →
+        ∀ (b : Domain n → ℝ) (B : ℝ),AEStronglyMeasurable b volume → 0≤B →
+          (∀ (x : Domain n) (r : ℝ),0<r → IntegrableOn b (Metric.ball x r) volume ∧
+            (⨍ y in Metric.ball x r,|b y-(⨍ z in Metric.ball x r,b z)|)≤B) →
+          ∃! s : ℝ,
+            (∀ k : ℕ,Integrable (fun x=>f x*min (k : ℝ) (max (-(k : ℝ)) (b x))) volume) ∧
+            Tendsto (fun k : ℕ=>∫ x,f x*min (k : ℝ) (max (-(k : ℝ)) (b x))) atTop (𝓝 s) ∧
+            |s|≤C*B*(∫⁻ x,J x).toReal ∧
+            (Integrable (fun x=>f x*b x) volume → s=(∫ x,f x*b x)) := by
+  obtain ⟨C,hC,_hFormula,H⟩ := existsUnique_continuous_pairing_of_finite_smooth_grand_kernel_explicit n hn
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

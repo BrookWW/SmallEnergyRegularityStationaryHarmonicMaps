@@ -30,8 +30,14 @@ open scoped ContDiff Topology ENNReal
 namespace StationaryHarmonicMaps.Analysis
 
 /-- Original finite grand data produce actual corrected bounded zero-mean pieces, their same-family strong L1 window reconstruction and true summable support-ball costs. -/
-theorem exists_corrected_grand_dyadic_pieces (n : ℕ) (hn : 0<n) :
-    ∃ K : ℝ,0<K ∧ ∀ (f : Domain n → ℝ),Integrable f volume →
+
+@[expose] noncomputable def correctedGrandPieceConstant (n : ℕ) : ℝ :=
+  4 * strongGrandPartitionKernelMajorant n +
+    whitneyCompensationConstant n (whitneyPartitionDerivativeConstant n) +
+    2 * grandDyadicCapConstant n
+
+theorem exists_corrected_grand_dyadic_pieces_explicit (n : ℕ) (hn : 0<n) :
+    ∃ K : ℝ,0<K ∧ K = correctedGrandPieceConstant n ∧ ∀ (f : Domain n → ℝ),Integrable f volume →
       let J := fun a => ⨆ s : PositiveRadius, ⨆ κ : Domain n → ℝ,
         ⨆ (_ : ContDiff ℝ ∞ κ), ⨆ (_ : HasCompactSupport κ),
         ⨆ (_ : tsupport κ⊆Metric.ball a s.val),
@@ -58,11 +64,13 @@ theorem exists_corrected_grand_dyadic_pieces (n : ℕ) (hn : 0<n) :
           (∑' j : ℤ,ENNReal.ofReal ((2 : ℝ)^j)*(∑' i : U j,volume (Metric.ball i.val (70*r j i.val))))≤
             ENNReal.ofReal (2*(70 : ℝ)^n)*(∫⁻ x,J x) := by
   classical
-  obtain ⟨B,D,A,hB,hD,hA,Hfamily⟩ := exists_strong_grand_dyadic_family n hn
-  obtain ⟨C,hC,Hcoefficient⟩ := exists_whitney_compensation_coefficient_bound n B hB
+  obtain ⟨B,D,A,hB,hD,hA,hBFormula,hDFormula,hAFormula,Hfamily⟩ := exists_strong_grand_dyadic_family_explicit n hn
+  obtain ⟨C,hC,hCFormula,Hcoefficient⟩ := exists_whitney_compensation_coefficient_bound_explicit n B hB
   let K := 4*D+C+2*A
   have hK : 0<K := by dsimp only [K];positivity
-  refine ⟨K,hK,?_⟩
+  refine ⟨K,hK,?_,?_⟩
+  · dsimp only [K, correctedGrandPieceConstant]
+    rw [hDFormula, hCFormula, hBFormula, hAFormula]
   intro f hf J hJ S r
   obtain ⟨U,θ,hProps,hStats,hLow,hHigh⟩ := Hfamily f hf hJ
   have hCount (j : ℤ) : (U j).Countable := (hProps j).2.2.2.1
@@ -200,6 +208,36 @@ theorem exists_corrected_grand_dyadic_pieces (n : ℕ) (hn : 0<n) :
   · change Tendsto (fun N : ℕ=>∫ x,|f x-∑ j∈Finset.Icc (-(N : ℤ)) (N : ℤ),∑' i,P j i x|) atTop (𝓝 (0 : ℝ))
     have hSumEq (j : ℤ) (x : Domain n) : (∑' i,P j i x)=g (j+1) x-g j x := (hReconstruct j).2 x
     simpa only [hSumEq] using hLimit
+
+theorem exists_corrected_grand_dyadic_pieces (n : ℕ) (hn : 0<n) :
+    ∃ K : ℝ,0<K ∧ ∀ (f : Domain n → ℝ),Integrable f volume →
+      let J := fun a => ⨆ s : PositiveRadius, ⨆ κ : Domain n → ℝ,
+        ⨆ (_ : ContDiff ℝ ∞ κ), ⨆ (_ : HasCompactSupport κ),
+        ⨆ (_ : tsupport κ⊆Metric.ball a s.val),
+        ⨆ (_ : ∀ x∈Metric.ball a s.val,∀ i : Fin n,
+          |fderiv ℝ κ x (EuclideanSpace.single i 1)|≤s.val^(-(n : ℝ)-1)),
+          ENNReal.ofReal |∫ x,κ x*f x|
+      (∫⁻ x,J x)<(∞ : ℝ≥0∞) →
+        let S := fun j : ℤ=>{x | ENNReal.ofReal ((2 : ℝ)^j)<J x}
+        let r := fun j a=>Metric.infDist a (S j)ᶜ/20
+        ∃ U : ℤ → Set (Domain n),(∀ j,(U j).Countable ∧ ∀ a : U j,0<r j a.val) ∧
+          ∃ θ : (j : ℤ) → U j → Domain n → ℝ,
+          let c := fun j (a : U j)=>(∫ x,θ j a x*f x)/(∫ x,θ j a x)
+          let b := fun j a x=>θ j a x*(f x-c j a)
+          let e := fun j (i : U j) (a : U (j+1))=>(∫ x,θ j i x*b (j+1) a x)/(∫ x,θ (j+1) a x)
+          let P := fun j i x=>b j i x-(∑' a,θ j i x*b (j+1) a x)+(∑' a,e j i a*θ (j+1) a x)
+          (∀ j (i : U j),Integrable (P j i) volume ∧ (∫ x,P j i x)=0 ∧
+            Function.support (P j i)⊆Metric.ball i.val (70*r j i.val) ∧
+            (∀ᵐ x ∂volume,|P j i x|≤K*(2 : ℝ)^j)) ∧
+          (∀ j x,Function.HasFiniteSupport (fun i=>P j i x)) ∧
+          (∀ N : ℕ,Integrable (fun x=>∑ j∈Finset.Icc (-(N : ℤ)) (N : ℤ),∑' i,P j i x) volume ∧
+            (∫ x,(∑ j∈Finset.Icc (-(N : ℤ)) (N : ℤ),∑' i,P j i x))=0) ∧
+          Tendsto (fun N : ℕ=>∫ x,|f x-∑ j∈Finset.Icc (-(N : ℤ)) (N : ℤ),∑' i,P j i x|)
+            atTop (𝓝 (0 : ℝ)) ∧
+          (∑' j : ℤ,ENNReal.ofReal ((2 : ℝ)^j)*(∑' i : U j,volume (Metric.ball i.val (70*r j i.val))))≤
+            ENNReal.ofReal (2*(70 : ℝ)^n)*(∫⁻ x,J x) := by
+  obtain ⟨K,hK,_hFormula,H⟩ := exists_corrected_grand_dyadic_pieces_explicit n hn
+  exact ⟨K,hK,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

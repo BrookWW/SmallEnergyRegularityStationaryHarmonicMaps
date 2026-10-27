@@ -81,7 +81,7 @@ private theorem actual_critical_approximant_data {n q : ℕ} (hn : 2≤n)
     refine ⟨hKData.choose,hKData.choose_spec.1,?_⟩
     exact fun a _ha r hr=>hKData.choose_spec.2 a r hr
 
-private theorem critical_native_coulomb_passage_of_stronger
+private theorem critical_native_coulomb_passage_of_stronger_explicit
     (n : ℕ) (hn : 2≤n) (q : ℕ)
     (E : (Ambient q→L[ℝ]Ambient q)→L[ℝ]Ambient (q*q))
     (R : Ambient (q*q)→L[ℝ](Ambient q→L[ℝ]Ambient q))
@@ -111,6 +111,7 @@ private theorem critical_native_coulomb_passage_of_stronger
           IntegrableOn (fun x=>∑i : Fin n,inner ℝ (Z x i) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
           (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (Z x i) (Dψ x i))=0)) :
     ∃κ₀ C₀ : ℝ,0<κ₀ ∧ 0<C₀ ∧
+      κ₀ = κ / Real.sqrt ((2 : ℝ) ^ (n - 2)) ∧ C₀ = 2 * C * (2 : ℝ) ^ (n - 2) ∧
       ∀(A : Domain n→Fin n→(Ambient q→L[ℝ]Ambient q)) (η : ℝ),
         (∀i,MemLp (fun x=>A x i) 2 (volume.restrict (ball (0:Domain n) 1))) →
         (∀i,∀ᵐx∂volume.restrict (ball (0:Domain n) 1),star (A x i)= -(A x i)) →
@@ -136,7 +137,7 @@ private theorem critical_native_coulomb_passage_of_stronger
   have hD : 0<(2:ℝ)^(n-2) := pow_pos (by norm_num) _
   have hκ₀ : 0<κ₀ := (mollifier_amplitude_threshold n κ hκ).1
   have hC₀ : 0<C₀ := mul_pos (mul_pos (by norm_num) hC) hD
-  refine ⟨κ₀,C₀,hκ₀,hC₀,?_⟩
+  refine ⟨κ₀,C₀,hκ₀,hC₀,rfl,rfl,?_⟩
   intro A η hA hSkew hη hηle hCritical
   let ξ := ρ*η
   have hξData := (mollifier_amplitude_threshold n κ hκ).2 η hη hηle
@@ -209,6 +210,59 @@ private theorem critical_native_coulomb_passage_of_stronger
   exact ⟨p,Dp,hL.2.1,hL.2.2.1,hL.2.2.2.1,hRaw.1,hZSkew,hSumFinal,hRaw.2.2⟩
 
 
+private theorem critical_native_coulomb_passage_of_stronger
+    (n : ℕ) (hn : 2≤n) (q : ℕ)
+    (E : (Ambient q→L[ℝ]Ambient q)→L[ℝ]Ambient (q*q))
+    (R : Ambient (q*q)→L[ℝ](Ambient q→L[ℝ]Ambient q))
+    (hRE : ∀T,R (E T)=T) (hER : ∀z,E (R z)=z)
+    (hE : ∀T : Ambient q→L[ℝ]Ambient q,‖E T‖^2=∑j : Fin q,‖T (EuclideanSpace.single j 1)‖^2)
+    (κ C : ℝ) (hκ : 0<κ) (hC : 0<C)
+    (hHigher : ∀(B : Domain n→Fin n→(Ambient q→L[ℝ]Ambient q)) (η KB : ℝ),
+      (∀i,MemLp (fun x=>B x i) 2 (volume.restrict (ball (0:Domain n) 1))) →
+      (∀i,∀ᵐx∂volume.restrict (ball (0:Domain n) 1),star (B x i)= -(B x i)) →
+      0≤η → η≤κ →
+      criticalGradientMorreySquare (fun x i=>E (B x i)) (ball (0:Domain n) 1)≤ENNReal.ofReal (η^2) →
+      (∀a∈ball (0:Domain n) 1,∀r : ℝ,0<r →
+        (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (fun i=>E (B x i)))≤KB*r^((n:ℝ)-1)) →
+      ∃(p : Domain n→Ambient (q*q)) (Dp : Domain n→Gradient n (q*q)),
+        MemW12 (ballDomain (0:Domain n) 1) p Dp ∧
+        (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),star (R (p x))*R (p x)=1) ∧
+        (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),(R (p x)).det=1) ∧
+        let Z := fun x i=>E (star (R (p x))*R (Dp x i)+star (R (p x))*B x i*R (p x))
+        (∀i,MemLp (fun x=>Z x i) 2 (volume.restrict (ball (0:Domain n) 1))) ∧
+        (criticalGradientMorreySquare Dp (ball (0:Domain n) 1)+
+          criticalGradientMorreySquare Z (ball (0:Domain n) 1)≤ENNReal.ofReal (C*η^2)) ∧
+        (∀a∈ball (0:Domain n) 1,∀r : ℝ,0<r →
+          (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (Dp x))≤C*KB*r^((n:ℝ)-1) ∧
+          (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (Z x))≤C*KB*r^((n:ℝ)-1)) ∧
+        (∀(ψ : Domain n→Ambient (q*q)) (Dψ : Domain n→Gradient n (q*q)),
+          MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+          IntegrableOn (fun x=>∑i : Fin n,inner ℝ (Z x i) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+          (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (Z x i) (Dψ x i))=0)) :
+    ∃κ₀ C₀ : ℝ,0<κ₀ ∧ 0<C₀ ∧
+      ∀(A : Domain n→Fin n→(Ambient q→L[ℝ]Ambient q)) (η : ℝ),
+        (∀i,MemLp (fun x=>A x i) 2 (volume.restrict (ball (0:Domain n) 1))) →
+        (∀i,∀ᵐx∂volume.restrict (ball (0:Domain n) 1),star (A x i)= -(A x i)) →
+        0≤η → η≤κ₀ →
+        criticalGradientMorreySquare (fun x i=>E (A x i)) (ball (0:Domain n) 1)≤ENNReal.ofReal (η^2) →
+        ∃(p : Domain n→Ambient (q*q)) (Dp : Domain n→Gradient n (q*q)),
+          MemW12 (ballDomain (0:Domain n) 1) p Dp ∧
+          (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),star (R (p x))*R (p x)=1) ∧
+          (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),(R (p x)).det=1) ∧
+          let Zop := fun x i=>star (R (p x))*R (Dp x i)+star (R (p x))*A x i*R (p x)
+          let Z := fun x i=>E (Zop x i)
+          (∀i,MemLp (fun x=>Z x i) 2 (volume.restrict (ball (0:Domain n) 1))) ∧
+          (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),∀i,star (Zop x i)= -(Zop x i)) ∧
+          (criticalGradientMorreySquare Dp (ball (0:Domain n) 1)+
+            criticalGradientMorreySquare Z (ball (0:Domain n) 1)≤ENNReal.ofReal (C₀*η^2)) ∧
+          (∀(ψ : Domain n→Ambient (q*q)) (Dψ : Domain n→Gradient n (q*q)),
+            MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+            IntegrableOn (fun x=>∑i : Fin n,inner ℝ (Z x i) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+            (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (Z x i) (Dψ x i))=0) := by
+  obtain ⟨κ₀,C₀,hκ₀,hC₀,_hκEq,_hCEq,H⟩ :=
+    critical_native_coulomb_passage_of_stronger_explicit n hn q E R hRE hER hE κ C hκ hC hHigher
+  exact ⟨κ₀,C₀,hκ₀,hC₀,H⟩
+
 /-- Every original sufficiently small critical skew connection has a native
 special orthogonal natural Coulomb frame with a uniform critical bound. -/
 theorem exists_small_critical_native_coulomb_frame
@@ -254,6 +308,73 @@ theorem exists_small_critical_native_coulomb_frame
   intro a ha r hr
   rw [←hν]
   exact hGrow a ha r hr
+
+/-- Every original sufficiently small critical skew connection has a native
+special orthogonal natural Coulomb frame with a uniform critical bound. -/
+theorem effective_small_critical_native_coulomb_frame
+    (n : ℕ) (hn : 2≤n) (q : ℕ)
+    (e : Ambient (q*q)≃L[ℝ](Ambient q→L[ℝ]Ambient q))
+    (hE : ∀T : Ambient q→L[ℝ]Ambient q,
+      ‖e.symm T‖^2=∑j : Fin q,‖T (EuclideanSpace.single j 1)‖^2) :
+    ∀(A : Domain n→Fin n→(Ambient q→L[ℝ]Ambient q)) (η : ℝ),
+        (∀i,MemLp (fun x=>A x i) 2 (volume.restrict (ball (0:Domain n) 1))) →
+        (∀i,∀ᵐx∂volume.restrict (ball (0:Domain n) 1),star (A x i)= -(A x i)) →
+        0≤η → η≤(effectiveCoulombFrameSmallness n q : ℝ) →
+        criticalGradientMorreySquare (fun x i=>e.symm (A x i)) (ball (0:Domain n) 1)≤ENNReal.ofReal (η^2) →
+        ∃(p : Domain n→Ambient (q*q)) (Dp : Domain n→Gradient n (q*q)),
+          MemW12 (ballDomain (0:Domain n) 1) p Dp ∧
+          (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),star (e (p x))*e (p x)=1) ∧
+          (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),(e (p x)).det=1) ∧
+          let Zop := fun x i=>star (e (p x))*e (Dp x i)+star (e (p x))*A x i*e (p x)
+          let Z := fun x i=>e.symm (Zop x i)
+          (∀i,MemLp (fun x=>Z x i) 2 (volume.restrict (ball (0:Domain n) 1))) ∧
+          (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),∀i,star (Zop x i)= -(Zop x i)) ∧
+          (criticalGradientMorreySquare Dp (ball (0:Domain n) 1)+
+            criticalGradientMorreySquare Z (ball (0:Domain n) 1)≤ENNReal.ofReal ((effectiveCoulombFrameGradientConstant n q : ℝ)*η^2)) ∧
+          (∀(ψ : Domain n→Ambient (q*q)) (Dψ : Domain n→Gradient n (q*q)),
+            MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+            IntegrableOn (fun x=>∑i : Fin n,inner ℝ (Z x i) (Dψ x i)) (ball (0:Domain n) 1) volume ∧
+            (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (Z x i) (Dψ x i))=0) := by
+  let κ : ℝ := effectiveScalarCoulombSmallness n q
+  let C : ℝ := effectiveStrongerCoulombGradientConstant n
+  have hκ : 0 < κ := by
+    change 0 < (effectiveScalarCoulombSmallness n q : ℝ)
+    exact_mod_cast effectiveScalarCoulombSmallness_pos n hn q
+  have hC : 0 < C := by
+    change 0 < (effectiveStrongerCoulombGradientConstant n : ℝ)
+    exact_mod_cast effectiveStrongerCoulombGradientConstant_pos n hn
+  have hData := critical_native_coulomb_passage_of_stronger_explicit n hn q
+    e.symm.toContinuousLinearMap e.toContinuousLinearMap
+    e.apply_symm_apply e.symm_apply_apply hE κ C hκ hC (by
+    intro B η KB hB hSkew hη hSmall hCritical hGrowth
+    have hν : (n:ℝ)-2+(1:ℝ)=(n:ℝ)-1 := by ring
+    have hGrowth' : ∀a∈ball (0:Domain n) 1,∀r : ℝ,0<r →
+        (∫x in ball a r∩ball (0:Domain n) 1,hsNormSq (fun i=>e.symm (B x i)))≤KB*r^((n:ℝ)-2+(1:ℝ)) := by
+      intro a ha r hr
+      rw [hν]
+      exact hGrowth a ha r hr
+    obtain ⟨p,Dp,hp,hOrth,hDet,hZLp,_hZSkew,hSum,hGrow,hNatural⟩ :=
+      effective_small_stronger_native_coulomb_frame n hn q e hE B η KB hB hSkew hη hSmall hCritical hGrowth'
+    refine ⟨p,Dp,hp,hOrth,hDet,hZLp,hSum,?_,hNatural⟩
+    intro a ha r hr
+    rw [←hν]
+    exact hGrow a ha r hr
+)
+  obtain ⟨κ₀,C₀,_hκ₀,_hC₀,hκEq,hCEq,H⟩ := hData
+  have hCFinal : C₀ = (effectiveCoulombFrameGradientConstant n q : ℝ) := by
+    rw [hCEq]
+    simp only [effectiveCoulombFrameGradientConstant, EffectiveCoulomb.criticalBound,
+      Rat.cast_mul, Rat.cast_pow, Rat.cast_ofNat, C]
+  intro A η hA hSkew hη hSmall hCritical
+  have hScaled : Real.sqrt ((2 : ℝ) ^ (n - 2)) * η ≤ κ :=
+    EffectiveCoulomb.criticalAmplitude_controls_mollifier n (effectiveScalarCoulombSmallness n q) hη hSmall
+  have hSmall₀ : η ≤ κ₀ := by
+    rw [hκEq]
+    exact (le_div_iff₀ (Real.sqrt_pos.mpr (by positivity : (0 : ℝ) < 2 ^ (n - 2)))).mpr
+      (by simpa only [mul_comm] using hScaled)
+  have hFrame := H A η hA hSkew hη hSmall₀ hCritical
+  rw [hCFinal] at hFrame
+  exact hFrame
 
 end StationaryHarmonicMaps.Analysis
 end

@@ -2,6 +2,7 @@ module
 
 public import StationaryHarmonicMaps.Frozen.SmallEnergyRegularity
 public import StationaryHarmonicMaps.Frozen.SmallEnergySmoothRegularity
+public import StationaryHarmonicMaps.EffectiveRegularity
 
 /-! # Small-energy regularity for stationary harmonic maps
 

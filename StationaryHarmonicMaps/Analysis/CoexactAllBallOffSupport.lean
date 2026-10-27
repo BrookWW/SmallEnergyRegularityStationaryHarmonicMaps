@@ -21,8 +21,8 @@ namespace StationaryHarmonicMaps.Analysis
 
 /-- Every actual natural relative response has the same all-ball essential
 bound off the original forcing, including boundary and exterior queries. -/
-theorem exists_native_coexact_all_ball_offSupport_bounds (n : ℕ) (hn : 2≤n) :
-    ∃C : ℝ,0<C ∧ ∀ (q : ℕ) (F Q : Domain n → Gradient n q)
+theorem effective_native_coexact_all_ball_offSupport_bounds (n : ℕ) (hn : 2≤n) :
+    ∀ (q : ℕ) (F Q : Domain n → Gradient n q)
       (v : Domain n → Ambient q),
       (∀i,MemLp (fun x=>F x i) 2 (volume.restrict (ball (0 : Domain n) 1))) →
       (∀i,MemLp (fun x=>Q x i) 2 (volume.restrict (ball (0 : Domain n) 1))) →
@@ -34,9 +34,9 @@ theorem exists_native_coexact_all_ball_offSupport_bounds (n : ℕ) (hn : 2≤n) 
         F=ᵐ[volume.restrict (ball (0 : Domain n) 1∩ball a (256*r))] (fun _=>0) →
         let Q₀ := (ball (0 : Domain n) 1).indicator Q
         ∀ᵐx∂volume.restrict (ball a r),hsNormSq (Q₀ x)≤
-          C*(volume.real (ball a (256*r)))⁻¹*(∫y in ball a (256*r),hsNormSq (Q₀ y)) := by
-  obtain ⟨C,hC,HC⟩ := exists_same_neumann_operator_all_ball_offSupport_bounds n hn
-  refine ⟨C,hC,?_⟩
+          (effectiveNeumannOffSupportConstant n : ℝ)*(volume.real (ball a (256*r)))⁻¹*(∫y in ball a (256*r),hsNormSq (Q₀ y)) := by
+  let C : ℝ := effectiveNeumannOffSupportConstant n
+  have HC := effective_same_neumann_operator_all_ball_offSupport_bounds n hn
   intro q F Q v hF hQ hv hNatural a r hr hZero Q₀
   let μ := volume.restrict (ball (0 : Domain n) 1)
   obtain ⟨T,_hNorm,_hSelf,_hIdem,Hresponse⟩ := HC q
@@ -90,6 +90,25 @@ theorem exists_native_coexact_all_ball_offSupport_bounds (n : ℕ) (hn : 2≤n) 
   have H := Hbound a r hr hZero
   rw [←integral_congr_ae hHS] at H
   exact hSmall.le.trans H
+
+/-- Every actual natural relative response has the same all-ball essential
+bound off the original forcing, including boundary and exterior queries. -/
+theorem exists_native_coexact_all_ball_offSupport_bounds (n : ℕ) (hn : 2≤n) :
+    ∃C : ℝ,0<C ∧ ∀ (q : ℕ) (F Q : Domain n → Gradient n q)
+      (v : Domain n → Ambient q),
+      (∀i,MemLp (fun x=>F x i) 2 (volume.restrict (ball (0 : Domain n) 1))) →
+      (∀i,MemLp (fun x=>Q x i) 2 (volume.restrict (ball (0 : Domain n) 1))) →
+      MemW12 (ballDomain (0 : Domain n) 1) v (fun x i=>F x i-Q x i) →
+      (∀ (ψ : Domain n → Ambient q) (Dψ : Domain n → Gradient n q),
+        MemW12 (ballDomain (0 : Domain n) 1) ψ Dψ →
+        (∫x in ball (0 : Domain n) 1,∑i : Fin n,inner ℝ (Q x i) (Dψ x i))=0) →
+      ∀ (a : Domain n) (r : ℝ),0<r →
+        F=ᵐ[volume.restrict (ball (0 : Domain n) 1∩ball a (256*r))] (fun _=>0) →
+        let Q₀ := (ball (0 : Domain n) 1).indicator Q
+        ∀ᵐx∂volume.restrict (ball a r),hsNormSq (Q₀ x)≤
+          C*(volume.real (ball a (256*r)))⁻¹*(∫y in ball a (256*r),hsNormSq (Q₀ y)) := by
+  exact ⟨(effectiveNeumannOffSupportConstant n : ℝ), effectiveNeumannOffSupportConstant_pos n,
+    effective_native_coexact_all_ball_offSupport_bounds n hn⟩
 
 end StationaryHarmonicMaps.Analysis
 

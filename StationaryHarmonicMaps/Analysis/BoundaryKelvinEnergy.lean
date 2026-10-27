@@ -78,8 +78,29 @@ private theorem odd_kelvin_gradient_hs_bound {n q : ℕ} (hn : 2≤n)
     _ ≤ _ := add_le_add (mul_le_mul_of_nonneg_left hC (by norm_num : (0:ℝ)≤2)) le_rfl
 
 /-- Actual native W0 unit-ball data give a uniform local gradient-energy bound for their literal odd Kelvin reflection on every sphere-centered query ball of radius at most one. -/
-theorem exists_odd_kelvin_boundary_gradient_energy_bound (n : ℕ) (hn : 2≤n) :
-    ∃ K : ℝ,0<K ∧ ∀ (q : ℕ) (u : Domain n → Ambient q) (Du : Domain n → Gradient n q),
+
+@[expose] noncomputable def oddKelvinBoundaryEnergyConstant (n : ℕ) : ℝ :=
+  1 + (2 : ℝ)^(2*n) * (2 + (8*(n : ℝ)*|2-(n : ℝ)|^2) *
+    ((1+(4 : ℝ)^n)*(2 : ℝ)^(n+1)))
+
+@[expose] def oddKelvinBoundaryEnergyMajorant (n : ℕ) : ℕ :=
+  1 + 2^(2*n) * (2 + (8*n*(n+2)^2) * ((1+4^n)*2^(n+1)))
+
+theorem oddKelvinBoundaryEnergyConstant_le (n : ℕ) :
+    oddKelvinBoundaryEnergyConstant n ≤ (oddKelvinBoundaryEnergyMajorant n : ℝ) := by
+  have hn : 0 ≤ (n : ℝ) := Nat.cast_nonneg n
+  have ha : |2-(n : ℝ)| ≤ (n : ℝ)+2 :=
+    abs_le.mpr ⟨by linarith only [hn], by linarith only [hn]⟩
+  have hp := pow_le_pow_left₀ (abs_nonneg (2-(n : ℝ))) ha 2
+  have H := mul_le_mul_of_nonneg_left hp (show 0 ≤ 8*(n : ℝ) by positivity)
+  have HP := mul_le_mul_of_nonneg_right H (show 0 ≤ (1+(4 : ℝ)^n)*(2 : ℝ)^(n+1) by positivity)
+  have HB := mul_le_mul_of_nonneg_left (add_le_add_right HP 2) (show 0 ≤ (2 : ℝ)^(2*n) by positivity)
+  have HF := add_le_add_right HB 1
+  simpa only [oddKelvinBoundaryEnergyConstant, oddKelvinBoundaryEnergyMajorant,
+    Nat.cast_add, Nat.cast_mul, Nat.cast_pow, Nat.cast_ofNat, Nat.cast_one] using HF
+
+theorem exists_odd_kelvin_boundary_gradient_energy_bound_explicit (n : ℕ) (hn : 2≤n) :
+    ∃ K : ℝ,0<K ∧ K = oddKelvinBoundaryEnergyConstant n ∧ ∀ (q : ℕ) (u : Domain n → Ambient q) (Du : Domain n → Gradient n q),
       HasZeroBoundaryValues (ballDomain (0 : Domain n) 1) u Du →
       ∀ (a : Domain n),‖a‖=1 → ∀ (r : ℝ),0<r → r≤1 →
         let I := inversion (0 : Domain n) 1
@@ -97,7 +118,7 @@ theorem exists_odd_kelvin_boundary_gradient_energy_bound (n : ℕ) (hn : 2≤n) 
   have hB : 0<B := by dsimp only [B];positivity
   have hP : 0≤P := by dsimp only [P];positivity
   have hL : 0≤L := by dsimp only [L];positivity
-  refine ⟨K,by dsimp only [K];positivity,?_⟩
+  refine ⟨K,by dsimp only [K];positivity,rfl,?_⟩
   intro q u Du hu a ha r hr hr1 I w C DU D₀
   let Q := Metric.ball a r
   let S := Q∩{x : Domain n | 1<‖x‖}
@@ -212,6 +233,45 @@ theorem exists_odd_kelvin_boundary_gradient_energy_bound (n : ℕ) (hn : 2≤n) 
       add_le_add le_rfl (add_le_add (mul_le_mul_of_nonneg_left hPullGrad (by norm_num))
         (mul_le_mul_of_nonneg_left hPullMap hL))
     _ = _ := by dsimp only [K];ring
+
+theorem exists_odd_kelvin_boundary_gradient_energy_bound_majorant (n : ℕ) (hn : 2≤n) :
+    ∃ K : ℝ,0<K ∧ K = (oddKelvinBoundaryEnergyMajorant n : ℝ) ∧ ∀ (q : ℕ) (u : Domain n → Ambient q) (Du : Domain n → Gradient n q),
+      HasZeroBoundaryValues (ballDomain (0 : Domain n) 1) u Du →
+      ∀ (a : Domain n),‖a‖=1 → ∀ (r : ℝ),0<r → r≤1 →
+        let I := inversion (0 : Domain n) 1
+        let w := fun x : Domain n=>‖x‖^(2-(n:ℝ))
+        let C := fun x i=>∑j : Fin n,(fderiv ℝ I x (EuclideanSpace.single i 1)) j • Du (I x) j
+        let DU := fun (x : Domain n) (i : Fin n)=>if ‖x‖≤1 then Du x i else
+          -w x • C x i-((2-(n:ℝ))*‖x‖^(-(n:ℝ))*inner ℝ x (EuclideanSpace.single i 1)) • u (I x)
+        let D₀ := fun x i=>(Metric.ball (0 : Domain n) 1).indicator (fun y=>Du y i) x
+        IntegrableOn (fun x=>hsNormSq (DU x)) (Metric.ball a r) volume ∧
+          (∫ x in Metric.ball a r,hsNormSq (DU x))≤K*(∫ x in Metric.ball a r,hsNormSq (D₀ x)) := by
+  obtain ⟨K,hK,hFormula,H⟩ := exists_odd_kelvin_boundary_gradient_energy_bound_explicit n hn
+  refine ⟨(oddKelvinBoundaryEnergyMajorant n : ℝ), ?_, rfl, ?_⟩
+  · dsimp only [oddKelvinBoundaryEnergyMajorant]
+    positivity
+  intro q u Du hu a ha r hr hrOne I w C DU D₀
+  obtain ⟨hI,hBound⟩ := H q u Du hu a ha r hr hrOne
+  have hKBound : K ≤ (oddKelvinBoundaryEnergyMajorant n : ℝ) := by
+    rw [hFormula]
+    exact oddKelvinBoundaryEnergyConstant_le n
+  refine ⟨hI,hBound.trans ?_⟩
+  exact mul_le_mul_of_nonneg_right hKBound (integral_nonneg fun _ => hsNormSq_nonneg _)
+
+theorem exists_odd_kelvin_boundary_gradient_energy_bound (n : ℕ) (hn : 2≤n) :
+    ∃ K : ℝ,0<K ∧ ∀ (q : ℕ) (u : Domain n → Ambient q) (Du : Domain n → Gradient n q),
+      HasZeroBoundaryValues (ballDomain (0 : Domain n) 1) u Du →
+      ∀ (a : Domain n),‖a‖=1 → ∀ (r : ℝ),0<r → r≤1 →
+        let I := inversion (0 : Domain n) 1
+        let w := fun x : Domain n=>‖x‖^(2-(n:ℝ))
+        let C := fun x i=>∑j : Fin n,(fderiv ℝ I x (EuclideanSpace.single i 1)) j • Du (I x) j
+        let DU := fun (x : Domain n) (i : Fin n)=>if ‖x‖≤1 then Du x i else
+          -w x • C x i-((2-(n:ℝ))*‖x‖^(-(n:ℝ))*inner ℝ x (EuclideanSpace.single i 1)) • u (I x)
+        let D₀ := fun x i=>(Metric.ball (0 : Domain n) 1).indicator (fun y=>Du y i) x
+        IntegrableOn (fun x=>hsNormSq (DU x)) (Metric.ball a r) volume ∧
+          (∫ x in Metric.ball a r,hsNormSq (DU x))≤K*(∫ x in Metric.ball a r,hsNormSq (D₀ x)) := by
+  obtain ⟨K,hK,_hFormula,H⟩ := exists_odd_kelvin_boundary_gradient_energy_bound_explicit n hn
+  exact ⟨K,hK,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

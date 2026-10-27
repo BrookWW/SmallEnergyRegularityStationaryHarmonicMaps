@@ -23,12 +23,16 @@ open scoped ContDiff Topology ENNReal NNReal
 
 namespace StationaryHarmonicMaps.Analysis
 
+/-- The coordinate lower-exponent kernel coefficient. -/
+@[expose] noncomputable def divcurlLowerExponentConstant (n : ℕ) (p : ℝ≥0) : ℝ :=
+  1+localSobolevPoincareConstant n p*Real.sqrt (n:ℝ)
+
 /-- Numeric Sobolev and Holder exponents yield an actual lower-exponent bound for every rough kernel pairing. -/
-theorem exists_divcurl_lower_exponent_kernel_bound (n : ℕ) (hn : 0 < n)
+theorem exists_divcurl_lower_exponent_kernel_bound_explicit (n : ℕ) (hn : 0 < n)
     (p s : ℝ≥0) (hp : 1 ≤ p) (hp₂ : p ≤ 2) (hs : 0 < s)
     (hsp : (s : ℝ)⁻¹=(p : ℝ)⁻¹-(n : ℝ)⁻¹)
     (hpq : Real.HolderConjugate (p : ℝ) (s : ℝ)) :
-    ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (a : Domain n) (r : ℝ), 0 < r →
+    ∃ C : ℝ, C=divcurlLowerExponentConstant n p ∧ 0 < C ∧ ∀ (q : ℕ) (a : Domain n) (r : ℝ), 0 < r →
       ∀ (Z : Domain n → Gradient n q),
         (∀ i, MemLp (fun x => Z x i) 2 (volume.restrict (Metric.ball a (2*r)))) →
         HolderToCK.WeakPoissonOn (ballDomain a (2*r)) Z (fun _ => (0 : Ambient q)) →
@@ -44,10 +48,12 @@ theorem exists_divcurl_lower_exponent_kernel_bound (n : ℕ) (hn : 0 < n)
               (volume.restrict (Metric.ball a r))*
               lpNorm (fun x => Real.sqrt (hsNormSq (Dw x))) (p : ℝ≥0∞)
                 (volume.restrict (Metric.ball a (2*r))) := by
-  obtain ⟨S,hS,Hsp⟩ := exists_local_sobolev_poincare_bound n hn p s hp hp₂ hs hsp
+  obtain ⟨S,hSEq,hS,Hsp⟩ := exists_local_sobolev_poincare_bound_explicit n hn p s hp hp₂ hs hsp
   let C : ℝ := 1+S*Real.sqrt (n : ℝ)
   have hC : 0 < C := by dsimp only [C]; positivity
-  refine ⟨C,hC,?_⟩
+  refine ⟨C,?_,hC,?_⟩
+  · change 1+S*Real.sqrt (n:ℝ)=1+localSobolevPoincareConstant n p*Real.sqrt (n:ℝ)
+    rw [hSEq]
   intro q a r hr Z hZ hdiv w Dw hw κ hκ hcκ hsκ B hB hDκ
   let μ : Measure (Domain n) := volume.restrict (Metric.ball a r)
   letI : IsFiniteMeasure μ := isFiniteMeasure_restrict.mpr measure_ball_ne_top
@@ -120,6 +126,29 @@ theorem exists_divcurl_lower_exponent_kernel_bound (n : ℕ) (hn : 0 < n)
           (volume.restrict (Metric.ball a (2*r))) := lpNorm_nonneg
       have H := mul_le_mul_of_nonneg_right hCoefficient (mul_nonneg (mul_nonneg hB hNZ) hNW)
       simpa only [G,μ,mul_assoc,mul_left_comm,mul_comm] using H
+
+theorem exists_divcurl_lower_exponent_kernel_bound (n : ℕ) (hn : 0 < n)
+    (p s : ℝ≥0) (hp : 1 ≤ p) (hp₂ : p ≤ 2) (hs : 0 < s)
+    (hsp : (s : ℝ)⁻¹=(p : ℝ)⁻¹-(n : ℝ)⁻¹)
+    (hpq : Real.HolderConjugate (p : ℝ) (s : ℝ)) :
+    ∃ C : ℝ, 0 < C ∧ ∀ (q : ℕ) (a : Domain n) (r : ℝ), 0 < r →
+      ∀ (Z : Domain n → Gradient n q),
+        (∀ i, MemLp (fun x => Z x i) 2 (volume.restrict (Metric.ball a (2*r)))) →
+        HolderToCK.WeakPoissonOn (ballDomain a (2*r)) Z (fun _ => (0 : Ambient q)) →
+        ∀ (w : Domain n → Ambient q) (Dw : Domain n → Gradient n q),
+          MemW12 (ballDomain a (2*r)) w Dw →
+          ∀ (κ : Domain n → ℝ), ContDiff ℝ ∞ κ → HasCompactSupport κ →
+          tsupport κ ⊆ Metric.ball a r → ∀ B : ℝ, 0 ≤ B →
+          (∀ x ∈ Metric.ball a r,∀ i : Fin n,|fderiv ℝ κ x (EuclideanSpace.single i 1)| ≤ B) →
+          IntegrableOn (fun x => κ x * ∑ i : Fin n, inner ℝ (Z x i) (Dw x i))
+            (Metric.ball a r) volume ∧
+          |∫ x in Metric.ball a r,κ x * ∑ i : Fin n, inner ℝ (Z x i) (Dw x i)| ≤
+            C*B*lpNorm (fun x => Real.sqrt (hsNormSq (Z x))) (p : ℝ≥0∞)
+              (volume.restrict (Metric.ball a r))*
+              lpNorm (fun x => Real.sqrt (hsNormSq (Dw x))) (p : ℝ≥0∞)
+                (volume.restrict (Metric.ball a (2*r))) := by
+  obtain ⟨C,_hEq,hC,H⟩ := exists_divcurl_lower_exponent_kernel_bound_explicit n hn p s hp hp₂ hs hsp hpq
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

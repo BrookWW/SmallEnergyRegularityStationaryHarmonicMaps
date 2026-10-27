@@ -70,6 +70,59 @@ The advertised results concern interior regularity for stationary harmonic
 maps. Boundary regularity, singular-set estimates and a regularity theorem for
 arbitrary Euclidean-valued antisymmetric systems are separate statements.
 
+## Computable constants from certified geometry
+
+**Given verified embedding data, both $\varepsilon_*$ and $C$ are fully
+computable.** The numerical input is a certified normal-projection extension
+and a rational derivative bound; no extraction algorithm from an arbitrary
+abstract target is asserted.
+
+The numerical interface proves the same conclusion with explicit rational
+functions of $n,q,\ell$. Supply a certified compactly supported C¹ ambient
+extension $G$ of the target's orthogonal normal projection and a rational
+$\ell\ge0$ satisfying $\|DG(y)\|\le\ell$ at every ambient point.
+Here $DG(y)$ has the induced operator norm from Euclidean space to matrices
+with their operator norm; gradient and coefficient energies use the
+Hilbert–Schmidt norm. Set
+
+```math
+M=(1+4q\ell^2)4^{n-2},\qquad K=(1+C_g)(1+M),
+\qquad
+\varepsilon_* = \left(\frac{\min(\kappa,\theta)}K\right)^2,
+\qquad C=2C_rK.
+```
+
+Here $\kappa,C_g$ are the proved critical Coulomb threshold and coefficient;
+$\theta,C_r$ are the proved given-frame smallness and Hölder coefficient.
+Their entire defining arithmetic uses natural numbers and rationals. The
+[paper's constant ledger and self-contained algorithm](paper/main.tex)
+expand every coefficient, including Sobolev, Hardy, projection, boundary,
+moment and iteration constants. The functions are
+[`effectiveStationaryEnergyThreshold`](StationaryHarmonicMaps/Analysis/EffectiveStationaryConstants.lean)
+and `effectiveStationaryHolderConstant`. The fixed theorem interfaces are
+[EffectiveSmallEnergyRegularity](StationaryHarmonicMaps/Frozen/EffectiveSmallEnergyRegularity.lean)
+and [EffectiveSmallEnergySmoothRegularity](StationaryHarmonicMaps/Frozen/EffectiveSmallEnergySmoothRegularity.lean).
+[EffectiveRegularity](StationaryHarmonicMaps/EffectiveRegularity.lean) is their
+import facade; both are also exported by `StationaryHarmonicMaps`.
+
+Every abstract compact embedded C² target admits a suitable $G,\ell$, as
+proved in [EffectiveNormalProjectionData](StationaryHarmonicMaps/Geometry/EffectiveNormalProjectionData.lean).
+Evaluating constants for a specified embedding requires certifying this
+geometric data, including the derivative bound throughout the ambient
+extension region. The existence theorem for an abstract target does not
+provide a numerical algorithm extracting that certificate. The original
+existential regularity theorem obtains it internally and retains its original
+hypotheses. Computing the constants requires no computation of the map or frame.
+
+For the numerical inputs $n=2,q=3,\ell=1$, the actual functions evaluate to
+$\varepsilon_*\approx2.227969608538\times10^{-6428}$ and
+$C\approx2.951399297746\times10^{5772}$.
+These are conservative admissible bounds. This input example does not certify
+$\ell=1$ for a particular target embedding. The exact rational numerators and
+denominators are recorded in
+[verification/effective-constants.json](verification/effective-constants.json)
+and reproduced by `python3 scripts/check_effective_constants.py`.
+
 ## Lean interface
 
 Import both main results with:
@@ -192,6 +245,11 @@ assumption.
 | Complete public entry point | [StationaryHarmonicMaps](StationaryHarmonicMaps.lean) |
 | C²-target small-energy regularity | [stationary_small_energy_regularity](StationaryHarmonicMaps/Frozen/SmallEnergyRegularity.lean) |
 | Smooth-target corollary | [stationary_small_energy_smooth_regularity](StationaryHarmonicMaps/Frozen/SmallEnergySmoothRegularity.lean) |
+| Certified rational C²-target bounds | [stationary_small_energy_regularity_effective](StationaryHarmonicMaps/Frozen/EffectiveSmallEnergyRegularity.lean) |
+| Certified rational smooth-target bounds | [stationary_small_energy_smooth_regularity_effective](StationaryHarmonicMaps/Frozen/EffectiveSmallEnergySmoothRegularity.lean) |
+| Effective import facade | [EffectiveRegularity](StationaryHarmonicMaps/EffectiveRegularity.lean) |
+| Literal rational threshold and Hölder coefficient | [EffectiveStationaryConstants](StationaryHarmonicMaps/Analysis/EffectiveStationaryConstants.lean) |
+| Existence of certified geometric data | [EffectiveNormalProjectionData](StationaryHarmonicMaps/Geometry/EffectiveNormalProjectionData.lean) |
 | Domain-stationary monotonicity | [Monotonicity](StationaryHarmonicMaps/Frozen/Monotonicity.lean) |
 | All-center critical Morrey bound | [StationaryMorreyBound](StationaryHarmonicMaps/Frozen/StationaryMorreyBound.lean) |
 | Actual normal projection and variational PDE equivalence | [NormalProjectionCharacterization](StationaryHarmonicMaps/Frozen/NormalProjectionCharacterization.lean), [VariationalWeakPoissonEquivalence](StationaryHarmonicMaps/Frozen/VariationalWeakPoissonEquivalence.lean) |
@@ -220,15 +278,21 @@ python3 scripts/check_sources.py
 python3 scripts/check_statements.py
 python3 scripts/check_axioms.py
 python3 scripts/check_consumers.py
+python3 scripts/check_effective_constants.py
 ```
 
 The default build covers all three included mathematical libraries. The source
-checker rejects unfinished proofs, project axioms, native trust bypasses and
-undeclared local dependencies. The statement checker compares complete
-elaborated public theorem types with committed baselines. The axiom checker
-audits the advertised theorem closures, allowing only `propext`,
-`Classical.choice` and `Quot.sound`. Public consumer checks use both main
-theorems through the repository entry point.
+checker verifies the source and tooling inventory and hashes, module headers,
+isolated import paths and dependency pins, rejecting unrecorded drift. The
+statement checker compares complete elaborated public theorem types with
+committed baselines. The axiom checker scans for proof gaps, custom axioms,
+resource overrides and native trust bypasses, then audits the advertised theorem
+closures, allowing only `propext`, `Classical.choice` and `Quot.sound`. Public
+consumer checks apply the original and effective regularity theorems.
+The numerical checker recomputes the exact rational example from the public
+constant functions and compares every numerator and denominator with the
+committed data. The statement baselines cover the original interfaces and the
+effective theorem, geometric existence and constant-positivity interfaces.
 
 To replay the compiled project declarations through the pinned Lean kernel:
 
@@ -288,7 +352,10 @@ specifically
 [LICENSES/LeanStationaryHarmonicMaps-MIT.txt](LICENSES/LeanStationaryHarmonicMaps-MIT.txt).
 
 Mathlib provides the underlying formalized analysis, measure theory,
-integration and manifold libraries under Apache 2.0. Third-party material
+integration and manifold libraries under Apache 2.0. The norm-power Sobolev
+argument in [EffectiveEuclideanSobolev](StationaryHarmonicMaps/Analysis/EffectiveEuclideanSobolev.lean)
+is adapted from the pinned Mathlib proof and retains its attribution; the
+license is included in [LICENSES/Mathlib-Apache-2.0.txt](LICENSES/Mathlib-Apache-2.0.txt). Third-party material
 retains its own licensing terms. No repository-wide license is assigned to the
 new project material. Citation metadata is available in
 [CITATION.cff](CITATION.cff).

@@ -4,6 +4,7 @@ public import StationaryHarmonicMaps.Analysis.LocalMeanOscillationCutoff
 public import StationaryHarmonicMaps.Analysis.LpMorreyRepresentative
 public import StationaryHarmonicMaps.Analysis.ScaledBallCutoff
 public import StationaryHarmonicMaps.Analysis.SobolevCutoff
+public import StationaryHarmonicMaps.Analysis.EffectiveEuclideanVolume
 public import Mathlib.MeasureTheory.Integral.Bochner.ContinuousLinearMap
 
 /-!
@@ -15,17 +16,40 @@ profile then supplies the same centered cutoff on the reference ball,
 with global scalar oscillation controlled by the original Lp amplitude.
 -/
 
-public section
+@[expose] public section
 
 open HarmonicMaps MeasureTheory Filter Set Metric
 open scoped ContDiff
 
 namespace StationaryHarmonicMaps.Analysis
 
+def effectiveLocalMeanOscillationCutoffConstant (n : ℕ) : ℕ :=
+  2*(32^n+1+2^23*(2*2^n+2*4^n))
+
+def effectiveLpMeanOscillationConstant (n : ℕ) : ℕ :=
+  2^(n+1)*(n+1)*(1+(n+1)^n)
+
+def effectiveLocalLpCriticalCutoffConstant (n : ℕ) : ℕ :=
+  1+effectiveLocalMeanOscillationCutoffConstant n*effectiveLpMeanOscillationConstant n
+
+theorem lpMeanOscillationFactor_le_effective (n : ℕ) (p : ℝ) (hp : 1≤p) :
+    ((2:ℝ)^(n+1)*Real.sqrt (n:ℝ))*
+      (volume.real (ball (0:Domain n) 1))^(-(1/p))≤
+      (effectiveLpMeanOscillationConstant n:ℝ) := by
+  have hp0 : 0<p := zero_lt_one.trans_le hp
+  have hVolume := euclidean_unit_ball_inverse_rpow_le n (1/p) (by positivity)
+    ((div_le_one hp0).mpr hp)
+  have hRoot : Real.sqrt (n:ℝ)≤(n:ℝ)+1 := by
+    apply (Real.sqrt_le_left (by positivity : 0≤(n:ℝ)+1)).mpr
+    nlinarith only [sq_nonneg (n:ℝ),Nat.cast_nonneg (α:=ℝ) n]
+  calc
+    _≤((2:ℝ)^(n+1)*((n:ℝ)+1))*(1+((n:ℝ)+1)^n) := by gcongr
+    _=(effectiveLpMeanOscillationConstant n:ℝ) := by unfold effectiveLpMeanOscillationConstant;push_cast;rfl
+
 /-- Original all-center critical Lp growth up to the reference scale produces an actual supported smooth cutoff and the same centered observable's all-ball BMO bound. -/
-theorem exists_local_lp_critical_cutoff_scalar_mean_oscillation_bound
+theorem exists_local_lp_critical_cutoff_scalar_mean_oscillation_bound_explicit
     (n : ℕ) (p : ℝ) (hp₁ : 1≤p) (hp₂ : p≤2) :
-    ∃ C : ℝ,0<C ∧ ∀ (q : ℕ) (a : Domain n) (t : ℝ),0<t →
+    ∃ C : ℝ,0<C ∧ C=(effectiveLocalLpCriticalCutoffConstant n:ℝ) ∧ ∀ (q : ℕ) (a : Domain n) (t : ℝ),0<t →
       ∀ (u : Domain n → Ambient q) (Du : Domain n → Gradient n q) (K : ℝ),
         MemW12Loc (⟨univ,isOpen_univ⟩ : OpenDomain n) u Du → 0≤K →
         (∀ (x : Domain n) (r : ℝ),0<r → r≤8*t →
@@ -39,14 +63,25 @@ theorem exists_local_lp_critical_cutoff_scalar_mean_oscillation_bound
             AEStronglyMeasurable b volume ∧
               ∀ (x : Domain n) (r : ℝ),0<r → IntegrableOn b (Metric.ball x r) volume ∧
                 (⨍ y in Metric.ball x r,|b y-(⨍ z in Metric.ball x r,b z)|)≤C*‖L‖*K := by
-  obtain ⟨A,hA,Hcut⟩ := exists_scaled_ball_cutoff n
-  obtain ⟨T,hT,Hosc⟩ := exists_local_mean_oscillation_cutoff_bound n (2*A) (by positivity)
+  obtain ⟨A,hA,hAEq,Hcut⟩ := exists_scaled_ball_cutoff_explicit n
+  obtain ⟨T,hT,hTEq,Hosc⟩ := exists_local_mean_oscillation_cutoff_bound_explicit n (2*A) (by positivity)
   let D : ℝ := ((2 : ℝ)^(n+1)*Real.sqrt (n : ℝ))*
     (volume.real (Metric.ball (0 : Domain n) 1))^(-(1/p))
-  let C : ℝ := 1+T*D
+  let C : ℝ := (effectiveLocalLpCriticalCutoffConstant n:ℝ)
   have hD : 0≤D := by dsimp only [D];positivity
-  have hC : 0<C := by dsimp only [C];positivity
-  refine ⟨C,hC,?_⟩
+  have hTNat : T=(effectiveLocalMeanOscillationCutoffConstant n:ℝ) := by
+    rw [hTEq,hAEq]
+    dsimp only [localMeanOscillationCutoffConstant,effectiveLocalMeanOscillationCutoffConstant]
+    push_cast
+    norm_num
+  have hDMajorant := lpMeanOscillationFactor_le_effective n p hp₁
+  have hTC : T*D≤C := by
+    calc
+      _≤(effectiveLocalMeanOscillationCutoffConstant n:ℝ)*
+          (effectiveLpMeanOscillationConstant n:ℝ) := by rw [hTNat];gcongr
+      _≤C := by dsimp only [C,effectiveLocalLpCriticalCutoffConstant];push_cast;linarith
+  have hC : 0<C := by dsimp only [C,effectiveLocalLpCriticalCutoffConstant];push_cast;positivity
+  refine ⟨C,hC,rfl,?_⟩
   intro q a t ht u Du K hu hK hGrowth
   obtain ⟨χ,hχ,hcχ,hsχ,hOne,hBounds,hDχ⟩ := Hcut a (t/2) (half_pos ht)
   have hSupport : tsupport χ⊆Metric.ball a t := by simpa only [mul_div_cancel₀ _ (by norm_num : (2 : ℝ)≠0)] using hsχ
@@ -108,11 +143,29 @@ theorem exists_local_lp_critical_cutoff_scalar_mean_oscillation_bound
   obtain ⟨hI,hBound⟩ := hActual x r hr
   rw [← hFormula] at hI hBound
   refine ⟨hI,hBound.trans ?_⟩
-  have hTC : T*D≤C := by dsimp only [C];linarith
   calc
     T*((‖L‖*D)*K) = (T*D)*(‖L‖*K) := by ring
     _ ≤ C*(‖L‖*K) := mul_le_mul_of_nonneg_right hTC (mul_nonneg (norm_nonneg _) hK)
     _ = _ := by ring
+
+theorem exists_local_lp_critical_cutoff_scalar_mean_oscillation_bound
+    (n : ℕ) (p : ℝ) (hp₁ : 1≤p) (hp₂ : p≤2) :
+    ∃ C : ℝ,0<C ∧ ∀ (q : ℕ) (a : Domain n) (t : ℝ),0<t →
+      ∀ (u : Domain n → Ambient q) (Du : Domain n → Gradient n q) (K : ℝ),
+        MemW12Loc (⟨univ,isOpen_univ⟩ : OpenDomain n) u Du → 0≤K →
+        (∀ (x : Domain n) (r : ℝ),0<r → r≤8*t →
+          (∫ y in Metric.ball x r,(Real.sqrt (hsNormSq (Du y)))^p)≤K^p*r^((n : ℝ)-p)) →
+        ∃ χ : Domain n → ℝ,ContDiff ℝ ∞ χ ∧ HasCompactSupport χ ∧
+          tsupport χ⊆Metric.ball a t ∧
+          (∀ x∈Metric.closedBall a (t/2),χ x=1) ∧ (∀ x,0≤χ x ∧ χ x≤1) ∧
+          ∀ L : Ambient q →L[ℝ] ℝ,
+            let c := ⨍ y in Metric.ball a (8*t),u y
+            let b := fun x=>L (χ x • (u x-c))
+            AEStronglyMeasurable b volume ∧
+              ∀ (x : Domain n) (r : ℝ),0<r → IntegrableOn b (Metric.ball x r) volume ∧
+                (⨍ y in Metric.ball x r,|b y-(⨍ z in Metric.ball x r,b z)|)≤C*‖L‖*K := by
+  obtain ⟨C,hC,_hCEq,H⟩ := exists_local_lp_critical_cutoff_scalar_mean_oscillation_bound_explicit n p hp₁ hp₂
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

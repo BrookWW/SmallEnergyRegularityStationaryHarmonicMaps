@@ -71,12 +71,43 @@ private theorem integrable_hs_real_power_of_columns {n q : ℕ}
   change Integrable (fun x=>(Real.sqrt (hsNormSq (F x)))^p) μ
   simpa only [Real.norm_of_nonneg (Real.sqrt_nonneg _)] using H
 
+@[expose] def effectiveHodgeLowPowerConstant (n : ℕ) : ℕ :=
+  16+256*2^n
+
+@[expose] noncomputable def hodgeLowPowerCoefficient (n : ℕ) (p : ℝ) : ℝ :=
+  ((2 : ℝ)^p)^2+(((2 : ℝ)^p)^2)^2*(2 : ℝ)^n
+
+theorem effectiveHodgeLowPowerConstant_pos (n : ℕ) :
+    0<(effectiveHodgeLowPowerConstant n : ℝ) := by
+  unfold effectiveHodgeLowPowerConstant
+  positivity
+
+theorem hodgeLowPowerCoefficient_le (n : ℕ) (p : ℝ) (hp : p≤2) :
+    hodgeLowPowerCoefficient n p≤(effectiveHodgeLowPowerConstant n : ℝ) := by
+  have hTwo : (2 : ℝ)^p≤4 := by
+    calc
+      _≤(2 : ℝ)^(2 : ℝ) :=
+        Real.rpow_le_rpow_of_exponent_le (by norm_num : (1 : ℝ)≤2) hp
+      _=4 := by norm_num
+  have hK : ((2 : ℝ)^p)^2≤16 := by
+    have H := pow_le_pow_left₀ (Real.rpow_nonneg (by norm_num : (0 : ℝ)≤2) p) hTwo 2
+    norm_num at H
+    exact H
+  have hKSq : (((2 : ℝ)^p)^2)^2≤256 := by
+    have H := pow_le_pow_left₀ (sq_nonneg ((2 : ℝ)^p)) hK 2
+    norm_num at H
+    exact H
+  unfold hodgeLowPowerCoefficient
+  have H := add_le_add hK (mul_le_mul_of_nonneg_right hKSq (by positivity : (0 : ℝ)≤2^n))
+  exact H.trans_eq (by simp only [effectiveHodgeLowPowerConstant,Nat.cast_add,Nat.cast_mul,
+    Nat.cast_pow,Nat.cast_ofNat])
+
 /-- The same actual three-field Hodge decomposition has its low-power
 small-ball bound in terms of its two nonharmonic moments and original
 input moment. The harmonic moment is eliminated internally. -/
-theorem exists_hodge_low_power_small_ball_comparison (n : ℕ) (hn : 2≤n)
+theorem exists_hodge_low_power_small_ball_comparison_explicit (n : ℕ) (hn : 2≤n)
     (p : ℝ) (hpOne : 1≤p) (hpTwo : p≤2) :
-    ∃C : ℝ,0<C ∧ ∀(q : ℕ) (a : Domain n) (R : PositiveRadius)
+    ∃C : ℝ,0<C ∧ C=hodgeLowPowerCoefficient n p ∧ ∀(q : ℕ) (a : Domain n) (R : PositiveRadius)
       (F D P h : Domain n → Gradient n q),
       (∀i,MemLp (fun x=>F x i) 2 (volume.restrict (ball a R.val))) →
       (∀i,MemLp (fun x=>D x i) 2 (volume.restrict (ball a R.val))) →
@@ -99,7 +130,7 @@ theorem exists_hodge_low_power_small_ball_comparison (n : ℕ) (hn : 2≤n)
   have hB : 0≤B := mul_nonneg (sq_nonneg K) (pow_nonneg (by norm_num) n)
   have hC : 0<C := by dsimp only [C];linarith only [hK,hB]
   have hBC : B≤C := by dsimp only [C];linarith only [hK]
-  refine ⟨C,hC,?_⟩
+  refine ⟨C,hC,rfl,?_⟩
   intro q a R F D P h hF hD hP hh hDecomp hHarm θ hθ hθHalf
   have hFI := integrable_hs_real_power_of_columns a R.val F p hp hpTwo hF
   have hDI := integrable_hs_real_power_of_columns a R.val D p hp hpTwo hD
@@ -169,6 +200,55 @@ theorem exists_hodge_low_power_small_ball_comparison (n : ℕ) (hn : 2≤n)
     _=C*(ID+IP)+B*(θ^n*IF) := by dsimp only [C];ring
     _≤C*(ID+IP)+C*(θ^n*IF) := add_le_add le_rfl (mul_le_mul_of_nonneg_right hBC (mul_nonneg hθN hIF))
     _=C*(ID+IP+θ^n*IF) := by ring
+
+theorem exists_hodge_low_power_small_ball_comparison (n : ℕ) (hn : 2≤n)
+    (p : ℝ) (hpOne : 1≤p) (hpTwo : p≤2) :
+    ∃C : ℝ,0<C ∧ ∀(q : ℕ) (a : Domain n) (R : PositiveRadius)
+      (F D P h : Domain n → Gradient n q),
+      (∀i,MemLp (fun x=>F x i) 2 (volume.restrict (ball a R.val))) →
+      (∀i,MemLp (fun x=>D x i) 2 (volume.restrict (ball a R.val))) →
+      (∀i,MemLp (fun x=>P x i) 2 (volume.restrict (ball a R.val))) →
+      (∀i,MemLp (fun x=>h x i) 2 (volume.restrict (ball a R.val))) →
+      (∀ᵐx∂volume.restrict (ball a R.val),∀i,F x i=D x i+P x i+h x i) →
+      (∀(i : Fin n) (ψ : Domain n → Ambient q),ContDiff ℝ ∞ ψ → HasCompactSupport ψ →
+        tsupport ψ⊆ball a R.val → (∫x in ball a R.val,inner ℝ (h x i) (Laplacian.laplacian ψ x))=0) →
+      ∀θ : ℝ,0<θ → θ≤1/2 →
+        IntegrableOn (fun x=>(Real.sqrt (hsNormSq (F x)))^p) (ball a (θ*R.val)) volume ∧
+        (∫x in ball a (θ*R.val),(Real.sqrt (hsNormSq (F x)))^p)≤
+          C*((∫x in ball a R.val,(Real.sqrt (hsNormSq (D x)))^p)+
+            (∫x in ball a R.val,(Real.sqrt (hsNormSq (P x)))^p)+
+            θ^n*(∫x in ball a R.val,(Real.sqrt (hsNormSq (F x)))^p)) := by
+  obtain ⟨C,hC,_hCEq,H⟩ := exists_hodge_low_power_small_ball_comparison_explicit n hn p hpOne hpTwo
+  exact ⟨C,hC,H⟩
+
+theorem effective_hodge_low_power_small_ball_comparison (n : ℕ) (hn : 2≤n)
+    (p : ℝ) (hpOne : 1≤p) (hpTwo : p≤2) :
+    ∀(q : ℕ) (a : Domain n) (R : PositiveRadius)
+      (F D P h : Domain n → Gradient n q),
+      (∀i,MemLp (fun x=>F x i) 2 (volume.restrict (ball a R.val))) →
+      (∀i,MemLp (fun x=>D x i) 2 (volume.restrict (ball a R.val))) →
+      (∀i,MemLp (fun x=>P x i) 2 (volume.restrict (ball a R.val))) →
+      (∀i,MemLp (fun x=>h x i) 2 (volume.restrict (ball a R.val))) →
+      (∀ᵐx∂volume.restrict (ball a R.val),∀i,F x i=D x i+P x i+h x i) →
+      (∀(i : Fin n) (ψ : Domain n → Ambient q),ContDiff ℝ ∞ ψ → HasCompactSupport ψ →
+        tsupport ψ⊆ball a R.val → (∫x in ball a R.val,inner ℝ (h x i) (Laplacian.laplacian ψ x))=0) →
+      ∀θ : ℝ,0<θ → θ≤1/2 →
+        IntegrableOn (fun x=>(Real.sqrt (hsNormSq (F x)))^p) (ball a (θ*R.val)) volume ∧
+        (∫x in ball a (θ*R.val),(Real.sqrt (hsNormSq (F x)))^p)≤
+          (effectiveHodgeLowPowerConstant n : ℝ)*((∫x in ball a R.val,(Real.sqrt (hsNormSq (D x)))^p)+
+            (∫x in ball a R.val,(Real.sqrt (hsNormSq (P x)))^p)+
+            θ^n*(∫x in ball a R.val,(Real.sqrt (hsNormSq (F x)))^p)) := by
+  obtain ⟨C,_hC,hCEq,H⟩ := exists_hodge_low_power_small_ball_comparison_explicit n hn p hpOne hpTwo
+  have hC : C≤(effectiveHodgeLowPowerConstant n : ℝ) := by
+    rw [hCEq]
+    exact hodgeLowPowerCoefficient_le n p hpTwo
+  intro q a R F D P h hF hD hP hh hDecomp hHarm θ hθ hθHalf
+  obtain ⟨hI,hEstimate⟩ := H q a R F D P h hF hD hP hh hDecomp hHarm θ hθ hθHalf
+  refine ⟨hI,hEstimate.trans ?_⟩
+  apply mul_le_mul_of_nonneg_right hC
+  exact add_nonneg (add_nonneg (integral_nonneg fun _=>Real.rpow_nonneg (Real.sqrt_nonneg _) _)
+    (integral_nonneg fun _=>Real.rpow_nonneg (Real.sqrt_nonneg _) _))
+    (mul_nonneg (pow_nonneg hθ.le n) (integral_nonneg fun _=>Real.rpow_nonneg (Real.sqrt_nonneg _) _))
 
 end StationaryHarmonicMaps.Analysis
 

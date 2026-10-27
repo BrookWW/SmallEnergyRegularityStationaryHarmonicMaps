@@ -678,5 +678,160 @@ theorem exists_small_native_coulomb_perturbations
   have hK := hΦ.2.2.1.choose_spec.2.2
   exact hLocal.choose_spec.2 Z Y η hNatural hη hηle hCritical hZ hY Φ K hΦ.1 hJoint hK hΦ.2.2.2.2.2
 
+private theorem actual_neumann_perturbation_from_characteristics_effective
+    (n : ℕ) (hn : 2≤n)
+    (q : ℕ) (e : Ambient (q*q)≃L[ℝ](Ambient q→L[ℝ]Ambient q))
+    (hE : ∀ T : Ambient q →L[ℝ] Ambient q,
+      ‖e.symm T‖ ^ 2 = ∑ j : Fin q, ‖T (EuclideanSpace.single j 1)‖ ^ 2) :
+    let ν : ℝ := (n:ℝ)-2+(1 : ℝ)
+    let S := NativeMorreySobolevSpace n (q*q) ν
+    let M := MorreyCoefficientSpace n (q*q) ν
+    let V := SkewMeanZeroNativeMorreySpace n q ν e
+    letI : NormedAddCommGroup V := Submodule.normedAddCommGroup (skewMeanZeroNativeMorreySubmodule n q ν e)
+    letI : SeminormedAddCommGroup V :=
+      (Submodule.normedAddCommGroup (skewMeanZeroNativeMorreySubmodule n q ν e)).toSeminormedAddCommGroup
+    letI : NormedSpace ℝ V := Submodule.normedSpace (skewMeanZeroNativeMorreySubmodule n q ν e)
+    let value : S→Domain n→Ambient (q*q) := fun H=>nativeMorreyMapClass (n:=n) (q:=q*q) ν H
+    let field : M→Domain n→Gradient n (q*q) := fun F x i=>WithLp.toLp 2
+      (fun j : Fin (q*q)=>morreyCoefficientRecover (n:=n) (q:=q*q) ν F x (finProdFinEquiv (i,j)))
+    let D : S→L[ℝ]M := nativeMorreyGradientClass (n:=n) (q:=q*q) ν
+    let Exp : S→S := matrixNativeMorreyExp n hn (1 : ℝ) (by norm_num) (by norm_num) q
+      e.symm.toContinuousLinearMap e.toContinuousLinearMap e.apply_symm_apply e.symm_apply_apply
+    ∀(Z Y : M) (η : ℝ),
+      (∀(ψ : Domain n→Ambient (q*q)) (Dψ : Domain n→Gradient n (q*q)),
+        MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+        (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (field Z x i) (Dψ x i))=0) →
+      0≤η → η≤(effectiveSkewNeumannAmplitude n q : ℝ) → criticalGradientMorreySquare (field Z) (ball (0:Domain n) 1)≤ENNReal.ofReal (η^2) →
+      (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),∀i : Fin n,
+        star (e (field Z x i))= -(e (field Z x i))) →
+      (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),∀i : Fin n,
+        star (e (field Y x i))= -(e (field Y x i))) →
+      ∀(Φ : S×ℝ→M) (K : S→L[ℝ]M),
+        (∀p : S×ℝ,∀ᵐx∂volume.restrict (ball (0:Domain n) 1),
+          field (Φ p) x=fun i=>e.symm
+            (e (value (Exp (-p.1)) x)*e (field (D (Exp p.1)) x i)+
+              (e (value (Exp (-p.1)) x)*(e (field Z x i)+p.2 • e (field Y x i)))*
+                e (value (Exp p.1) x))) →
+        HasStrictFDerivAt Φ (K.coprod ((ContinuousLinearMap.id ℝ ℝ).smulRight Y)) (0:S×ℝ) →
+        (∀H : S,∀ᵐx∂volume.restrict (ball (0:Domain n) 1),
+          field (K H) x=fun i=>field (D H) x i+
+            e.symm (e (field Z x i)*e (value H x)-e (value H x)*e (field Z x i))) →
+        (∀t : ℝ,Φ (0,t)=Z+t • Y) →
+        ∀U : Set (ℝ×V),U∈𝓝 (0 : ℝ×V) →
+          ∀ᶠt in 𝓝 (0 : ℝ),∃u : V,(t,u)∈U ∧
+            nativeNeumannMorreyResponse n hn ν
+              (by
+                have hnR : (2:ℝ)≤n := by exact_mod_cast hn
+                dsimp only [ν]
+                linarith)
+              (by dsimp only [ν];linarith) (q*q) (Φ (u.val.val,t))=0 ∧
+            ∀(ψ : Domain n→Ambient (q*q)) (Dψ : Domain n→Gradient n (q*q)),
+              MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+              IntegrableOn (fun x=>∑i : Fin n,inner ℝ (field (Φ (u.val.val,t)) x i) (Dψ x i))
+                (ball (0:Domain n) 1) volume ∧
+              (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (field (Φ (u.val.val,t)) x i) (Dψ x i))=0 := by
+  have hγ : 0 < (1 : ℝ) := by norm_num
+  have hγTwo : (1 : ℝ) < 2 := by norm_num
+  let ν : ℝ := (n:ℝ)-2+(1 : ℝ)
+  let S := NativeMorreySobolevSpace n (q*q) ν
+  let M := MorreyCoefficientSpace n (q*q) ν
+  let V := SkewMeanZeroNativeMorreySpace n q ν e
+  letI : NormedAddCommGroup V := Submodule.normedAddCommGroup (skewMeanZeroNativeMorreySubmodule n q ν e)
+  letI : SeminormedAddCommGroup V :=
+    (Submodule.normedAddCommGroup (skewMeanZeroNativeMorreySubmodule n q ν e)).toSeminormedAddCommGroup
+  letI : NormedSpace ℝ V := Submodule.normedSpace (skewMeanZeroNativeMorreySubmodule n q ν e)
+  have hnR : (2:ℝ)≤n := by exact_mod_cast hn
+  have hν : 0≤ν := by dsimp only [ν];linarith
+  have hνn : ν<(n:ℝ) := by dsimp only [ν];linarith
+  have hInv := effective_unique_skew_linearized_neumann_inverse_one n hn q e hE
+  change ∀ (Z Y : M) (η : ℝ), _
+  intro Z Y η hNatural hη hηle hCritical hZ hY Φ K hFormula hJoint hK hBaseAll
+  have hAData := hInv (coefficientValue ν Z) η (coefficientValue_memLp ν Z)
+    hNatural hη hηle hCritical hZ
+  let A := hAData.choose
+  have hA := hAData.choose_spec.1.1
+  have hProject := (exists_unique_bounded_skew_native_projection n hn (1 : ℝ) hγ hγTwo).choose_spec.2 q e
+  let P := hProject.choose
+  have hP : ∀W : V,P W.val=W := hProject.choose_spec.1.2.2.1
+  exact neumann_perturbation_of_actual_equivalence n hn (1 : ℝ) hγ hγTwo q e
+    Z Y hNatural hZ hY Φ K hFormula hJoint hK hBaseAll P hP A
+      (fun X ψ Dψ hψ=>(hA X ψ Dψ hψ).2.2)
+
+
+/-- Original stronger-class natural skew coefficients with small critical
+norm admit actual nearby exponential Coulomb perturbations. Every chosen
+neighborhood in the same original parameter/skew Banach space is retained. -/
+theorem effective_small_native_coulomb_perturbations
+    (n : ℕ) (hn : 2≤n)
+    (q : ℕ) (e : Ambient (q*q)≃L[ℝ](Ambient q→L[ℝ]Ambient q))
+    (hE : ∀ T : Ambient q →L[ℝ] Ambient q,
+      ‖e.symm T‖ ^ 2 = ∑ j : Fin q, ‖T (EuclideanSpace.single j 1)‖ ^ 2) :
+    let ν : ℝ := (n:ℝ)-2+(1 : ℝ)
+    let S := NativeMorreySobolevSpace n (q*q) ν
+    let M := MorreyCoefficientSpace n (q*q) ν
+    let V := SkewMeanZeroNativeMorreySpace n q ν e
+    letI : NormedAddCommGroup V := Submodule.normedAddCommGroup (skewMeanZeroNativeMorreySubmodule n q ν e)
+    letI : SeminormedAddCommGroup V :=
+      (Submodule.normedAddCommGroup (skewMeanZeroNativeMorreySubmodule n q ν e)).toSeminormedAddCommGroup
+    letI : NormedSpace ℝ V := Submodule.normedSpace (skewMeanZeroNativeMorreySubmodule n q ν e)
+    let value : S→Domain n→Ambient (q*q) := fun H=>nativeMorreyMapClass (n:=n) (q:=q*q) ν H
+    let field : M→Domain n→Gradient n (q*q) := fun F x i=>WithLp.toLp 2
+      (fun j : Fin (q*q)=>morreyCoefficientRecover (n:=n) (q:=q*q) ν F x (finProdFinEquiv (i,j)))
+    let D : S→L[ℝ]M := nativeMorreyGradientClass (n:=n) (q:=q*q) ν
+    let Exp : S→S := matrixNativeMorreyExp n hn (1 : ℝ) (by norm_num) (by norm_num) q
+      e.symm.toContinuousLinearMap e.toContinuousLinearMap e.apply_symm_apply e.symm_apply_apply
+    ∀(Z Y : M) (η : ℝ),
+      (∀(ψ : Domain n→Ambient (q*q)) (Dψ : Domain n→Gradient n (q*q)),
+        MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+        (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (field Z x i) (Dψ x i))=0) →
+      0≤η → η≤(effectiveSkewNeumannAmplitude n q : ℝ) → criticalGradientMorreySquare (field Z) (ball (0:Domain n) 1)≤ENNReal.ofReal (η^2) →
+      (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),∀i : Fin n,
+        star (e (field Z x i))= -(e (field Z x i))) →
+      (∀ᵐx∂volume.restrict (ball (0:Domain n) 1),∀i : Fin n,
+        star (e (field Y x i))= -(e (field Y x i))) →
+      ∃Φ : S×ℝ→M,
+        (∀p : S×ℝ,∀ᵐx∂volume.restrict (ball (0:Domain n) 1),
+          field (Φ p) x=fun i=>e.symm
+            (e (value (Exp (-p.1)) x)*e (field (D (Exp p.1)) x i)+
+              (e (value (Exp (-p.1)) x)*(e (field Z x i)+p.2 • e (field Y x i)))*
+                e (value (Exp p.1) x))) ∧
+        (∀p : S×ℝ,AnalyticAt ℝ Φ p) ∧
+        (∀t : ℝ,Φ (0,t)=Z+t • Y) ∧
+        ∀U : Set (ℝ×V),U∈𝓝 (0 : ℝ×V) →
+          ∀ᶠt in 𝓝 (0 : ℝ),∃u : V,(t,u)∈U ∧
+            nativeNeumannMorreyResponse n hn ν
+              (by
+                have hnR : (2:ℝ)≤n := by exact_mod_cast hn
+                dsimp only [ν]
+                linarith)
+              (by dsimp only [ν];linarith) (q*q) (Φ (u.val.val,t))=0 ∧
+            ∀(ψ : Domain n→Ambient (q*q)) (Dψ : Domain n→Gradient n (q*q)),
+              MemW12 (ballDomain (0:Domain n) 1) ψ Dψ →
+              IntegrableOn (fun x=>∑i : Fin n,inner ℝ (field (Φ (u.val.val,t)) x i) (Dψ x i))
+                (ball (0:Domain n) 1) volume ∧
+              (∫x in ball (0:Domain n) 1,∑i : Fin n,inner ℝ (field (Φ (u.val.val,t)) x i) (Dψ x i))=0 := by
+  have hγ : 0 < (1 : ℝ) := by norm_num
+  have hγTwo : (1 : ℝ) < 2 := by norm_num
+  let ν : ℝ := (n:ℝ)-2+(1 : ℝ)
+  let S := NativeMorreySobolevSpace n (q*q) ν
+  let M := MorreyCoefficientSpace n (q*q) ν
+  let V := SkewMeanZeroNativeMorreySpace n q ν e
+  letI : NormedAddCommGroup V := Submodule.normedAddCommGroup (skewMeanZeroNativeMorreySubmodule n q ν e)
+  letI : SeminormedAddCommGroup V :=
+    (Submodule.normedAddCommGroup (skewMeanZeroNativeMorreySubmodule n q ν e)).toSeminormedAddCommGroup
+  letI : NormedSpace ℝ V := Submodule.normedSpace (skewMeanZeroNativeMorreySubmodule n q ν e)
+  have hLocal := actual_neumann_perturbation_from_characteristics_effective n hn q e hE
+  change ∀ (Z Y : M) (η : ℝ), _
+  intro Z Y η hNatural hη hηle hCritical hZ hY
+  have hFlux := existsUnique_native_matrix_coulomb_flux n hn (1 : ℝ) hγ hγTwo q
+    e.symm.toContinuousLinearMap e.toContinuousLinearMap e.apply_symm_apply e.symm_apply_apply Z Y
+  let Φ := hFlux.choose
+  have hΦ := hFlux.choose_spec.1
+  refine ⟨Φ,hΦ.1,hΦ.2.1,hΦ.2.2.2.2.2,?_⟩
+  let K := hΦ.2.2.1.choose
+  have hJoint := hΦ.2.2.1.choose_spec.2.1
+  have hK := hΦ.2.2.1.choose_spec.2.2
+  exact hLocal Z Y η hNatural hη hηle hCritical hZ hY Φ K hΦ.1 hJoint hK hΦ.2.2.2.2.2
+
 end StationaryHarmonicMaps.Analysis
 end

@@ -2,6 +2,8 @@ module
 
 public import StationaryHarmonicMaps.Analysis.SystemMatrixTestEnergy
 public import StationaryHarmonicMaps.Analysis.NativeSupercriticalTestBound
+public import StationaryHarmonicMaps.Analysis.EffectiveElementaryPowers
+public import StationaryHarmonicMaps.Analysis.EffectiveEuclideanVolume
 
 /-!
 # Supercritical energy of the same original matrix tests
@@ -12,7 +14,7 @@ inserted into the literal rank-one matrix Leibniz graph on the original
 query, with encoder and decoder norms retained in the fixed constant.
 -/
 
-public section
+@[expose] public section
 
 open HarmonicMaps MeasureTheory Filter Set Metric
 open scoped Topology ENNReal
@@ -88,6 +90,85 @@ theorem exists_system_matrix_test_supercritical_energy (n : ℕ) (hn : 2≤n)
   have hGrad := matrix_test_gradient_energy_root s hs2 Dφ a r hr hDφ
   have hCA : 2*‖E‖*(‖R‖*A)≤C := by dsimp only [C];nlinarith only [hV,norm_nonneg E]
   have hCV : 2*‖E‖*V≤C := by dsimp only [C];nlinarith only [hRA,norm_nonneg E]
+  let X := Real.sqrt (∫x in ball a r,hsNormSq (DP x))*r^(1-(n : ℝ)/s)
+  let Y := r^((n : ℝ)/2-(n : ℝ)/s)
+  have hX : 0≤X := mul_nonneg (Real.sqrt_nonneg _) (Real.rpow_nonneg hr.le _)
+  have hY : 0≤Y := Real.rpow_nonneg hr.le _
+  refine ⟨hI,(fun j=>(hEach j).1),?_⟩
+  intro j
+  have HE := (hEach j).2.2
+  rw [abs_of_nonneg hH] at HE
+  calc
+    _≤2*‖E‖*(‖R‖*H*Real.sqrt (∫x in ball a r,hsNormSq (DP x))+
+        Real.sqrt (∫x in ball a r,hsNormSq (Dφ x))) := HE
+    _≤2*‖E‖*(‖R‖*H*Real.sqrt (∫x in ball a r,hsNormSq (DP x))+V*Y*J) :=
+      mul_le_mul_of_nonneg_left (add_le_add le_rfl hGrad) (mul_nonneg (by norm_num) (norm_nonneg E))
+    _=(2*‖E‖*(‖R‖*A))*(X*J)+(2*‖E‖*V)*(Y*J) := by dsimp only [H,X,Y];ring
+    _≤C*(X*J)+C*(Y*J) := add_le_add
+      (mul_le_mul_of_nonneg_right hCA (mul_nonneg hX hJ))
+      (mul_le_mul_of_nonneg_right hCV (mul_nonneg hY hJ))
+    _=C*(X+Y)*J := by ring
+
+def effectiveSystemMatrixSupercriticalConstant (n q : ℕ) : ℕ :=
+  1+2*(q+1)*(nativeZeroBoundaryFixedSupercriticalMajorant n+1+2^n)
+
+theorem exists_system_matrix_test_supercritical_energy_effective (n : ℕ) (hn : 2≤n)
+    (s : ℝ) (hsn : (n : ℝ)<s) (hHalf : (1/2:ℝ)≤1-(n:ℝ)/s) (m q : ℕ)
+    (E : (Ambient q →L[ℝ] Ambient q) →L[ℝ] Ambient (q*q))
+    (R : Ambient m →L[ℝ] (Ambient q →L[ℝ] Ambient q))
+    (hENorm : ‖E‖≤(q:ℝ)+1) (hRNorm : ‖R‖≤1) :
+    ∃C : ℝ,0<C ∧ C=(effectiveSystemMatrixSupercriticalConstant n q:ℝ) ∧ ∀(a : Domain n) (r : ℝ),0<r →
+      ∀(P : Domain n → Ambient m) (DP : Domain n → Gradient n m),
+      MemW12 (ballDomain a r) P DP → ∀M : ℝ,
+      (∀ᵐx∂volume.restrict (ball a r),‖P x‖≤M) →
+      (∀ᵐx∂volume.restrict (ball a r),star (R (P x))*R (P x)=1) →
+      ∀(φ : Domain n → Ambient q) (Dφ : Domain n → Gradient n q),
+        HasZeroBoundaryValues (ballDomain a r) φ Dφ →
+        (∀i,MemLp (fun x=>Dφ x i) (ENNReal.ofReal s) (volume.restrict (ball a r))) →
+        let T := fun (j : Fin q) x=>systemMatrixTestCoefficient E R j (P x) (φ x)
+        let DT := fun (j : Fin q) x i=>systemMatrixTestCoefficient E R j (DP x i) (φ x)+
+          systemMatrixTestCoefficient E R j (P x) (Dφ x i)
+        IntegrableOn (fun x=>(Real.sqrt (hsNormSq (Dφ x)))^s) (ball a r) volume ∧
+        (∀j,HasZeroBoundaryValues (ballDomain a r) (T j) (DT j)) ∧
+        ∀j,Real.sqrt (∫x in ball a r,hsNormSq (DT j x))≤
+          C*(Real.sqrt (∫x in ball a r,hsNormSq (DP x))*r^(1-(n : ℝ)/s)+r^((n : ℝ)/2-(n : ℝ)/s))*
+            (∫x in ball a r,(Real.sqrt (hsNormSq (Dφ x)))^s)^(1/s) := by
+  have hnReal : (2 : ℝ)≤n := by exact_mod_cast hn
+  have hs2 : 2≤s := hnReal.trans hsn.le
+  obtain ⟨A,hA,hAEq,Hsup⟩ := exists_native_zeroBoundary_supercritical_bound_uniform_explicit n hn s hsn hHalf
+  let V := (volume.real (ball (0 : Domain n) 1))^(1/2-1/s)
+  let C : ℝ := (effectiveSystemMatrixSupercriticalConstant n q:ℝ)
+  have hV : 0≤V := Real.rpow_nonneg ENNReal.toReal_nonneg _
+  have hRA : 0≤‖R‖*A := mul_nonneg (norm_nonneg R) hA.le
+  have hC : 0<C := by dsimp only [C,effectiveSystemMatrixSupercriticalConstant];push_cast;positivity
+  have hs0 : 0<s := lt_of_lt_of_le (by norm_num : (0:ℝ)<2) hs2
+  have hExponent : 0≤(1/2:ℝ)-1/s := by
+    have H : 1/s≤1/2 := (div_le_div_iff₀ hs0 (by norm_num : (0:ℝ)<2)).mpr (by linarith only [hs2])
+    linarith only [H]
+  have hVBound : V≤1+(2:ℝ)^n := by
+    calc
+      _≤1+volume.real (ball (0:Domain n) 1) :=
+        rpow_le_one_add_self_of_unit_exponent _ _ ENNReal.toReal_nonneg hExponent (by linarith only [div_pos zero_lt_one hs0])
+      _≤_ := by linarith only [euclidean_unit_ball_volume_upper_bound n]
+  have hCA : 2*‖E‖*(‖R‖*A)≤C := by
+    calc
+      _≤2*((q:ℝ)+1)*(1*A) := by gcongr
+      _=2*((q:ℝ)+1)*(nativeZeroBoundaryFixedSupercriticalMajorant n:ℝ) := by rw [one_mul,hAEq]
+      _≤C := by dsimp only [C,effectiveSystemMatrixSupercriticalConstant];push_cast;nlinarith only [Nat.cast_nonneg (α:=ℝ) q,pow_nonneg (by norm_num : (0:ℝ)≤2) n]
+  have hCV : 2*‖E‖*V≤C := by
+    calc
+      _≤2*((q:ℝ)+1)*(1+(2:ℝ)^n) := by gcongr
+      _≤C := by dsimp only [C,effectiveSystemMatrixSupercriticalConstant];push_cast;nlinarith only [Nat.cast_nonneg (α:=ℝ) q,Nat.cast_nonneg (α:=ℝ) (nativeZeroBoundaryFixedSupercriticalMajorant n)]
+  refine ⟨C,hC,rfl,?_⟩
+  intro a r hr P DP hP M hPBound hOrth φ Dφ hφ hDφ T DT
+  let J := (∫x in ball a r,(Real.sqrt (hsNormSq (Dφ x)))^s)^(1/s)
+  have hJ : 0≤J := Real.rpow_nonneg (integral_nonneg fun _=>Real.rpow_nonneg (Real.sqrt_nonneg _) _) _
+  let H := A*r^(1-(n : ℝ)/s)*J
+  have hH : 0≤H := mul_nonneg (mul_nonneg hA.le (Real.rpow_nonneg hr.le _)) hJ
+  obtain ⟨hI,hφBound,_hTop⟩ := Hsup q a r φ Dφ hr hφ hDφ
+  have hEach (j : Fin q) := system_matrix_native_test_energy_ball a r hr E R P DP hP M hPBound
+    hOrth φ Dφ hφ H hφBound j
+  have hGrad := matrix_test_gradient_energy_root s hs2 Dφ a r hr hDφ
   let X := Real.sqrt (∫x in ball a r,hsNormSq (DP x))*r^(1-(n : ℝ)/s)
   let Y := r^((n : ℝ)/2-(n : ℝ)/s)
   have hX : 0≤X := mul_nonneg (Real.sqrt_nonneg _) (Real.rpow_nonneg hr.le _)

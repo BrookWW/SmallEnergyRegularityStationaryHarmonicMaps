@@ -126,9 +126,30 @@ private theorem core_pairing_of_native_complement {n q : ℕ}
   rw [integral_congr_ae (Eventually.of_forall hPoint),integral_sub hFI hPI] at H
   exact ⟨hPI,hFI,(sub_eq_zero.mp H).symm⟩
 
+@[expose] noncomputable def effectiveCoexactLpMomentConstant (n : ℕ) (p : ℝ) : ℝ :=
+  (2 : ℝ)^p*(1+effectiveNeumannLpMomentConstant n p)
+
+@[expose] def effectiveCoexactDimensionalDualConstant (n : ℕ) : ℕ :=
+  2^(2*n+1)*(1+effectiveNeumannDimensionalMomentConstant n)
+
+theorem effectiveCoexactLpMomentConstant_pos (n : ℕ) (p : ℝ) (hp : 1<p) :
+    0 < effectiveCoexactLpMomentConstant n p := by
+  have H := effectiveNeumannLpMomentConstant_pos n p hp
+  unfold effectiveCoexactLpMomentConstant
+  positivity
+
+theorem effectiveCoexactLpMomentConstant_dimensional (n : ℕ) (hn : 2≤n) :
+    effectiveCoexactLpMomentConstant n ((2*n+1 : ℕ) : ℝ) =
+      (effectiveCoexactDimensionalDualConstant n : ℝ) := by
+  rw [effectiveCoexactLpMomentConstant,effectiveNeumannLpMomentConstant_dimensional n hn,
+    Real.rpow_natCast]
+  simp only [effectiveCoexactDimensionalDualConstant,Nat.cast_mul,Nat.cast_pow,
+    Nat.cast_ofNat,Nat.cast_add,Nat.cast_one]
+
 /-- One actual relative coexact L2 projection has all Lp estimates for its same response one-form and internally constructs its exact native closed normal H1 potential. -/
-theorem exists_same_coexact_operator_all_lp_unitBall (n : ℕ) (hn : 2≤n) :
-    ∃ Cp : {p : ℝ //1<p} → ℝ,(∀p,0<Cp p) ∧ ∀q : ℕ,
+theorem exists_same_coexact_operator_all_lp_unitBall_explicit (n : ℕ) (hn : 2≤n) :
+    ∃ Cp : {p : ℝ //1<p} → ℝ,(∀p,0<Cp p) ∧
+      Cp = (fun p => effectiveCoexactLpMomentConstant n p.val) ∧ ∀q : ℕ,
       let μ := volume.restrict (ball (0 : Domain n) 1)
       let D := fun (W : Domain n → Ambient (n*q)) x i=>WithLp.toLp 2
         (fun j : Fin q=>W x (finProdFinEquiv (i,j)))
@@ -169,11 +190,14 @@ theorem exists_same_coexact_operator_all_lp_unitBall (n : ℕ) (hn : 2≤n) :
             ∀p : {p : ℝ //1<p},MemLp (fun x=>W x) (ENNReal.ofReal p.val) μ →
               MemLp (fun x=>(T W) x) (ENNReal.ofReal p.val) μ ∧
               (∫x,‖(T W) x‖^p.val ∂μ)≤Cp p*(∫x,‖W x‖^p.val ∂μ) := by
-  obtain ⟨CN,hCN,HN⟩ := exists_same_neumann_operator_all_lp_unitBall n hn
+  obtain ⟨CN,hCN,hCNEq,HN⟩ := exists_same_neumann_operator_all_lp_unitBall_explicit n hn
   let Cp := fun p : {p : ℝ //1<p}=>(2 : ℝ)^p.val*(1+CN p)
   have hCp (p : {p : ℝ //1<p}) : 0<Cp p :=
     mul_pos (Real.rpow_pos_of_pos (by norm_num) _) (by linarith only [hCN p])
-  refine ⟨Cp,hCp,?_⟩
+  refine ⟨Cp,hCp,?_,?_⟩
+  · funext p
+    simp only [Cp,hCNEq]
+    rfl
   intro q μ D
   obtain ⟨N,_hN,hSelfN,hIdemN,hResponse⟩ := HN q
   let T : Lp (Ambient (n*q)) 2 μ →L[ℝ] Lp (Ambient (n*q)) 2 μ := 1-N
@@ -235,6 +259,51 @@ theorem exists_same_coexact_operator_all_lp_unitBall (n : ℕ) (hn : 2≤n) :
     obtain ⟨hNW,hMomentN⟩ := hLpN p hW
     have H := difference_lp_moment_bound μ W (N W) p (CN p) hW hNW hMomentN
     simpa only [hTApply,Cp] using H
+
+theorem exists_same_coexact_operator_all_lp_unitBall (n : ℕ) (hn : 2≤n) :
+    ∃ Cp : {p : ℝ //1<p} → ℝ,(∀p,0<Cp p) ∧ ∀q : ℕ,
+      let μ := volume.restrict (ball (0 : Domain n) 1)
+      let D := fun (W : Domain n → Ambient (n*q)) x i=>WithLp.toLp 2
+        (fun j : Fin q=>W x (finProdFinEquiv (i,j)))
+      ∃ T : Lp (Ambient (n*q)) 2 μ →L[ℝ] Lp (Ambient (n*q)) 2 μ,
+        ‖T‖≤1 ∧ IsSelfAdjoint T ∧ (∀W,T (T W)=T W) ∧
+        ∀W : Lp (Ambient (n*q)) 2 μ,
+          ∃ (u : Domain n → Ambient q) (b : Fin n → Fin n → Domain n → Ambient q)
+            (Db : Fin n → Fin n → Domain n → Gradient n q),
+            MemW12 (ballDomain (0 : Domain n) 1) u (fun x i=>D W x i-D (T W) x i) ∧
+            (∀i j,MemW12 (ballDomain (0 : Domain n) 1) (b i j) (Db i j)) ∧
+            (∀ᵐx∂μ,∀i j,b i j x= -b j i x) ∧
+            (∀ᵐx∂μ,∀i j k,Db i j x k+Db j k x i+Db k i x j=0) ∧
+            (∀ᵐx∂μ,∀j,(∑i : Fin n,Db i j x i)=D (T W) x j) ∧
+            (∀ (j : Fin n) (ψ : Domain n → Ambient q) (Dψ : Domain n → Gradient n q),
+              MemW12 (ballDomain (0 : Domain n) 1) ψ Dψ →
+              Integrable (fun x=>∑i : Fin n,inner ℝ (b i j x) (Dψ x i)) μ ∧
+              Integrable (fun x=>inner ℝ (D (T W) x j) (ψ x)) μ ∧
+              (∫x,∑i : Fin n,inner ℝ (b i j x) (Dψ x i) ∂μ)=
+                -(∫x,inner ℝ (D (T W) x j) (ψ x) ∂μ)) ∧
+            (∀ (ψ : Domain n → Ambient q) (Dψ : Domain n → Gradient n q),
+              MemW12 (ballDomain (0 : Domain n) 1) ψ Dψ →
+              Integrable (fun x=>∑i : Fin n,inner ℝ (D (T W) x i) (Dψ x i)) μ ∧
+              (∫x,∑i : Fin n,inner ℝ (D (T W) x i) (Dψ x i) ∂μ)=0) ∧
+            ((∫x,∑j : Fin n,∑i : Fin n,‖b i j x‖^2 ∂μ)+
+              (∫x,∑j : Fin n,∑k : Fin n,∑i : Fin n,‖Db i j x k‖^2 ∂μ)≤
+                (4*(2 : ℝ)^(n+1)+2*(n : ℝ)+2)*(∫x,hsNormSq (D (T W) x) ∂μ)) ∧
+            ((∫x,hsNormSq (D (T W) x) ∂μ)≤∫x,hsNormSq (D W x) ∂μ) ∧
+            (∀ C : Fin n → Fin n → Domain n → Ambient q,
+              (∀i j,ContDiff ℝ ∞ (C i j)) → (∀i j x,C i j x= -C j i x) →
+              (∀i j k x,fderiv ℝ (C i j) x (EuclideanSpace.single k 1)+
+                fderiv ℝ (C j k) x (EuclideanSpace.single i 1)+fderiv ℝ (C k i) x (EuclideanSpace.single j 1)=0) →
+              (∀j (x : Domain n),‖x‖=1 → (∑i : Fin n,x i • C i j x)=0) →
+              let Z := fun x j=>∑i : Fin n,fderiv ℝ (C i j) x (EuclideanSpace.single i 1)
+              Integrable (fun x=>∑j : Fin n,inner ℝ (D (T W) x j) (Z x j)) μ ∧
+              Integrable (fun x=>∑j : Fin n,inner ℝ (D W x j) (Z x j)) μ ∧
+              (∫x,∑j : Fin n,inner ℝ (D (T W) x j) (Z x j) ∂μ)=
+                ∫x,∑j : Fin n,inner ℝ (D W x j) (Z x j) ∂μ) ∧
+            ∀p : {p : ℝ //1<p},MemLp (fun x=>W x) (ENNReal.ofReal p.val) μ →
+              MemLp (fun x=>(T W) x) (ENNReal.ofReal p.val) μ ∧
+              (∫x,‖(T W) x‖^p.val ∂μ)≤Cp p*(∫x,‖W x‖^p.val ∂μ) := by
+  obtain ⟨C,hC,_hCEq,H⟩ := exists_same_coexact_operator_all_lp_unitBall_explicit n hn
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 

@@ -22,8 +22,8 @@ open scoped ContDiff Topology ENNReal
 namespace StationaryHarmonicMaps.Analysis
 
 /-- Original open finite-volume data produce the actual Whitney cutoffs, their positive uniformly bounded genuine sum, and the same normalized smooth compact partition. -/
-theorem exists_whitney_normalized_smooth_partition (n : ℕ) (hn : 0<n) :
-    ∃ C : ℝ,0<C ∧ ∀ S : Set (Domain n),IsOpen S → volume S≠(∞ : ℝ≥0∞) →
+theorem exists_whitney_normalized_smooth_partition_explicit (n : ℕ) (hn : 0<n) :
+    ∃ C : ℝ,0<C ∧ C = (2 : ℝ)^22 ∧ ∀ S : Set (Domain n),IsOpen S → volume S≠(∞ : ℝ≥0∞) →
       let r := fun a=>Metric.infDist a Sᶜ/20
       ∃ U : Set (Domain n),U.Countable ∧ U⊆S ∧
         U.PairwiseDisjoint (fun a=>Metric.ball a (r a)) ∧
@@ -42,8 +42,8 @@ theorem exists_whitney_normalized_smooth_partition (n : ℕ) (hn : 0<n) :
               tsupport (θ a)⊆Metric.ball a.val (10*r a.val) ∧ tsupport (θ a)⊆S) ∧
             (∀ a x,0≤θ a x ∧ θ a x≤1) ∧ (∀ x∈S,∑' a,θ a x=1) := by
   classical
-  obtain ⟨C,hC,Hcut⟩ := exists_scaled_ball_cutoff n
-  refine ⟨C,hC,?_⟩
+  obtain ⟨C,hC,hFormula,Hcut⟩ := exists_scaled_ball_cutoff_explicit n
+  refine ⟨C,hC,hFormula,?_⟩
   intro S hOpen hFinite r
   obtain ⟨U,hCount,hUS,hDisj,hCover,hGood,_hVolume⟩ := exists_open_whitney_vitali_cover n hn S hOpen hFinite
   obtain ⟨_R,_hR,_hCap,hComp⟩ := exists_ball_radius_cap_of_finite_volume n hn S hFinite
@@ -105,6 +105,28 @@ theorem exists_whitney_normalized_smooth_partition (n : ℕ) (hn : 0<n) :
     exact ⟨hη a,hcη a,hSuppBall a,hSuppS a,hOne a,hBounds a,hDη a⟩
   · intro a
     exact ⟨(hθ a).1,(hθ a).2.1,(hθ a).2.2.trans (hSuppBall a),(hθ a).2.2.trans (hSuppS a)⟩
+
+theorem exists_whitney_normalized_smooth_partition (n : ℕ) (hn : 0<n) :
+    ∃ C : ℝ,0<C ∧ ∀ S : Set (Domain n),IsOpen S → volume S≠(∞ : ℝ≥0∞) →
+      let r := fun a=>Metric.infDist a Sᶜ/20
+      ∃ U : Set (Domain n),U.Countable ∧ U⊆S ∧
+        U.PairwiseDisjoint (fun a=>Metric.ball a (r a)) ∧
+        S=⋃ a : U,Metric.ball a.val (5*r a.val) ∧
+        ∃ η : U → Domain n → ℝ,
+          (∀ a,ContDiff ℝ ∞ (η a) ∧ HasCompactSupport (η a) ∧
+            tsupport (η a)⊆Metric.ball a.val (10*r a.val) ∧ tsupport (η a)⊆S ∧
+            (∀ x∈Metric.closedBall a.val (5*r a.val),η a x=1) ∧
+            (∀ x,0≤η a x ∧ η a x≤1) ∧ (∀ x,‖fderiv ℝ (η a) x‖≤C/(5*r a.val))) ∧
+          let P := fun x=>∑' a,η a x
+          let θ := fun a x=>η a x/P x
+          (∀ x,Function.HasFiniteSupport (fun a=>η a x)) ∧
+            (∀ x∈S,1≤P x ∧ P x≤(60 : ℝ)^n) ∧
+            (∀ x,Function.HasFiniteSupport (fun a=>θ a x)) ∧
+            (∀ a,ContDiff ℝ ∞ (θ a) ∧ HasCompactSupport (θ a) ∧
+              tsupport (θ a)⊆Metric.ball a.val (10*r a.val) ∧ tsupport (θ a)⊆S) ∧
+            (∀ a x,0≤θ a x ∧ θ a x≤1) ∧ (∀ x∈S,∑' a,θ a x=1) := by
+  obtain ⟨C, hC, _hFormula, H⟩ := exists_whitney_normalized_smooth_partition_explicit n hn
+  exact ⟨C, hC, H⟩
 
 end StationaryHarmonicMaps.Analysis
 

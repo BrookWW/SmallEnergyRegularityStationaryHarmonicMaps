@@ -62,8 +62,12 @@ private theorem normalized_boundary_center_of_small_query {n : ℕ}
   exact abs_le.mpr ⟨by linarith,by linarith⟩
 
 /-- For each dimension at least two, one genuine contractive self-adjoint Dirichlet L2 operator has the same-response essential off-support bound on every center and positive radius, with a dimension-only constant chosen before the target dimension and all original data. -/
-theorem exists_same_dirichlet_operator_all_ball_offSupport_bounds (n : ℕ) (hn : 2≤n) :
-    ∃C : ℝ,0<C ∧ ∀q : ℕ,
+
+@[expose] def sameDirichletOffSupportMajorant (n : ℕ) : ℕ :=
+  64^n + oddKelvinBoundaryEnergyMajorant n * 16^n
+
+theorem exists_same_dirichlet_operator_all_ball_offSupport_bounds_explicit (n : ℕ) (hn : 2≤n) :
+    ∃C : ℝ,0<C ∧ C = (sameDirichletOffSupportMajorant n : ℝ) ∧ ∀q : ℕ,
       let μ := volume.restrict (ball (0:Domain n) 1)
       let E : Gradient n q → Ambient (n*q) := fun A=>WithLp.toLp 2
         (fun k=>A (finProdFinEquiv.symm k).1 (finProdFinEquiv.symm k).2)
@@ -83,10 +87,19 @@ theorem exists_same_dirichlet_operator_all_ball_offSupport_bounds (n : ℕ) (hn 
               F =ᵐ[volume.restrict (ball (0:Domain n) 1∩ball a (256*r))] (fun _=>(0:Gradient n q)) →
               ∀ᵐx∂volume.restrict (ball a r),hsNormSq (Q₀ x)≤
                 C*(volume.real (ball a (256*r)))⁻¹*(∫y in ball a (256*r),hsNormSq (Q₀ y)) := by
-  obtain ⟨K,hK,Hboundary⟩ := exists_boundary_offSupport_gradient_bounds n hn
-  let C := max ((64:ℝ)^n) (K*(16:ℝ)^n)
-  have hC : 0<C := (pow_pos (by norm_num : (0:ℝ)<64) n).trans_le (le_max_left _ _)
-  refine ⟨C,hC,?_⟩
+  obtain ⟨K,hK,hKFormula,Hboundary⟩ := exists_boundary_offSupport_gradient_bounds_explicit n hn
+  let C : ℝ := sameDirichletOffSupportMajorant n
+  have hC : 0<C := by dsimp only [C, sameDirichletOffSupportMajorant]; positivity
+  have hInteriorCoeff : (64 : ℝ)^n ≤ C := by
+    simp only [C, sameDirichletOffSupportMajorant, Nat.cast_add, Nat.cast_mul,
+      Nat.cast_pow, Nat.cast_ofNat]
+    exact le_add_of_nonneg_right (by positivity)
+  have hBoundaryCoeff : K*(16 : ℝ)^n ≤ C := by
+    rw [hKFormula]
+    simp only [C, sameDirichletOffSupportMajorant, Nat.cast_add, Nat.cast_mul,
+      Nat.cast_pow, Nat.cast_ofNat]
+    exact le_add_of_nonneg_left (by positivity)
+  refine ⟨C,hC,rfl,?_⟩
   intro q μ E
   obtain ⟨T,hNorm,hSelf,hIdem,Hresponse⟩ := exists_dirichlet_L2_operator_interior_offSupport_bounds_unitBall (q:=q) hn
   refine ⟨T,hNorm,hSelf,hIdem,?_⟩
@@ -172,7 +185,7 @@ theorem exists_same_dirichlet_operator_all_ball_offSupport_bounds (n : ℕ) (hn 
               mul_le_mul_of_nonneg_left hEnergySmall (inv_nonneg.mpr ENNReal.toReal_nonneg)
             _=(64:ℝ)^n*(volume.real B)⁻¹*(∫y in B,hsNormSq (Q₀ y)) := by rw [hVolume]
             _≤M := mul_le_mul_of_nonneg_right
-              (mul_le_mul_of_nonneg_right (le_max_left _ _) (inv_nonneg.mpr ENNReal.toReal_nonneg))
+              (mul_le_mul_of_nonneg_right hInteriorCoeff (inv_nonneg.mpr ENNReal.toReal_nonneg))
               (integral_nonneg fun y=>hsNormSq_nonneg (Q₀ y))
         filter_upwards [ae_restrict_of_ae_restrict_of_subset hQueryHalf hBound,ae_restrict_mem measurableSet_ball] with x hx hxQ
         have hxU : x∈ball (0:Domain n) 1 := hSmallUnit ((ball_subset_ball (by linarith : r≤8*r)) hxQ)
@@ -212,7 +225,7 @@ theorem exists_same_dirichlet_operator_all_ball_offSupport_bounds (n : ℕ) (hn 
               mul_le_mul_of_nonneg_left hEnergyBoundary (mul_nonneg hK.le (inv_nonneg.mpr ENNReal.toReal_nonneg))
             _=(K*(16:ℝ)^n)*(volume.real B)⁻¹*(∫y in B,hsNormSq (Q₀ y)) := by rw [hVolume];ring
             _≤M := mul_le_mul_of_nonneg_right
-              (mul_le_mul_of_nonneg_right (le_max_right _ _) (inv_nonneg.mpr ENNReal.toReal_nonneg))
+              (mul_le_mul_of_nonneg_right hBoundaryCoeff (inv_nonneg.mpr ENNReal.toReal_nonneg))
               (integral_nonneg fun y=>hsNormSq_nonneg (Q₀ y))
         exact (ae_restrict_of_ae_restrict_of_subset hQueryHalf hBound).mono (fun x hx=>hx.trans hScale)
   · filter_upwards [ae_restrict_mem measurableSet_ball] with x hx
@@ -221,6 +234,30 @@ theorem exists_same_dirichlet_operator_all_ball_offSupport_bounds (n : ℕ) (hn 
       simp only [Q₀,indicator_of_notMem hOut,hsNormSq,norm_zero,zero_pow (by decide : (2:ℕ)≠0),Finset.sum_const_zero]
     rw [hHS0]
     exact hM0
+
+theorem exists_same_dirichlet_operator_all_ball_offSupport_bounds (n : ℕ) (hn : 2≤n) :
+    ∃C : ℝ,0<C ∧ ∀q : ℕ,
+      let μ := volume.restrict (ball (0:Domain n) 1)
+      let E : Gradient n q → Ambient (n*q) := fun A=>WithLp.toLp 2
+        (fun k=>A (finProdFinEquiv.symm k).1 (finProdFinEquiv.symm k).2)
+      ∃T : Lp (Ambient (n*q)) 2 μ →L[ℝ] Lp (Ambient (n*q)) 2 μ,
+        ‖T‖≤1 ∧ IsSelfAdjoint T ∧ (∀Z,T (T Z)=T Z) ∧
+        ∀(F : Domain n → Gradient n q) (hF : ∀i,MemLp (fun x=>F x i) 2 μ),
+          let A := (memLp_hs_flatten F hF).toLp (fun x=>E (F x))
+          let Q := fun (x : Domain n) (i : Fin n)=>WithLp.toLp 2
+            (fun j : Fin q=>(T A) x (finProdFinEquiv (i,j)))
+          let Q₀ := fun x i=>(ball (0:Domain n) 1).indicator (fun y=>Q y i) x
+          ∃f : Domain n → Ambient q,HasZeroBoundaryValues (ballDomain (0:Domain n) 1) f Q ∧
+            (∫x,hsNormSq (Q x) ∂μ)≤∫x,hsNormSq (F x) ∂μ ∧
+            HolderToCK.WeakPoissonOn (ballDomain (0:Domain n) 1)
+              (fun x i=>Q x i-F x i) (fun _=>(0:Ambient q)) ∧
+            (∀i,MemLp (fun x=>Q₀ x i) 2 volume) ∧
+            ∀(a : Domain n) (r : ℝ),0<r →
+              F =ᵐ[volume.restrict (ball (0:Domain n) 1∩ball a (256*r))] (fun _=>(0:Gradient n q)) →
+              ∀ᵐx∂volume.restrict (ball a r),hsNormSq (Q₀ x)≤
+                C*(volume.real (ball a (256*r)))⁻¹*(∫y in ball a (256*r),hsNormSq (Q₀ y)) := by
+  obtain ⟨C,hC,_hFormula,H⟩ := exists_same_dirichlet_operator_all_ball_offSupport_bounds_explicit n hn
+  exact ⟨C,hC,H⟩
 
 end StationaryHarmonicMaps.Analysis
 
